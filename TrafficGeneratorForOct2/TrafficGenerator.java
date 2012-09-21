@@ -31,7 +31,14 @@ public class TrafficGenerator
 			currentTime = currentTime + nextTime;
 			if(currentTime < simulationLength)
 			{
-				System.out.println("Time: " + currentTime + "\tGate: " + nextGate + "\t\tWaitTime: " + waitTime);
+				if(currentTime < 10)
+				{
+					System.out.println("Time: " + currentTime + "\t\tGate: " + nextGate + "\t\tWaitTime: " + waitTime);
+				}
+				else
+				{
+					System.out.println("Time: " + currentTime + "\tGate: " + nextGate + "\t\tWaitTime: " + waitTime);
+				}
 			}
 		}
 	}
@@ -100,12 +107,18 @@ public class TrafficGenerator
 	}
 	public double nextTime(double expectedValue)
 	{
-		System.out.println(expectedValue);
 		return -Math.log(1 - rdm.nextDouble()) / expectedValue;
 	}
 	public static void main(String [] args)
 	{
-		TrafficGenerator gt = new TrafficGenerator(200, "0,.1", "2,.0000099,1,-.00198,0,.1");
+		if(args.length != 3)
+		{
+			System.out.println("usage: java TrafficGenerator <simulation lenght (seconds)> <P(t) = y where y is expected value for the next time> <P(t) = y where y is the expected value for wait time>");
+			System.out.println("Example: P(t) = t^2 + 3t + 5 would be 2,1,1,3,0,5 such that the sequence is Exponent, Coeefficient with the largest exponent first");
+			System.exit(0);
+		}
+		//TrafficGenerator gt = new TrafficGenerator(200, "0,.1", "2,.0000099,1,-.00198,0,.1");
+		TrafficGenerator gt = new TrafficGenerator(Integer.parseInt(args[0]),args[1],args[2]);
 		gt.run();
 	}
 }
