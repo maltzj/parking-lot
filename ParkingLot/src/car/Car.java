@@ -9,8 +9,6 @@ public class Car {
 	Date timeDeparts;
 	Date timeWaitingUntil;
 	
-	
-	
 	public Car(Date timeSent, Date timeDeparts, long timeToWait) {
 		super();
 		this.timeSent = timeSent;
