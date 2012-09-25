@@ -2,9 +2,15 @@ package messaging;
 
 import java.util.Date;
 
-public class TimeMessage {
+public class TimeMessage extends AbstractMessage {
 
 	Date newTime;
+	
+	public TimeMessage(Date newTime, int length)
+	{
+		super(length, AbstractMessage.TYPE_TIME_MESSAGE);
+		this.newTime = newTime;
+	}
 
 	public Date getNewTime() {
 		return newTime;
@@ -12,6 +18,11 @@ public class TimeMessage {
 
 	public void setNewTime(Date newTime) {
 		this.newTime = newTime;
+	}
+	
+	public byte[] generateMessageData()
+	{
+		return null;
 	}
 	
 }
