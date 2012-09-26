@@ -7,8 +7,8 @@ public class GateSubscribeMessage extends AbstractMessage{
 	private InetAddress addressOfGate;
 	private int port;
 	
-	public GateSubscribeMessage(InetAddress addressOfGate, int port, int length) {
-		super(length, AbstractMessage.TYPE_GATE_SUBSCRIBE);
+	public GateSubscribeMessage(InetAddress addressOfGate, int port) {
+		super(AbstractMessage.TYPE_GATE_SUBSCRIBE);
 		this.addressOfGate = addressOfGate;
 		this.port = port;
 	}

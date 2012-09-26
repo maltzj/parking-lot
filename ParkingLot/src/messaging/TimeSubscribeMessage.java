@@ -7,10 +7,13 @@ public class TimeSubscribeMessage extends AbstractMessage{
 	private InetAddress addressSubscribing;
 	private int portSubscribingOn;
 	
-	public TimeSubscribeMessage(InetAddress address, int port, int length) {
-		super(length, AbstractMessage.TYPE_TIME_SUBSCRIBE);
+	
+	public TimeSubscribeMessage(InetAddress address, int port) {
+		super(AbstractMessage.TYPE_TIME_SUBSCRIBE);
 		this.addressSubscribing = address;
 		this.portSubscribingOn = port;
+		
+		
 	}
 	
 	public InetAddress getAddressSubscribing() {

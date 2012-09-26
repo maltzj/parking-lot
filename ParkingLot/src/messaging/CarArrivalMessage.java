@@ -8,8 +8,8 @@ public class CarArrivalMessage extends AbstractMessage {
 	Date carSentTime;
 	Date carReturnTime;
 	
-	public CarArrivalMessage(Date carSentTime, Date carReturnTime, int length) {
-		super(length, AbstractMessage.TYPE_CAR_ARRIVAL);
+	public CarArrivalMessage(Date carSentTime, Date carReturnTime) {
+		super(AbstractMessage.TYPE_CAR_ARRIVAL);
 		this.carSentTime = carSentTime;
 		this.carReturnTime = carReturnTime;
 	}

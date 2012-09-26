@@ -6,9 +6,9 @@ public class TimeMessage extends AbstractMessage {
 
 	Date newTime;
 	
-	public TimeMessage(Date newTime, int length)
+	public TimeMessage(Date newTime)
 	{
-		super(length, AbstractMessage.TYPE_TIME_MESSAGE);
+		super(AbstractMessage.TYPE_TIME_MESSAGE);
 		this.newTime = newTime;
 	}
 
