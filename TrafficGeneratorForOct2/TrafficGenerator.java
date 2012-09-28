@@ -1,11 +1,12 @@
 import java.util.Random;
+import java.util.ArrayList;
 
 public class TrafficGenerator
 {
 	private int currentTime;
 	private int simulationLength;
-	private double [] nextTimePolynomial;
-	private double [] waitTimePolynomial;
+	private Polynomial nextTimePolynomial;
+	private Polynomial waitTimePolynomial;
 	private Random rdm;
 	private static int numGates = 6;
 	//nextTimePoly is a function of time that returns expected value for generating the next time, waitTimePoly is similar but for car wait time
@@ -13,8 +14,8 @@ public class TrafficGenerator
 	{
 		currentTime = 0;
 		simulationLength = simLen;
-		nextTimePolynomial = createPolynomial(nextTimePoly);
-		waitTimePolynomial = createPolynomial(waitTimePoly);
+		nextTimePolynomial = new Polynomial(nextTimePoly);
+		waitTimePolynomial = new Polynomial(waitTimePoly);
 		rdm = new Random();
 	}
 	public void run()
@@ -24,8 +25,8 @@ public class TrafficGenerator
 		int nextGate;
 		while(currentTime < simulationLength)
 		{
-			nextTime = (int)nextTime(evaluatePolynomial(nextTimePolynomial, currentTime));
-			waitTime = (int)nextTime(evaluatePolynomial(waitTimePolynomial, currentTime));
+			nextTime = (int)nextTime(nextTimePolynomial.evaluate(currentTime));
+			waitTime = (int)nextTime(waitTimePolynomial.evaluate(currentTime));
 			nextGate = (int)(rdm.nextDouble() * numGates);
 			
 			currentTime = currentTime + nextTime;
@@ -42,39 +43,27 @@ public class TrafficGenerator
 			}
 		}
 	}
-	//create polynomial must start with the highest exponent first and must be in format specific 
-	//format: Exponent,Coefficient,Exponent,Coefficient "x^2 + .5x + 5" = 2,1,1,.5,0,5  
-	public double [] createPolynomial(String poly)
+	public double nextTime(double expectedValue)
 	{
-		double [] p;
-		int i;
-		int exp;
-		double coeff;
+		return -Math.log(1 - rdm.nextDouble()) / expectedValue;
+	}
 
-		i = poly.indexOf(',');
-		exp = Integer.parseInt(poly.substring(0,i));
-		poly = poly.substring(i+1);
-		i = poly.indexOf(',');
-		if(i == -1)
+	private class Polynomial
+	{
+		private ArrayList<Integer> exponent;
+		private ArrayList<Double> coefficient; 		
+		public Polynomial(String str)
 		{
-			coeff = Double.parseDouble(poly);
-			poly = "";
+			createPolynomial(str);
+			//printPoly();
 		}
-		else
+		//format: Exponent,Coefficient,Exponent,Coefficient "x^2 + .5x + 5" = 2,1,1,.5,0,5  
+		private void createPolynomial(String poly)
 		{
-			coeff = Double.parseDouble(poly.substring(0,i));
-			poly = poly.substring(i+1);
-		}
-
-		p = new double [exp+1];
-		for(int j = 0; j < p.length; j++)
-		{
-			p[j] = 0;
-		}
-		p[exp] = coeff;
-
-		while(!poly.equals(""))
-		{
+			int i;
+			int exp;
+			double coeff;
+	
 			i = poly.indexOf(',');
 			exp = Integer.parseInt(poly.substring(0,i));
 			poly = poly.substring(i+1);
@@ -89,32 +78,57 @@ public class TrafficGenerator
 				coeff = Double.parseDouble(poly.substring(0,i));
 				poly = poly.substring(i+1);
 			}
-			p[exp] = coeff;	
-		}	
-		return p;
-	}
-	public double evaluatePolynomial(double [] poly, double x)
-	{
-		double sum = 0;
-		for(int i = 0; i < poly.length; i++)
-		{
-			if(poly[i] != 0)
+
+			exponent = new ArrayList<Integer>();
+			coefficient = new ArrayList<Double>();
+			exponent.add(exp);
+			coefficient.add(coeff);
+
+			while(!poly.equals(""))
 			{
-				sum = sum + poly[i] * Math.pow(x, i);
+				i = poly.indexOf(',');
+				exp = Integer.parseInt(poly.substring(0,i));
+				poly = poly.substring(i+1);
+				i = poly.indexOf(',');
+				if(i == -1)
+				{
+					coeff = Double.parseDouble(poly);
+					poly = "";
+				}
+				else
+				{
+					coeff = Double.parseDouble(poly.substring(0,i));
+					poly = poly.substring(i+1);
+				}
+				exponent.add(exp);
+				coefficient.add(coeff);
+			}	
+		}	
+		private void printPoly()
+		{
+			for(int i = 0; i < exponent.size(); i++)
+			{
+				System.out.print(" exp: " + exponent.get(i) + " coeff: " + coefficient.get(i) + "\t");
 			}
+			System.out.println("");
 		}
-		return sum;
+		public double evaluate(double x)
+		{
+			double sum = 0;
+			for(int i = 0; i < exponent.size(); i++)
+			{
+				sum = sum + coefficient.get(i) * Math.pow(x, exponent.get(i));
+			}
+			return sum;
+		}
 	}
-	public double nextTime(double expectedValue)
-	{
-		return -Math.log(1 - rdm.nextDouble()) / expectedValue;
-	}
+		
 	public static void main(String [] args)
 	{
 		if(args.length != 3)
 		{
 			System.out.println("usage: java TrafficGenerator <simulation lenght (seconds)> <P(t) = y where y is expected value for the next time> <P(t) = y where y is the expected value for wait time>");
-			System.out.println("Example: P(t) = t^2 + 3t + 5 would be 2,1,1,3,0,5 such that the sequence is Exponent, Coeefficient with the largest exponent first");
+			System.out.println("Example: P(t) = t^2 + 3t + 5 would be 2,1,1,3,0,5 such that the sequence is Exponent, Coeefficient...");
 			System.exit(0);
 		}
 		//TrafficGenerator gt = new TrafficGenerator(200, "0,.1", "2,.0000099,1,-.00198,0,.1");
