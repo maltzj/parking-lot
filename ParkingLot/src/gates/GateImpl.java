@@ -8,8 +8,9 @@ import car.Car;
 
 import messaging.CarArrivalMessage;
 import messaging.TimeMessage;
+import messaging.TokenRequestMessage;
 
-public class GateImpl implements Gate{
+public class GateImpl implements Gate, TokenTrader{
 	
 	ConcurrentLinkedQueue<Car> waitingCars = new ConcurrentLinkedQueue<Car>();
 	int numberOfTokens;
@@ -54,6 +55,12 @@ public class GateImpl implements Gate{
 			if(timeToCheckAgainst.after(carLeaveQueueTime))
 				waitingCars.remove(currentCar);
 		}
+	}
+
+	@Override
+	public void onTokenRequest(TokenRequestMessage tokenRequest) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 	

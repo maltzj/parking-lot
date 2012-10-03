@@ -120,4 +120,9 @@ public abstract class AbstractMessage {
 		dataInput.read(addressSize);
 		return new String(addressSize, "UTF-8");
 	}
+	
+	public byte getMessageType()
+	{
+		return this.messageType;
+	}
 }
