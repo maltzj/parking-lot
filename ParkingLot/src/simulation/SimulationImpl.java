@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
+import util.MessageReceiver;
+
 import car.Car;
 
 import messaging.GateSubscribeMessage;
