@@ -2,6 +2,7 @@ package gates;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import car.Car;
@@ -9,12 +10,18 @@ import car.Car;
 import messaging.CarArrivalMessage;
 import messaging.TimeMessage;
 import messaging.TokenRequestMessage;
+import messaging.TokenSubscribeMessage;
 
-public class GateImpl implements Gate, TokenTrader{
+public class GateImpl implements Gate{
+	
+	public static boolean stillRunning = true;
 	
 	ConcurrentLinkedQueue<Car> waitingCars = new ConcurrentLinkedQueue<Car>();
 	int numberOfTokens;
 	long amountOfTimeToWait;
+	SimulationMessageListener messageListener;
+	List<TokenTrader> tokenTraders;
+	
 	
 	@Override
 	public void onCarArrived(CarArrivalMessage arrival) {
@@ -34,15 +41,6 @@ public class GateImpl implements Gate, TokenTrader{
 	}
 
 	@Override
-	public void onTokenReceived() {
-		numberOfTokens++;
-		if(waitingCars.size() > 0)
-		{
-			//let a car through the gate
-		}	
-	}
-
-	@Override
 	public void onTimeUpdate(TimeMessage messageFromChronos){
 		
 		Date newTime = messageFromChronos.getNewTime();
@@ -57,11 +55,5 @@ public class GateImpl implements Gate, TokenTrader{
 		}
 	}
 
-	@Override
-	public void onTokenRequest(TokenRequestMessage tokenRequest) {
-		// TODO Auto-generated method stub
-		
-	}
-	
 	
 }

@@ -10,18 +10,14 @@ import car.Car;
 
 public class CarReceiver extends MessageReceiver {
 	
-	private Socket connection;
-	
-	public CarReceiver(Socket newConnection)
+	public CarReceiver(Socket newConnection) throws IOException
 	{
 		super(newConnection.getInetAddress(), newConnection.getPort());
-		connection = newConnection;
 	}
 	
 	public CarReceiver(InetAddress location, int port) throws IOException
 	{ 
 		super(location, port);
-		connection = new Socket(location, port);
 	}
 	
 	public void sendCar(Car carSending)

@@ -1,21 +1,49 @@
 package gates;
 
+import java.io.IOException;
 import java.net.InetAddress;
+import java.net.Socket;
+
+import messaging.AbstractMessage;
+import messaging.CarArrivalMessage;
+import messaging.TimeMessage;
 
 import util.MessageReceiver;
 
 public class SimulationMessageListener extends MessageReceiver implements Runnable {
 
-	Gate gateListeningFor;
+	protected Gate gateListeningFor;
 	
-	public SimulationMessageListener(InetAddress ipAddress, int port, Gate listeningFor) {
+	public SimulationMessageListener(InetAddress ipAddress, int port, Gate listeningFor) throws IOException {
 		super(ipAddress, port);
 		this.gateListeningFor = listeningFor;
 	}
 
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
+		while(GateImpl.stillRunning)
+		{
+			try {
+				AbstractMessage messageReceived = AbstractMessage.decodeMessage(this.socket.getInputStream());
+				switch(messageReceived.getMessageType())
+				{
+					case AbstractMessage.TYPE_CAR_ARRIVAL:
+					{
+						gateListeningFor.onCarArrived((CarArrivalMessage) messageReceived);
+					}
+					case AbstractMessage.TYPE_TIME_MESSAGE:
+					{
+						gateListeningFor.onTimeUpdate((TimeMessage) messageReceived);
+					}
+					default:
+					{
+						//Do something
+					}
+				}
+			} catch (IOException e) {
+				//herpderp had trouble learning
+			}
+		}
 		
 	}
 

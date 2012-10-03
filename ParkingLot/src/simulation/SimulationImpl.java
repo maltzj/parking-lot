@@ -26,10 +26,16 @@ public class SimulationImpl implements Chronos, Simulation {
 
 	@Override
 	public void onSubscribeReceived(TimeSubscribeMessage messageRecieved) {
-		MessageReceiver messageRecieverToAdd = new MessageReceiver(
-				messageRecieved.getAddressSubscribing(),
-				messageRecieved.getPortSubscribingOn());
-		this.subscribedTimeElements.add(messageRecieverToAdd);
+		MessageReceiver messageRecieverToAdd;
+		try {
+			messageRecieverToAdd = new MessageReceiver(
+					messageRecieved.getAddressSubscribing(),
+					messageRecieved.getPortSubscribingOn());
+			this.subscribedTimeElements.add(messageRecieverToAdd);
+		} catch (IOException e) {
+			// do something
+		}
+
 	}
 
 	@Override
