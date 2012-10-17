@@ -34,7 +34,7 @@ public abstract class TokenTradingPolicy implements TokenTrader, Runnable {
 		gateResponsibleFor.onTokensAdded(numberOfTokensReceived);
 	}
 
-	public abstract void onTokenRequest(TokenRequestMessage tokenRequest);
+	public abstract void onTokenRequest(TokenRequestMessage tokenRequest, Socket socketToRequestOn);
 
 	@Override
 	public void onTokenTraderRegister(TokenSubscribeMessage tokenSubscription) {
@@ -49,7 +49,7 @@ public abstract class TokenTradingPolicy implements TokenTrader, Runnable {
 		}	
 	}
 	
-	public void onMessageReceived(AbstractMessage messageReceived)
+	public void onMessageReceived(AbstractMessage messageReceived, MessageReceiverListener listener)
 	{	
 		switch(messageReceived.getMessageType())
 		{
@@ -59,7 +59,7 @@ public abstract class TokenTradingPolicy implements TokenTrader, Runnable {
 			}
 			case AbstractMessage.TYPE_TOKEN_REQUEST_MESSAGE:
 			{
-				this.onTokenRequest((TokenRequestMessage)messageReceived);
+				this.onTokenRequest((TokenRequestMessage)messageReceived, listener.currentReceiver.getSocket());
 			}
 		}
 	}
@@ -100,7 +100,7 @@ public abstract class TokenTradingPolicy implements TokenTrader, Runnable {
 				AbstractMessage message;
 				try {
 					message = AbstractMessage.decodeMessage(currentReceiver.getSocket().getInputStream());
-					tradingPolicy.onMessageReceived(message);
+					tradingPolicy.onMessageReceived(message, this);
 				} catch (IOException e) {
 					//do shit
 				}

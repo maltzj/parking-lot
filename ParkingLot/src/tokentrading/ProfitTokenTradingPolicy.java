@@ -3,6 +3,7 @@ package tokentrading;
 import gates.Gate;
 
 import java.io.IOException;
+import java.net.Socket;
 
 import messaging.TokenRequestMessage;
 
@@ -19,8 +20,8 @@ public class ProfitTokenTradingPolicy extends TokenTradingPolicy {
 	}
 	
 	@Override
-	public void onTokenRequest(TokenRequestMessage tokenRequest) {
-		
+	public void onTokenRequest(TokenRequestMessage tokenRequest, Socket socketToSendTo) {
+		//figure out what to do
 	}
 
 }
