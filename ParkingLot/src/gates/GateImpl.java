@@ -2,15 +2,13 @@ package gates;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import car.Car;
+import tokentrading.TokenTrader;
 
 import messaging.CarArrivalMessage;
 import messaging.TimeMessage;
-import messaging.TokenRequestMessage;
-import messaging.TokenSubscribeMessage;
+import car.Car;
 
 public class GateImpl implements Gate{
 	
@@ -20,7 +18,8 @@ public class GateImpl implements Gate{
 	int numberOfTokens;
 	long amountOfTimeToWait;
 	SimulationMessageListener messageListener;
-	List<TokenTrader> tokenTraders;
+	TokenTrader tokenTrader;
+	int amountOfMoney;
 	
 	
 	@Override
@@ -53,6 +52,23 @@ public class GateImpl implements Gate{
 			if(timeToCheckAgainst.after(carLeaveQueueTime))
 				waitingCars.remove(currentCar);
 		}
+	}
+
+	@Override
+	public void onTokensLow() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public int getTradeableTokens() {
+		// TODO Auto-generated method stub
+		return this.numberOfTokens - 10;
+	}
+
+	@Override
+	public void onTokensAdded(int tokens) {
+		this.numberOfTokens += tokens;
 	}
 
 	
