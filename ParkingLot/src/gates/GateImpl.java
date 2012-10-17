@@ -61,14 +61,24 @@ public class GateImpl implements Gate{
 	}
 
 	@Override
-	public int getTradeableTokens() {
-		// TODO Auto-generated method stub
-		return this.numberOfTokens - 10;
+	public void onTokensAdded(int tokens) {
+		this.numberOfTokens += tokens;
 	}
 
 	@Override
-	public void onTokensAdded(int tokens) {
-		this.numberOfTokens += tokens;
+	public int getNumberTokens() {
+		// TODO Auto-generated method stub
+		return this.numberOfTokens;
+	}
+
+	@Override
+	public boolean removeTokens(int numberOfTokensToReceive) {
+		if(this.numberOfTokens - numberOfTokensToReceive > 0)
+		{
+			this.numberOfTokens -= numberOfTokensToReceive;
+			return true;
+		}
+		return false;
 	}
 
 	
