@@ -12,6 +12,7 @@ import java.util.List;
 import util.MessageReceiver;
 
 import messaging.AbstractMessage;
+import messaging.MoneyMessage;
 import messaging.TokenMessage;
 import messaging.TokenRequestMessage;
 import messaging.TokenSubscribeMessage;
@@ -60,6 +61,10 @@ public abstract class TokenTradingPolicy implements TokenTrader, Runnable {
 			case AbstractMessage.TYPE_TOKEN_REQUEST_MESSAGE:
 			{
 				this.onTokenRequest((TokenRequestMessage)messageReceived, listener.currentReceiver.getSocket());
+			}
+			case AbstractMessage.TYPE_MONEY_MESSAGE:
+			{
+				this.gateResponsibleFor.addMoney(((MoneyMessage)messageReceived).getAmountOfMoney());
 			}
 		}
 	}
