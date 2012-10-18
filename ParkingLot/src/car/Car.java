@@ -7,17 +7,12 @@ public class Car {
 	
 	Date timeSent;
 	Date timeDeparts;
-	Date timeWaitingUntil;
 	
-	public Car(Date timeSent, Date timeDeparts, long timeToWait) {
+	public Car(Date timeSent, Date timeDeparts) {
 		super();
 		this.timeSent = timeSent;
 		this.timeDeparts = timeDeparts;
 		
-		Calendar timeLeavingCal = Calendar.getInstance();
-		Date dateToLeave = new Date(timeSent.getTime() + timeToWait);
-		timeLeavingCal.setTime(dateToLeave);
-		timeWaitingUntil = timeLeavingCal.getTime();
 	}
 	
 	public Date getTimeSent() {
@@ -32,12 +27,6 @@ public class Car {
 	public void setTimeDeparts(Date timeDeparts) {
 		this.timeDeparts = timeDeparts;
 	}
-	public Date getTimeWaitingUntil() {
-		return timeWaitingUntil;
-	}
-	public void setTimeWaitingUntil(Date timeWaitingUntil) {
-		this.timeWaitingUntil = timeWaitingUntil;
-	}
-	
+
 	
 }
