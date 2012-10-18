@@ -18,6 +18,7 @@ public abstract class AbstractMessage {
 	public static final byte TYPE_TOKEN_REQUEST_MESSAGE = 6;
 	public static final byte TYPE_TOKEN_MESSAGE = 7;
 	public static final byte TYPE_MONEY_MESSAGE = 8;
+	public static final byte TYPE_CAR_LEAVING = 9;
 	
 	protected int length;
 	protected byte messageType;
@@ -82,6 +83,10 @@ public abstract class AbstractMessage {
 				{
 					int amountOfMoney = dataInput.readInt();
 					return new MoneyMessage(amountOfMoney);
+				}
+				case TYPE_CAR_LEAVING:
+				{
+					return new CarLeavingMessage();
 				}
 				default:
 					return null;
@@ -162,6 +167,11 @@ public abstract class AbstractMessage {
 				{
 					MoneyMessage moneyMessage = (MoneyMessage) messageWriting;
 					dataOutput.writeInt(moneyMessage.amountOfMoney);
+					dataOutput.flush();
+					break;
+				}
+				case TYPE_CAR_LEAVING:
+				{
 					dataOutput.flush();
 					break;
 				}
