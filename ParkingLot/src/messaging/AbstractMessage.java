@@ -17,6 +17,7 @@ public abstract class AbstractMessage {
 	public static final byte TYPE_TOKEN_SUBSCRIBE_MESSAGE = 5;
 	public static final byte TYPE_TOKEN_REQUEST_MESSAGE = 6;
 	public static final byte TYPE_TOKEN_MESSAGE = 7;
+	public static final byte TYPE_MONEY_MESSAGE = 8;
 	
 	protected int length;
 	protected byte messageType;
@@ -76,6 +77,11 @@ public abstract class AbstractMessage {
 				{
 					int tokensSent = dataInput.readInt();
 					return new TokenMessage(tokensSent);
+				}
+				case TYPE_MONEY_MESSAGE:
+				{
+					int amountOfMoney = dataInput.readInt();
+					return new MoneyMessage(amountOfMoney);
 				}
 				default:
 					return null;
@@ -149,6 +155,13 @@ public abstract class AbstractMessage {
 				{
 					TokenMessage tokenMessage = (TokenMessage) messageWriting;
 					dataOutput.writeInt(tokenMessage.getNumberOfTokensSent());
+					dataOutput.flush();
+					break;
+				}
+				case TYPE_MONEY_MESSAGE:
+				{
+					MoneyMessage moneyMessage = (MoneyMessage) messageWriting;
+					dataOutput.writeInt(moneyMessage.amountOfMoney);
 					dataOutput.flush();
 					break;
 				}
