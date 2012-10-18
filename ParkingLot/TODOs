@@ -1,0 +1,13 @@
+TODOS:
+
+Implement a parking lot that the gates send their car to. 
+	 In the "check if car leaves" method in the traffic generator message the parking lot
+Give gates a method to listen on a given port
+	Hook up the gates to the simulator.
+Add main methods to start stuff up
+
+TEST!!!!
+
+There is a design flaw currently in the code that I just realized.  Basically the TokenTrader object for each gate is responsible for accepting connections.  This is a flaw because it assumes that only gates will want to connect to other gates.
+We should probably change this so that the accepting of connections is handled within the Gate itself and then delegated as is necessary.  I don't think it will be a huge issue for now, but it is worth noting.
+
