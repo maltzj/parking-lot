@@ -56,8 +56,7 @@ public class GateImpl implements Gate{
 
 	@Override
 	public void onTokensLow() {
-		// TODO Auto-generated method stub
-		
+		//
 	}
 
 	@Override
@@ -67,7 +66,6 @@ public class GateImpl implements Gate{
 
 	@Override
 	public int getNumberTokens() {
-		// TODO Auto-generated method stub
 		return this.numberOfTokens;
 	}
 
@@ -79,6 +77,27 @@ public class GateImpl implements Gate{
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public int getAmountOfMoneyLeft() {
+		return this.amountOfMoney;
+	}
+
+	@Override
+	public boolean removeMoney(int amountOfMoneyToTake) {
+		if(this.amountOfMoney < amountOfMoneyToTake)
+			return false;
+		else
+		{
+			this.amountOfMoney -= amountOfMoneyToTake;
+			return true;
+		}
+	}
+
+	@Override
+	public void addMoney(int amountOfMoneyToAdd) {
+		this.amountOfMoney += amountOfMoneyToAdd;
 	}
 
 	
