@@ -14,19 +14,32 @@ public class GateImpl implements Gate{
 	
 	public static boolean stillRunning = true;
 	
-	ConcurrentLinkedQueue<Car> waitingCars = new ConcurrentLinkedQueue<Car>();
+	ConcurrentLinkedQueue<CarWrapper> waitingCars = new ConcurrentLinkedQueue<CarWrapper>();
 	int numberOfTokens;
 	long amountOfTimeToWait;
 	SimulationMessageListener messageListener;
 	TokenTrader tokenTrader;
 	int amountOfMoney;
 	
+	public GateImpl(long timeToWait, int moneyToStartWith, TokenTrader tokenPolicy)
+	{
+		this.amountOfTimeToWait = timeToWait*1000; //dates deal with miliseconds, we want to expose all apis as seconds
+		this.amountOfMoney = moneyToStartWith;
+		tokenTrader = tokenPolicy;
+	}
+	
 	
 	@Override
 	public void onCarArrived(CarArrivalMessage arrival) {
-		Car carToQueue = new Car(arrival.getCarSentTime(), arrival.getCarReturnTime(), amountOfTimeToWait);
+		Car carToQueue = new Car(arrival.getCarSentTime(), arrival.getCarReturnTime());
 		if(numberOfTokens <= 0)
-			waitingCars.add(carToQueue);
+		{
+			long timeArrived = arrival.getCarSentTime().getTime();
+			long leavingTime = timeArrived + amountOfTimeToWait;
+			Date timeToLeave = new Date();
+			timeToLeave.setTime(leavingTime);
+			CarWrapper carWrapper = new CarWrapper(carToQueue, timeToLeave);
+		}
 		else
 		{
 			//do some logic that puts the car into place
@@ -45,10 +58,10 @@ public class GateImpl implements Gate{
 		Date newTime = messageFromChronos.getNewTime();
 		Calendar timeToCheckAgainst = Calendar.getInstance();
 		timeToCheckAgainst.setTime(newTime);
-		for(Car currentCar: waitingCars)
+		for(CarWrapper currentCar: waitingCars)
 		{
 			Calendar carLeaveQueueTime = Calendar.getInstance();
-			carLeaveQueueTime.setTime(currentCar.getTimeWaitingUntil());
+			carLeaveQueueTime.setTime(currentCar.timeLeaving);
 			if(timeToCheckAgainst.after(carLeaveQueueTime))
 				waitingCars.remove(currentCar);
 		}
@@ -100,5 +113,32 @@ public class GateImpl implements Gate{
 		this.amountOfMoney += amountOfMoneyToAdd;
 	}
 
-	
+	private static class CarWrapper {
+		Car carRepresenting;
+		Date timeLeaving;
+		
+		public CarWrapper(Car carRepresenting, Date leavingTime)
+		{
+			this.carRepresenting = carRepresenting;
+			this.timeLeaving = leavingTime;
+		}
+
+		public Car getCarRepresenting() {
+			return carRepresenting;
+		}
+
+		public void setCarRepresenting(Car carRepresenting) {
+			this.carRepresenting = carRepresenting;
+		}
+
+		public Date getTimeLeaving() {
+			return timeLeaving;
+		}
+
+		public void setTimeLeaving(Date timeLeaving) {
+			this.timeLeaving = timeLeaving;
+		}
+		
+		
+	}
 }
