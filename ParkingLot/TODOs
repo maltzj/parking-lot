@@ -2,9 +2,15 @@ TODOS:
 
 Implement a parking lot that the gates send their car to. 
 	 In the "check if car leaves" method in the traffic generator message the parking lot
-Give gates a method to listen on a given port
-	Hook up the gates to the simulator.
-Add main methods to start stuff up
+Hook up the gates to the simulator
+	We can do this one of two ways.  
+	One: we can let the gates listen on two ports (one for other gates and one for the simulator) and have the simulator connect to the gates
+	Two: We can assume that the simulation will only be connected to and the gates will always be doing the connecting.  If that's the case then we will need to figure out what to do with the manager (probably have gates connect to the manager and the manager to the simulation)
+Create a start-up logic in general (what order stuff gets started)
+	Add main methods to start stuff up
+
+Create a manager class
+
 
 TEST!!!!
 
