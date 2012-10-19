@@ -5,10 +5,9 @@ import java.util.Date;
 import java.util.List;
 
 import util.MessageReceiver;
-
 import car.Car;
 
-public class ParkingLot implements Runnable{
+public class ParkingLot {
 	
 	List<Car> parkingLot;
 	List<MessageReceiver> carReceivers;
@@ -26,12 +25,6 @@ public class ParkingLot implements Runnable{
 				//have the car leave
 			}
 		}
-	}
-
-	@Override
-	public void run() {
-		// TODO Auto-generated method stub
-		
 	}
 
 }

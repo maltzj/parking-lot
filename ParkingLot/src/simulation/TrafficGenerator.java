@@ -15,6 +15,11 @@ import car.Car;
 
 public class TrafficGenerator extends Thread implements Chronos, Simulation
 {
+	
+	//Make parking lot a composition, so Gates communicate with the
+	//Traffic Generator only. Makes stuff easier to handle/test
+	ParkingLot parkLot = new ParkingLot();
+	
 	List<MessageReceiver> subscribedTimeElements = new ArrayList<MessageReceiver>();
 	List<CarReceiver> subscribedGates = new ArrayList<CarReceiver>();
 	Date timeFromStart = new Date();
@@ -23,7 +28,7 @@ public class TrafficGenerator extends Thread implements Chronos, Simulation
 	private int simulationLength;
 	private Polynomial nextTimePolynomial;
 	private Random rdm;
-	private static int numGates = 6;
+	public static int numGates = 6;
 	
 	public TrafficGenerator(int simLen, String nextTimePoly)
 	{
@@ -175,11 +180,6 @@ public class TrafficGenerator extends Thread implements Chronos, Simulation
 		}
 	}
 		
-	public static void main(String [] args)
-	{
-		TrafficGenerator gt = new TrafficGenerator(40000, "2,0.000000000275,1,-0.0000099,0,0.1");
-		gt.run();
-	}
 
 	@Override
 	public void onCarGenerated(Car newestCar) {
