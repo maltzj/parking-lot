@@ -1,20 +1,19 @@
 package gates;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
 import messaging.AbstractMessage;
 import messaging.CarArrivalMessage;
 import messaging.TimeMessage;
-
 import util.MessageReceiver;
 
 public class SimulationMessageListener extends MessageReceiver implements Runnable {
 
 	protected Gate gateListeningFor;
 	
-	public SimulationMessageListener(int port, Gate listeningFor) {
+	public SimulationMessageListener(int port, Gate listeningFor) throws UnknownHostException, IOException {
 		super(port);
 		this.gateListeningFor = listeningFor;
 	}
@@ -24,7 +23,9 @@ public class SimulationMessageListener extends MessageReceiver implements Runnab
 		while(GateImpl.stillRunning)
 		{
 			try {
-				AbstractMessage messageReceived = AbstractMessage.decodeMessage(this.socket.getInputStream());
+				Socket clientSocket = serverSocket.accept();
+				
+				AbstractMessage messageReceived = AbstractMessage.decodeMessage(clientSocket.getInputStream());
 				switch(messageReceived.getMessageType())
 				{
 					case AbstractMessage.TYPE_CAR_ARRIVAL:
@@ -41,7 +42,6 @@ public class SimulationMessageListener extends MessageReceiver implements Runnab
 					}
 				}
 			} catch (IOException e) {
-				//herpderp had trouble learning
 			}
 		}
 		
