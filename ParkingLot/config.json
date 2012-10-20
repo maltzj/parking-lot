@@ -1,0 +1,16 @@
+{
+    TrafficGenerator: {
+        port: 1000,
+        host: 'localhost',
+    },
+    Gates: [
+        {
+            port: 100,
+            host: 'localhost',
+        },
+        {
+            port: 101,
+            host: 'localhost', 
+        }
+    ],
+}
