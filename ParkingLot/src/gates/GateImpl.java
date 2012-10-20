@@ -15,17 +15,26 @@ public class GateImpl implements Gate{
 	public static boolean stillRunning = true;
 	
 	ConcurrentLinkedQueue<CarWrapper> waitingCars = new ConcurrentLinkedQueue<CarWrapper>();
-	int numberOfTokens;
-	long amountOfTimeToWait;
+	long amountOfTimeToWait; //Seconds
+	
+	Thread messageListenerThread;
 	SimulationMessageListener messageListener;
+	
+	int numberOfTokens;
 	TokenTrader tokenTrader;
+	
 	int amountOfMoney;
 	
-	public GateImpl(long timeToWait, int moneyToStartWith, TokenTrader tokenPolicy)
+	public GateImpl(long timeToWait, int moneyToStartWith, TokenTrader tokenPolicy, int port)
 	{
-		this.amountOfTimeToWait = timeToWait*1000; //dates deal with miliseconds, we want to expose all apis as seconds
+		this.amountOfTimeToWait = timeToWait*1000; //dates deal with milliseconds, we want to expose all APIs as seconds
 		this.amountOfMoney = moneyToStartWith;
 		tokenTrader = tokenPolicy;
+		
+		messageListener = new SimulationMessageListener(port, this);
+		messageListenerThread = new Thread(messageListener);
+		messageListenerThread.setName("Simulation Message Listener Thread");
+		messageListenerThread.start();
 	}
 	
 	
