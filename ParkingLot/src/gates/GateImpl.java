@@ -113,6 +113,15 @@ public class GateImpl implements Gate{
 		this.amountOfMoney += amountOfMoneyToAdd;
 	}
 
+    /** Makes dude subscribe to Traffic generator.
+     * @param ip - IP Address of Traffic Generator
+     * @param port - Port of Traffic Generator
+     */
+    public void subscribe(InetAddress ip, int port)
+    {
+    }
+
+
 	private static class CarWrapper {
 		Car carRepresenting;
 		Date timeLeaving;

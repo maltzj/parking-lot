@@ -9,7 +9,16 @@ public class MessageReceiver {
 	protected InetAddress ipAddress;
 	protected int port;
 	protected Socket socket;
+    private ServerSocket socket;
+
+    /** defaults to localhost */
+    public MessageReceiver(int port)
+    {
+        this.ipAddress = InetAddress.getLocalHost();
+        this.port = port; 
+    }
 	
+
 	public MessageReceiver(InetAddress ipAddress, int port) throws IOException {
 		super();
 		this.ipAddress = ipAddress;

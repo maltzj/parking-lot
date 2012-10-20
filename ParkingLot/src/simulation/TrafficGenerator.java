@@ -60,6 +60,9 @@ public class TrafficGenerator extends Thread implements Chronos, Simulation
 			if (nextGate >= numGates){
 				nextGate = numGates-1;
 			}
+
+            //wait for things to be ready.
+
 			
 			currentTime = currentTime + nextTime;
 			leavingTime = currentTime + stayTime;
@@ -198,7 +201,6 @@ public class TrafficGenerator extends Thread implements Chronos, Simulation
 			throws IOException {
 		// TODO Auto-generated method stub
 		subscribedGates.add(new CarReceiver(gateSubscribing.getAddressOfGate(), gateSubscribing.getPort()));
-		
 	}
 
 	@Override
