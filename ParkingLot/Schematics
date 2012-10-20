@@ -1,0 +1,22 @@
+Let S = Chronos + Traffic Generator
+
+SETUP
+1) S starts up (doesn't send cars)
+2) Manager Starts
+3) Simulation connects to manager
+4) Gates start
+5) Gates connect to parking lot
+6) Gates connect to manager
+7) Gates connect to each other
+8) Gates connect to simulation
+9) Simulation starts sending cars
+
+LOOP
+1) S updates time
+2) S ---time---> Parking Lot
+3) Parking Lot ---done---> S (So we can have cars leave before we admit new ones)
+4) S ---time---> Gates, S ---car---> Gate
+5) G ---trade tokens---> G
+6) Gates ---cars---> Parking Lot
+7) Gates ---done---> S
+REPEAT
