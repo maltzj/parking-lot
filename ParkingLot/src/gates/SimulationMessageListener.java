@@ -14,8 +14,8 @@ public class SimulationMessageListener extends MessageReceiver implements Runnab
 
 	protected Gate gateListeningFor;
 	
-	public SimulationMessageListener(InetAddress ipAddress, int port, Gate listeningFor) throws IOException {
-		super(ipAddress, port);
+	public SimulationMessageListener(int port, Gate listeningFor) {
+		super(port);
 		this.gateListeningFor = listeningFor;
 	}
 
