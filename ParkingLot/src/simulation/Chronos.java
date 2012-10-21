@@ -8,5 +8,5 @@ public interface Chronos
 	private ArrayList<HostPort> subscribers;
 	public long getCurrentTime();
 	public void onSubscribeReceived(TimeSubscribeMessage messageReceived);
-	public void notifyAll();
+	public void publish();
 }
