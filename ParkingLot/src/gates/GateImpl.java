@@ -143,7 +143,7 @@ public class GateImpl extends MessageReceiver implements Gate {
      * @param ip - IP Address of Traffic Generator
      * @param port - Port of Traffic Generator
      */
-    public void subscribe(InetAddress ip, int port)
+    public void timeSubscribe(InetAddress ip, int port)
     {
 		TimeSubscribeMessage message = new TimeSubscribeMessage(this.ipAddress, this.port);
 		try 
@@ -158,7 +158,21 @@ public class GateImpl extends MessageReceiver implements Gate {
 			System.out.println("Sadddnesss");
 		}	
 	}
-
+	public void gateSubscribe(InetAddress ip, int port)
+    {
+		GateSubscribeMessage message = new GateSubscribeMessage(this.ipAddress, this.port);
+		try 
+		{
+            Socket s = new Socket(ip, port);
+            OutputStream o = s.getOutputStream();
+            AbstractMessage.encodeMessage(o, message);
+            o.close();
+            s.close();
+		} 
+		catch(Exception e) {
+			System.out.println("Sadddnesss");
+		}	
+	}
 	private static class CarWrapper {
 		Car carRepresenting;
 		Date timeLeaving;
