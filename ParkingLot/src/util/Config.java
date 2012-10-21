@@ -1,6 +1,7 @@
-package test;
+package util;
 
 import java.net.InetAddress;
+
 
 public class Config
 {
@@ -10,15 +11,11 @@ public class Config
 	{
 		try
 		{
-			trafficGenerator = new HostPort();
-			trafficGenerator.iaddr = InetAddress.getByName("localhost");
-			trafficGenerator.port = 6000;
+			trafficGenerator = new HostPort(InetAddress.getByName("localhost"),6000);
 			gates = new HostPort [6];
 			for(int i = 0; i < 6; i++)
 			{
-				gates[i] = new HostPort();
-				gates[i].iaddr = InetAddress.getByName("localhost");
-				gates[i].port = 6001 + i;
+				gates[i] = new HostPort(InetAddress.getByName("localhost"), 6001 + i);
 			}
 		}
 		catch(Exception e)

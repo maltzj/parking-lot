@@ -1,3 +1,7 @@
+package util;
+
+import java.net.InetAddress;
+
 public class HostPort
 {
 	public InetAddress iaddr;
