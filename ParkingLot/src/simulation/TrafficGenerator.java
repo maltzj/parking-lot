@@ -106,6 +106,12 @@ public class TrafficGenerator extends MessageReceiver
     {
 	/**Iterate over the subscribers and send each of them the current time*/
     }
+    
+	@Override
+	public void onMessageArrived(AbstractMessage message) {
+		// TODO Auto-generated method stub
+		
+	}
 
 	/**You don't need to change the rest of code*/
 	private class Polynomial
@@ -175,6 +181,4 @@ public class TrafficGenerator extends MessageReceiver
 		}
 	}
 
-    public void onCarArrived(CarArrivalMessage message) { }
-    public void onTimeUpdate(TimeMessage message) { }
 }
