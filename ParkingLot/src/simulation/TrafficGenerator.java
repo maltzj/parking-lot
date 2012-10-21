@@ -165,6 +165,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 	
 	@Override
 	public void onCarGenerated(Car newestCar) {
+	//SUCK DICK TODO	
 	}
 
 	@Override
