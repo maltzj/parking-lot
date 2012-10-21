@@ -23,7 +23,7 @@ import car.Car;
 public class TrafficGenerator extends MessageReceiver implements Simulation, Chronos
 {
 	
-	public ArrayList<HostPort> subscribers;
+	public ArrayList<HostPort> timeSubscribers;
 	public ArrayList<HostPort> gates;
 	
 	//Make parking lot a composition, so Gates communicate with the
@@ -45,7 +45,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 		simulationLength = simLen;
 		nextTimePolynomial = new Polynomial(nextTimePoly);
 		rdm = new Random();
-		subscribers = new ArrayList<HostPort>();
+		timeSubscribers = new ArrayList<HostPort>();
 		gates = new ArrayList<HostPort>();
 	}
 
@@ -79,9 +79,6 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 			
 			//Make cars leave parking lot
 			checkCarLeaving();
-			
-			//Send time to everyone
-			publish();
 			
 			if(currentTime < simulationLength)
 			{
@@ -144,7 +141,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
     
     private void notifySubscribers()
     {
-	/**Iterate over the subscribers and send each of them the current time*/
+	/**Iterate over the timeSubscribers and send each of them the current time*/
     }
     
 	@Override
@@ -176,15 +173,15 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 	}
 	
 	@Override
-	public void onSubscribeReceived(TimeSubscribeMessage messageReceived) {
+	public void onTimeSubscribeReceived(TimeSubscribeMessage messageReceived) {
         System.out.println("Received a subscribe from "+messageReceived.getPortSubscribingOn());
-		subscribers.add(new HostPort(messageReceived.getAddressSubscribing(), messageReceived.getPortSubscribingOn()));
+		timeSubscribers.add(new HostPort(messageReceived.getAddressSubscribing(), messageReceived.getPortSubscribingOn()));
 	}
 	public void publishTime()
 	{
 		Date d = getCurrentTime();
 		TimeMessage message = new TimeMessage(d);
-		for(HostPort hp : subscribers)
+		for(HostPort hp : timeSubscribers)
 		{
 			try 
 			{

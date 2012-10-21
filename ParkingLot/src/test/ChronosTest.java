@@ -15,9 +15,9 @@ public class ChronosTest extends SetupTest
 
         Thread.sleep(1000);
         
-        System.out.println("trafficGenerator.size ="+trafficGenerator.subscribers.size());
+        System.out.println("trafficGenerator.size ="+trafficGenerator.timeSubscribers.size());
         System.out.println("gates.size ="+gates.size());
-        assert(trafficGenerator.subscribers.size() == gates.size());
+        assert(trafficGenerator.timeSubscribers.size() == gates.size());
 
         System.out.println("We subscribed all the gates brah");
     }
