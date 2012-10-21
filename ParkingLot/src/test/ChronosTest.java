@@ -10,7 +10,7 @@ public class ChronosTest extends SetupTest
     {
         for(GateImpl g: gates)
         {
-            g.subscribe(trafficGenerator.ipAddress, trafficGenerator.port);
+            g.timeSubscribe(trafficGenerator.ipAddress, trafficGenerator.port);
         }
 
         Thread.sleep(1000);

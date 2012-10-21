@@ -143,7 +143,7 @@ public class GateImpl extends MessageReceiver implements Gate {
      * @param ip - IP Address of Traffic Generator
      * @param port - Port of Traffic Generator
      */
-    public void subscribe(InetAddress ip, int port)
+    public void timeSubscribe(InetAddress ip, int port)
     {
 		TimeSubscribeMessage message = new TimeSubscribeMessage(this.ipAddress, this.port);
 		try 
