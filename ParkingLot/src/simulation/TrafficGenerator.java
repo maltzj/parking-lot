@@ -90,6 +90,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 				Here you should send a {massage} (MASSAGES FOR ALL) to the gate and insert the car to parking lot array (you need to implement the array).
 				Remember to handle the situation that car may get reject by the gate so that it won't be in the parking lot.
 				*/
+				publishTime();
 				
 				Date carSendDate = getCurrentTime();
 				Date carLeaveDate = new Date(leavingTime*1000);
@@ -152,7 +153,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 		{
 			case AbstractMessage.TYPE_TIME_SUBSCRIBE:
 			{
-				this.onSubscribeReceived((TimeSubscribeMessage) message);
+				this.onTimeSubscribeReceived((TimeSubscribeMessage) message);
 				break;
 			}
 			case AbstractMessage.TYPE_GATE_SUBSCRIBE:
@@ -179,7 +180,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
         System.out.println("Received a subscribe from "+messageReceived.getPortSubscribingOn());
 		subscribers.add(new HostPort(messageReceived.getAddressSubscribing(), messageReceived.getPortSubscribingOn()));
 	}
-	public void publish()
+	public void publishTime()
 	{
 		Date d = getCurrentTime();
 		TimeMessage message = new TimeMessage(d);
