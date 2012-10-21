@@ -1,13 +1,13 @@
 package gates;
 
+import java.net.InetAddress;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import tokentrading.TokenTrader;
-
 import messaging.CarArrivalMessage;
 import messaging.TimeMessage;
+import tokentrading.TokenTrader;
 import car.Car;
 
 public class GateImpl implements Gate{
@@ -31,7 +31,13 @@ public class GateImpl implements Gate{
 		this.amountOfMoney = moneyToStartWith;
 		tokenTrader = tokenPolicy;
 		
-		messageListener = new SimulationMessageListener(port, this);
+		try {
+			messageListener = new SimulationMessageListener(port, this);
+		} catch (Exception e) {
+			//Couldn't create ServerSocket
+			e.printStackTrace();
+		}
+		
 		messageListenerThread = new Thread(messageListener);
 		messageListenerThread.setName("Simulation Message Listener Thread");
 		messageListenerThread.start();
@@ -41,18 +47,14 @@ public class GateImpl implements Gate{
 	@Override
 	public void onCarArrived(CarArrivalMessage arrival) {
 		Car carToQueue = new Car(arrival.getCarSentTime(), arrival.getCarReturnTime());
-		if(numberOfTokens <= 0)
-		{
-			long timeArrived = arrival.getCarSentTime().getTime();
-			long leavingTime = timeArrived + amountOfTimeToWait;
-			Date timeToLeave = new Date();
-			timeToLeave.setTime(leavingTime);
-			CarWrapper carWrapper = new CarWrapper(carToQueue, timeToLeave);
-		}
-		else
-		{
-			//do some logic that puts the car into place
-		}
+		
+		//Add Car to queue
+		long timeArrived = arrival.getCarSentTime().getTime();
+		long leavingTime = timeArrived + amountOfTimeToWait;
+		Date timeToLeave = new Date();
+		timeToLeave.setTime(leavingTime);
+		CarWrapper carWrapper = new CarWrapper(carToQueue, timeToLeave);
+		waitingCars.add(carWrapper);
 	}
 
 	@Override
@@ -71,8 +73,11 @@ public class GateImpl implements Gate{
 		{
 			Calendar carLeaveQueueTime = Calendar.getInstance();
 			carLeaveQueueTime.setTime(currentCar.timeLeaving);
-			if(timeToCheckAgainst.after(carLeaveQueueTime))
+			
+			//Car waited too long and left
+			if(timeToCheckAgainst.after(carLeaveQueueTime)) {
 				waitingCars.remove(currentCar);
+			}
 		}
 	}
 
@@ -129,7 +134,6 @@ public class GateImpl implements Gate{
     public void subscribe(InetAddress ip, int port)
     {
     }
-
 
 	private static class CarWrapper {
 		Car carRepresenting;
