@@ -57,6 +57,7 @@ public abstract class MessageReceiver implements Runnable {
 	public void run() {
 		while(true)
 		{
+            System.out.println("I'm listening on "+this.ipAddress+":"+this.port);
 			try {
 				Socket clientSocket = serverSocket.accept();
 				

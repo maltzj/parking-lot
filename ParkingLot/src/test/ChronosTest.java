@@ -12,6 +12,7 @@ public class ChronosTest extends SetupTest
 
         TimeSubscribeMessage t = new TimeSubscribeMessage(InetAddress.getLocalHost(), 5000);
         AbstractMessage.encodeMessage(s.getOutputStream(), t);
+        s.getOutputStream().flush();
 
         s.close();
 

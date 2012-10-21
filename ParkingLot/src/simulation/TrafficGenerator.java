@@ -46,9 +46,10 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 		nextTimePolynomial = new Polynomial(nextTimePoly);
 		rdm = new Random();
 		subscribers = new ArrayList<HostPort>();
+		gates = new ArrayList<HostPort>();
 	}
 
-	public void run()
+	public void notRun()
 	{
 		/**
 			You may want to wait for a signal here, instead of start sending a car right away.
@@ -95,6 +96,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 				
 				/* Make a car arrival message and send it to the gate */
 				CarArrivalMessage carToGateMessage = new CarArrivalMessage(carSendDate, carLeaveDate);
+                /*
 				
 				try {
 					HostPort gateHP = gates.get(nextGate);
@@ -113,6 +115,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 					e.printStackTrace();
 				}
 				
+                */
 				/* End send car to gate message */
 				
 			}
