@@ -1,12 +1,18 @@
 package test;
-import car.Car;
+
+
 import gates.GateImpl;
-import gates.Gate;
+
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.util.Date;
+
+import messaging.AbstractMessage;
+import messaging.CarArrivalMessage;
 import simulation.TrafficGenerator;
-import java.util.*;
-import messaging.*;
-import java.net.*;
-import java.io.*;
+import car.Car;
+
 
 public class Test
 {
@@ -19,10 +25,12 @@ public class Test
 
         TrafficGenerator t = new TrafficGenerator(100, "0,.1", InetAddress.getLocalHost(), 1234);
 
+        //Gate
         GateImpl g = new GateImpl(100, 100, null, 10000);
         Thread thread = new Thread(g);
         thread.start();
 
+        //Traffic Generator
         Thread thread2 = new Thread(t);
         thread2.start();
 

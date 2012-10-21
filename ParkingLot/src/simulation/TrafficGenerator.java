@@ -12,7 +12,7 @@ import util.*;
 import car.Car;
 import java.net.*;
 
-public class TrafficGenerator extends MessageReceiver
+public class TrafficGenerator extends MessageReceiver implements Simulation, Chronos
 {
 	
 	//Make parking lot a composition, so Gates communicate with the
@@ -56,10 +56,7 @@ public class TrafficGenerator extends MessageReceiver
 			nextTime = (int)nextTime(nextTimePolynomial.evaluate(currentTime));
 			stayTime = (int)(Math.abs(rdm.nextGaussian() * ( simulationLength - currentTime )/4 + (simulationLength - currentTime)/2));
 			nextGate = (int)(rdm.nextDouble() * ( numGates + 2 ));
-			leavingGate = (int)(rdm.nextDouble() * numGates );
-			if (nextGate >= numGates){
-				nextGate = numGates-1;
-			}
+			leavingGate = (int)(rdm.nextDouble() * (numGates - 1) );
 
             //wait for things to be ready.
 
@@ -71,9 +68,12 @@ public class TrafficGenerator extends MessageReceiver
 			{
 				System.out.println("Time: " + currentTime + "\tGate: " + nextGate + "\t\tstayTime: " + stayTime + "\t\tleavingGate: " + leavingGate + "\t\tleavingTime: " + leavingTime);
 				/**
-				Here you should send a massage to the gate and insert the car to parking lot array (you need to implement the array).
+				Here you should send a {massage} (LOL MALTZ) to the gate and insert the car to parking lot array (you need to implement the array).
 				Remember to handle the situation that car may get reject by the gate so that it won't be in the parking lot.
 				*/
+				
+				
+				
 			}
 			
 			Calendar startCal = Calendar.getInstance();
@@ -109,6 +109,31 @@ public class TrafficGenerator extends MessageReceiver
     
 	@Override
 	public void onMessageArrived(AbstractMessage message) {
+		switch(message.getMessageType())
+		{
+			case AbstractMessage.TYPE_TIME_SUBSCRIBE:
+			{
+				this.onSubscribeReceived((TimeSubscribeMessage) message);
+				break;
+			}
+		}
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public void onCarGenerated(Car newestCar) {
+	}
+
+	@Override
+	public void onGateSubscribe(GateSubscribeMessage gateSubscribing)
+			throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public void onSubscribeReceived(TimeSubscribeMessage messageRecieved) {
 		// TODO Auto-generated method stub
 		
 	}

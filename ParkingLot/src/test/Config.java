@@ -1,3 +1,5 @@
+package test;
+
 import java.net.InetAddress;
 
 public class Config
