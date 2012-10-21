@@ -24,8 +24,7 @@ public class Test
 
         TrafficGenerator t = new TrafficGenerator(100, "0,.1", InetAddress.getLocalHost(), 1234);
 
-        //Gate
-        GateImpl g = new GateImpl(100, 100, null, 10000);
+        GateImpl g = new GateImpl(100, 100, null, InetAddress.getLocalHost(), 10000);
         Thread thread = new Thread(g);
         thread.start();
 
