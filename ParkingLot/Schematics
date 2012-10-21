@@ -15,7 +15,8 @@ LOOP
 1) S updates time
 2) S ---time---> Parking Lot
 3) Parking Lot ---done---> S (So we can have cars leave before we admit new ones)
-4) S ---time---> Gates, S ---car---> Gate
+4a) S ---car---> Gate
+4b) S ---time---> Gates
 5) G ---trade tokens---> G
 6) Gates ---cars---> Parking Lot
 7) Gates ---done---> S

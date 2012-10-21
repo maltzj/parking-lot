@@ -1,14 +1,14 @@
 package gates;
 import java.net.*;
 
+import java.net.InetAddress;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import tokentrading.TokenTrader;
-
 import messaging.CarArrivalMessage;
 import messaging.TimeMessage;
+import tokentrading.TokenTrader;
 import car.Car;
 import util.*;
 
@@ -40,18 +40,14 @@ public class GateImpl extends MessageReceiver implements Gate {
 	public void onCarArrived(CarArrivalMessage arrival) {
         System.out.println("ON CAR ARRRIVVVVVEEEEEED");
 		Car carToQueue = new Car(arrival.getCarSentTime(), arrival.getCarReturnTime());
-		if(numberOfTokens <= 0)
-		{
-			long timeArrived = arrival.getCarSentTime().getTime();
-			long leavingTime = timeArrived + amountOfTimeToWait;
-			Date timeToLeave = new Date();
-			timeToLeave.setTime(leavingTime);
-			CarWrapper carWrapper = new CarWrapper(carToQueue, timeToLeave);
-		}
-		else
-		{
-			//do some logic that puts the car into place
-		}
+		
+		//Add Car to queue
+		long timeArrived = arrival.getCarSentTime().getTime();
+		long leavingTime = timeArrived + amountOfTimeToWait;
+		Date timeToLeave = new Date();
+		timeToLeave.setTime(leavingTime);
+		CarWrapper carWrapper = new CarWrapper(carToQueue, timeToLeave);
+		waitingCars.add(carWrapper);
 	}
 
 	@Override
@@ -70,8 +66,11 @@ public class GateImpl extends MessageReceiver implements Gate {
 		{
 			Calendar carLeaveQueueTime = Calendar.getInstance();
 			carLeaveQueueTime.setTime(currentCar.timeLeaving);
-			if(timeToCheckAgainst.after(carLeaveQueueTime))
+			
+			//Car waited too long and left
+			if(timeToCheckAgainst.after(carLeaveQueueTime)) {
 				waitingCars.remove(currentCar);
+			}
 		}
 	}
 
@@ -128,7 +127,6 @@ public class GateImpl extends MessageReceiver implements Gate {
     public void subscribe(InetAddress ip, int port)
     {
     }
-
 
 	private static class CarWrapper {
 		Car carRepresenting;
