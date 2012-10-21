@@ -10,7 +10,9 @@ CLASSPATH = $(CURRPATH)/src:$(CURRPATH)/src/libs/junit-4.9.jar
 CLASSES = \
         src/test/Test.java \
         src/test/SetupTest.java \
-        src/test/ChronosTest.java
+        src/test/ChronosTest.java \
+        src/test/GateTest.java
+
 
 fuck: you
 
@@ -19,7 +21,7 @@ default: classes
 classes: $(CLASSES:.java=.class)
 
 go: classes
-	CLASSPATH=$(CLASSPATH) java -ea test.ChronosTest
+	CLASSPATH=$(CLASSPATH) java -ea test.GateTest
 
 you: clean default go
 

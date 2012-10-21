@@ -93,6 +93,10 @@ public class GateImpl extends MessageReceiver implements Gate {
 		}
 	}
 
+	public int getCarsWaiting() {
+		return waitingCars.size();
+	}
+
 	@Override
 	public void onTokensLow() {
 		//
