@@ -96,7 +96,6 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 				
 				/* Make a car arrival message and send it to the gate */
 				CarArrivalMessage carToGateMessage = new CarArrivalMessage(carSendDate, carLeaveDate);
-                /*
 				
 				try {
 					HostPort gateHP = gates.get(nextGate);
@@ -115,7 +114,6 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 					e.printStackTrace();
 				}
 				
-                */
 				/* End send car to gate message */
 				
 			}
