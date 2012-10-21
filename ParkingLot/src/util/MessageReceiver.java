@@ -17,7 +17,6 @@ public abstract class MessageReceiver implements Runnable {
 	protected InetAddress ipAddress;
 	protected int port;
     protected ServerSocket serverSocket;
-
 	protected MessageReceiver(ServerSocket socket)
 	{
 		this.serverSocket = socket;
@@ -52,9 +51,7 @@ public abstract class MessageReceiver implements Runnable {
 	}
 
     /** Implement these abstract methods. */
-
-    public abstract void onCarArrived(CarArrivalMessage message);
-    public abstract void onTimeUpdate(TimeMessage message);
+	public abstract void onMessageArrived(AbstractMessage message);
 
 	@Override
 	public void run() {
@@ -65,23 +62,7 @@ public abstract class MessageReceiver implements Runnable {
 				
 				AbstractMessage messageReceived = AbstractMessage.decodeMessage(clientSocket.getInputStream());
                 System.out.println(messageReceived.getMessageType());
-				switch(messageReceived.getMessageType())
-				{
-					case AbstractMessage.TYPE_CAR_ARRIVAL:
-					{
-						this.onCarArrived((CarArrivalMessage) messageReceived);
-                        break;
-					}
-					case AbstractMessage.TYPE_TIME_MESSAGE:
-					{
-						this.onTimeUpdate((TimeMessage) messageReceived);
-                        break;
-					}
-					default:
-					{
-						//Do something
-					}
-				}
+                this.onMessageArrived(messageReceived);
 			} catch (IOException e) {
 
 			}

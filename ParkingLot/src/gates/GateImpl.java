@@ -1,16 +1,15 @@
 package gates;
-import java.net.*;
-
 import java.net.InetAddress;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import messaging.AbstractMessage;
 import messaging.CarArrivalMessage;
 import messaging.TimeMessage;
 import tokentrading.TokenTrader;
+import util.MessageReceiver;
 import car.Car;
-import util.*;
 
 public class GateImpl extends MessageReceiver implements Gate {
 	
@@ -70,6 +69,27 @@ public class GateImpl extends MessageReceiver implements Gate {
 			//Car waited too long and left
 			if(timeToCheckAgainst.after(carLeaveQueueTime)) {
 				waitingCars.remove(currentCar);
+			}
+		}
+	}
+
+	@Override
+	public void onMessageArrived(AbstractMessage message) {
+		switch(message.getMessageType())
+		{
+			case AbstractMessage.TYPE_CAR_ARRIVAL:
+			{
+				this.onCarArrived((CarArrivalMessage) message);
+				break;
+			}
+			case AbstractMessage.TYPE_TIME_MESSAGE:
+			{
+				this.onTimeUpdate((TimeMessage) message);
+				break;
+			}
+			default:
+			{
+				//Do something
 			}
 		}
 	}
