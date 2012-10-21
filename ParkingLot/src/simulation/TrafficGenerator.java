@@ -29,8 +29,6 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 	//Traffic Generator only. Makes stuff easier to handle/test
 	ParkingLot parkLot = new ParkingLot();
 	
-	//List<MessageReceiver> subscribedTimeElements = new ArrayList<MessageReceiver>();
-	//List<CarReceiver> subscribedGates = new ArrayList<CarReceiver>();
 	Date timeFromStart = new Date();
 	
 	private int currentTime;
@@ -185,6 +183,8 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 				Socket s = new Socket(hp.iaddr, hp.port);
 				OutputStream o = s.getOutputStream();
 				AbstractMessage.encodeMessage(o, message);
+                o.close();
+                s.close();
        		}
 			catch(Exception e) {
         	    System.out.println("Sadddnesss");

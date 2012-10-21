@@ -4,12 +4,12 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import messaging.AbstractMessage;
-import messaging.CarArrivalMessage;
-import messaging.TimeMessage;
+import messaging.*;
 import tokentrading.TokenTrader;
 import util.MessageReceiver;
 import car.Car;
+import java.net.*;
+import java.io.*;
 
 public class GateImpl extends MessageReceiver implements Gate {
 	
@@ -146,12 +146,14 @@ public class GateImpl extends MessageReceiver implements Gate {
      */
     public void subscribe(InetAddress ip, int port)
     {
-		TimeSubscribeMessage message = new TimeSubscribeMessage(this.ip, this.port);
+		TimeSubscribeMessage message = new TimeSubscribeMessage(this.ipAddress, this.port);
 		try 
 		{
             Socket s = new Socket(ip, port);
             OutputStream o = s.getOutputStream();
             AbstractMessage.encodeMessage(o, message);
+            o.close();
+            s.close();
 		} 
 		catch(Exception e) {
 			System.out.println("Sadddnesss");
