@@ -1,6 +1,5 @@
 package test;
 
-
 import gates.GateImpl;
 
 import java.io.OutputStream;

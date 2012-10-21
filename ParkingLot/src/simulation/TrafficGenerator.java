@@ -1,16 +1,19 @@
 package simulation;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.Random;
-import java.util.ArrayList;
 
-import messaging.*;
-import util.*;
+import messaging.AbstractMessage;
+import messaging.GateSubscribeMessage;
+import messaging.TimeSubscribeMessage;
+import util.MessageReceiver;
 import car.Car;
-import java.net.*;
+
+
 
 public class TrafficGenerator extends MessageReceiver implements Simulation, Chronos
 {
