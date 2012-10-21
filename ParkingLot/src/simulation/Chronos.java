@@ -1,11 +1,12 @@
 package simulation;
 
 import messaging.TimeSubscribeMessage;
+import java.util.ArrayList;
 
 public interface Chronos 
 {	
-	private HostPort [] subscribers;
+	private ArrayList<HostPort> subscribers;
 	public long getCurrentTime();
-	public void onSubscribeReceived(TimeSubscribeMessage messageRecieved);
+	public void onSubscribeReceived(TimeSubscribeMessage messageReceived);
 	public void notifyAll();
 }
