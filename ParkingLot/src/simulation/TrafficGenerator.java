@@ -36,6 +36,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 		simulationLength = simLen;
 		nextTimePolynomial = new Polynomial(nextTimePoly);
 		rdm = new Random();
+		subscribers = new ArrayList<HostPort>();
 	}
 
 	public void run()
@@ -133,9 +134,8 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 	}
 	
 	@Override
-	public void onSubscribeReceived(TimeSubscribeMessage messageRecieved) {
-		// TODO Auto-generated method stub
-		
+	public void onSubscribeReceived(TimeSubscribeMessage messageReceived) {
+		subscribers.add(new HostPort(messageReceived.getAddressSubscribing(), messageReceived.getPortSubscribingOn()));
 	}
 
 	/**You don't need to change the rest of code*/
