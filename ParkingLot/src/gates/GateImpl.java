@@ -37,7 +37,7 @@ public class GateImpl extends MessageReceiver implements Gate {
 	
 	@Override
 	public void onCarArrived(CarArrivalMessage arrival) {
-        System.out.println("ON CAR ARRRIVVVVVEEEEEED");
+        System.out.println("FUCK HJERRRY");
 		Car carToQueue = new Car(arrival.getCarSentTime(), arrival.getCarReturnTime());
 		
 		//Add Car to queue

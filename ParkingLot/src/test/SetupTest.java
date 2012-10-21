@@ -16,7 +16,7 @@ public class SetupTest
     protected TrafficGenerator trafficGenerator;
     protected ArrayList<GateImpl> gates;
 
-    public void setup()
+    public void setup() throws Exception
     {
         try {
             Config config = new Config();
@@ -27,7 +27,7 @@ public class SetupTest
 
             Thread trafficGenThread = new Thread(trafficGenerator);
             trafficGenThread.start();
-
+/*
             Thread[] gateThreads = new Thread[config.gates.length];
 
             this.gates = new ArrayList<GateImpl>();
@@ -41,6 +41,7 @@ public class SetupTest
                 gateThreads[i].start();
                 i++;
             }
+            */
 
             System.out.println("Created "+config.gates.length+" gates successfully");
         }
@@ -50,7 +51,7 @@ public class SetupTest
         }
     }
 
-    public static void main(String[] args)
+    public static void main(String[] args) throws Exception
     {
         SetupTest test = new SetupTest();
         test.setup();
