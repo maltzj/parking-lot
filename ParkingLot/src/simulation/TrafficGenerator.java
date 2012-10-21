@@ -10,9 +10,12 @@ import java.util.Random;
 import messaging.AbstractMessage;
 import messaging.GateSubscribeMessage;
 import messaging.TimeSubscribeMessage;
+import messaging.*;
 import util.HostPort;
 import util.MessageReceiver;
 import car.Car;
+import java.net.*;
+import java.io.*;
 
 
 
@@ -78,7 +81,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 				Here you should send a {massage} (LOL MALTZ) to the gate and insert the car to parking lot array (you need to implement the array).
 				Remember to handle the situation that car may get reject by the gate so that it won't be in the parking lot.
 				*/
-				
+				publish();
 				
 				
 			}
@@ -153,7 +156,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 		{
 			try 
 			{
-				Socket s = new Socket(ip, port);
+				Socket s = new Socket(hp.iaddr, hp.port);
 				OutputStream o = s.getOutputStream();
 				AbstractMessage.encodeMessage(o, message);
        		}
@@ -229,12 +232,6 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 			}
 			return sum;
 		}
-	}
-
-	@Override
-	public void publish() {
-		// TODO Auto-generated method stub
-		
 	}
 
 }
