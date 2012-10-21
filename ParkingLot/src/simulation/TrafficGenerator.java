@@ -11,9 +11,12 @@ import messaging.AbstractMessage;
 import messaging.CarArrivalMessage;
 import messaging.GateSubscribeMessage;
 import messaging.TimeSubscribeMessage;
+import messaging.*;
 import util.HostPort;
 import util.MessageReceiver;
 import car.Car;
+import java.net.*;
+import java.io.*;
 
 
 
@@ -77,6 +80,9 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 			//Make cars leave parking lot
 			checkCarLeaving();
 			
+			//Send time to everyone
+			publish();
+			
 			if(currentTime < simulationLength)
 			{
 				System.out.println("Time: " + currentTime + "\tGate: " + nextGate + "\t\tstayTime: " + stayTime + "\t\tleavingGate: " + leavingGate + "\t\tleavingTime: " + leavingTime);
@@ -90,6 +96,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 				
 				//Make a car arrival message and send it to the gate
 				CarArrivalMessage carToGateMessage = new CarArrivalMessage(carSendDate, carLeaveDate);
+			
 				
 				
 			}
@@ -102,9 +109,11 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 		return -Math.log(1 - rdm.nextDouble()) / expectedValue;
 	}
 
-    public long getCurrentTime()
+    public Date getCurrentTime()
     {
-		return this.currentTime;
+		Date d = new Date();
+		d.setTime(this.currentTime * 1000);
+		return d;
     }
 
 	/**Base on current time, check your parking lot array whether there is car should be leaving*/
@@ -146,6 +155,23 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 	@Override
 	public void onSubscribeReceived(TimeSubscribeMessage messageReceived) {
 		subscribers.add(new HostPort(messageReceived.getAddressSubscribing(), messageReceived.getPortSubscribingOn()));
+	}
+	public void publish()
+	{
+		Date d = getCurrentTime();
+		TimeMessage message = new TimeMessage(d);
+		for(HostPort hp : subscribers)
+		{
+			try 
+			{
+				Socket s = new Socket(hp.iaddr, hp.port);
+				OutputStream o = s.getOutputStream();
+				AbstractMessage.encodeMessage(o, message);
+       		}
+			catch(Exception e) {
+        	    System.out.println("Sadddnesss");
+        	}
+		}
 	}
 
 	/**You don't need to change the rest of code*/
@@ -214,12 +240,6 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 			}
 			return sum;
 		}
-	}
-
-	@Override
-	public void publish() {
-		// TODO Auto-generated method stub
-		
 	}
 
 }
