@@ -1,22 +1,22 @@
 package simulation;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
 
 import messaging.AbstractMessage;
 import messaging.CarArrivalMessage;
 import messaging.GateSubscribeMessage;
+import messaging.TimeMessage;
 import messaging.TimeSubscribeMessage;
-import messaging.*;
 import util.HostPort;
 import util.MessageReceiver;
 import car.Car;
-import java.net.*;
-import java.io.*;
 
 
 
@@ -91,13 +91,31 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 				Remember to handle the situation that car may get reject by the gate so that it won't be in the parking lot.
 				*/
 				
-				Date carSendDate = new Date(currentTime*1000);
+				Date carSendDate = getCurrentTime();
 				Date carLeaveDate = new Date(leavingTime*1000);
 				
-				//Make a car arrival message and send it to the gate
+				/* Make a car arrival message and send it to the gate */
 				CarArrivalMessage carToGateMessage = new CarArrivalMessage(carSendDate, carLeaveDate);
-			
 				
+				try {
+					//TODO:HardCoded
+					InetAddress gateIP = InetAddress.getLocalHost();
+					int gatePort = 6001;
+
+					Socket sock = new Socket(gateIP, gatePort);
+					
+					OutputStream outStream = sock.getOutputStream();
+					AbstractMessage.encodeMessage(outStream, carToGateMessage);
+					sock.close();
+					
+				} catch (UnknownHostException e) {
+					// TODO Auto-generated catch block
+					System.err.println("Unknown Host");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
+				/* End send car to gate message */
 				
 			}
 			
