@@ -47,6 +47,7 @@ public class Test
          
 
             AbstractMessage.encodeMessage(o, message);
+            s.close();
         } catch(Exception e) {
             System.out.println("Sadddnesss");
         }
