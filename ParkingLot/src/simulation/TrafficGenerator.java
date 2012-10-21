@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.Random;
 
 import messaging.AbstractMessage;
+import messaging.CarArrivalMessage;
 import messaging.GateSubscribeMessage;
 import messaging.TimeSubscribeMessage;
 import util.HostPort;
@@ -64,32 +65,34 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 			stayTime = (int)(Math.abs(rdm.nextGaussian() * ( simulationLength - currentTime )/4 + (simulationLength - currentTime)/2));
 			nextGate = (int)(rdm.nextDouble() * ( numGates + 2 ));
 			leavingGate = (int)(rdm.nextDouble() * (numGates - 1) );
+			if (nextGate >= numGates){
+				nextGate = numGates-1;
+			}
 
             //wait for things to be ready.
-
 			
 			currentTime = currentTime + nextTime;
 			leavingTime = currentTime + stayTime;
+			
+			//Make cars leave parking lot
 			checkCarLeaving();
+			
 			if(currentTime < simulationLength)
 			{
 				System.out.println("Time: " + currentTime + "\tGate: " + nextGate + "\t\tstayTime: " + stayTime + "\t\tleavingGate: " + leavingGate + "\t\tleavingTime: " + leavingTime);
 				/**
-				Here you should send a {massage} (LOL MALTZ) to the gate and insert the car to parking lot array (you need to implement the array).
+				Here you should send a {massage} (MASSAGES FOR ALL) to the gate and insert the car to parking lot array (you need to implement the array).
 				Remember to handle the situation that car may get reject by the gate so that it won't be in the parking lot.
 				*/
 				
+				Date carSendDate = new Date(currentTime*1000);
+				Date carLeaveDate = new Date(leavingTime*1000);
+				
+				//Make a car arrival message and send it to the gate
+				CarArrivalMessage carToGateMessage = new CarArrivalMessage(carSendDate, carLeaveDate);
 				
 				
 			}
-			
-			Calendar startCal = Calendar.getInstance();
-			startCal.setTime(timeFromStart);
-			startCal.add(Calendar.SECOND, currentTime);
-			
-			Calendar endCal = Calendar.getInstance();
-			endCal.setTime(timeFromStart);
-			endCal.add(Calendar.SECOND, leavingTime);
 			
 		}
 	}
@@ -104,9 +107,10 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 		return this.currentTime;
     }
 
+	/**Base on current time, check your parking lot array whether there is car should be leaving*/
     private void checkCarLeaving()
     {
-	/**Base on current time, check your parking lot array whether there is car should be leaving*/
+    	
     }
     
     private void notifySubscribers()
