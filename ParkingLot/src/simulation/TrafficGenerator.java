@@ -81,7 +81,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 				Here you should send a {massage} (LOL MALTZ) to the gate and insert the car to parking lot array (you need to implement the array).
 				Remember to handle the situation that car may get reject by the gate so that it won't be in the parking lot.
 				*/
-				publish();
+				publishTime();
 				
 				
 			}
@@ -125,7 +125,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 		{
 			case AbstractMessage.TYPE_TIME_SUBSCRIBE:
 			{
-				this.onSubscribeReceived((TimeSubscribeMessage) message);
+				this.onTimeSubscribeReceived((TimeSubscribeMessage) message);
 				break;
 			}
 		}
@@ -148,7 +148,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 	public void onSubscribeReceived(TimeSubscribeMessage messageReceived) {
 		subscribers.add(new HostPort(messageReceived.getAddressSubscribing(), messageReceived.getPortSubscribingOn()));
 	}
-	public void publish()
+	public void publishTime()
 	{
 		Date d = getCurrentTime();
 		TimeMessage message = new TimeMessage(d);

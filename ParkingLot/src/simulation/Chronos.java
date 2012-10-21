@@ -1,10 +1,11 @@
 package simulation;
 
 import messaging.TimeSubscribeMessage;
+import java.util.Date;
 
 public interface Chronos 
 {	
-	public long getCurrentTime();
-	public void onSubscribeReceived(TimeSubscribeMessage messageReceived);
-	public void publish();
+	public Date getCurrentTime();
+	public void onTimeSubscribeReceived(TimeSubscribeMessage messageReceived);
+	public void publishTime();
 }
