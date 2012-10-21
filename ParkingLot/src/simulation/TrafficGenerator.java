@@ -7,21 +7,20 @@ import java.util.List;
 import java.util.Random;
 import java.util.ArrayList;
 
-import util.MessageReceiver;
-
-import messaging.GateSubscribeMessage;
-import messaging.TimeSubscribeMessage;
+import messaging.*;
+import util.*;
 import car.Car;
+import java.net.*;
 
-public class TrafficGenerator extends Thread implements Chronos, Simulation
+public class TrafficGenerator extends MessageReceiver
 {
 	
 	//Make parking lot a composition, so Gates communicate with the
 	//Traffic Generator only. Makes stuff easier to handle/test
 	ParkingLot parkLot = new ParkingLot();
 	
-	List<MessageReceiver> subscribedTimeElements = new ArrayList<MessageReceiver>();
-	List<CarReceiver> subscribedGates = new ArrayList<CarReceiver>();
+	//List<MessageReceiver> subscribedTimeElements = new ArrayList<MessageReceiver>();
+	//List<CarReceiver> subscribedGates = new ArrayList<CarReceiver>();
 	Date timeFromStart = new Date();
 	
 	private int currentTime;
@@ -30,8 +29,9 @@ public class TrafficGenerator extends Thread implements Chronos, Simulation
 	private Random rdm;
 	public static int numGates = 6;
 	
-	public TrafficGenerator(int simLen, String nextTimePoly)
+	public TrafficGenerator(int simLen, String nextTimePoly, InetAddress address, int port) throws Exception
 	{
+        super(address, port);
 		currentTime = 0;
 		simulationLength = simLen;
 		nextTimePolynomial = new Polynomial(nextTimePoly);
@@ -84,14 +84,6 @@ public class TrafficGenerator extends Thread implements Chronos, Simulation
 			endCal.setTime(timeFromStart);
 			endCal.add(Calendar.SECOND, leavingTime);
 			
-			onCarGenerated(new Car(startCal.getTime(), endCal.getTime()));
-			try
-  			{
-  				sleep(10);  
-  			}catch (InterruptedException ie)
-  			{
-  				System.out.println(ie.getMessage());
-  			}
 		}
 	}
 
@@ -182,37 +174,7 @@ public class TrafficGenerator extends Thread implements Chronos, Simulation
 			return sum;
 		}
 	}
-		
 
-	@Override
-	public void onCarGenerated(Car newestCar) {
-		synchronized (subscribedGates) {
-			if (subscribedGates.size() == 0) // If there are no gates then we can't really do anything
-				return;
-
-			Random rand = new Random(System.currentTimeMillis());
-			int gateToSendTo = rand.nextInt(subscribedGates.size());
-			subscribedGates.get(gateToSendTo).sendCar(newestCar);
-		}
-	}
-
-	@Override
-	public void onGateSubscribe(GateSubscribeMessage gateSubscribing)
-			throws IOException {
-		// TODO Auto-generated method stub
-		subscribedGates.add(new CarReceiver(gateSubscribing.getAddressOfGate(), gateSubscribing.getPort()));
-	}
-
-	@Override
-	public void onSubscribeReceived(TimeSubscribeMessage messageRecieved) {
-		MessageReceiver messageRecieverToAdd;
-		try {
-			messageRecieverToAdd = new MessageReceiver(
-					messageRecieved.getAddressSubscribing(),
-					messageRecieved.getPortSubscribingOn());
-			this.subscribedTimeElements.add(messageRecieverToAdd);
-		} catch (IOException e) {
-			// do something
-		}
-	}
+    public void onCarArrived(CarArrivalMessage message) { }
+    public void onTimeUpdate(TimeMessage message) { }
 }

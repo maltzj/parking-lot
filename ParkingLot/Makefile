@@ -9,12 +9,16 @@ CLASSPATH := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))/src
 CLASSES = \
         src/test/Test.java 
 
+fuck: you
+
 default: classes
 
 classes: $(CLASSES:.java=.class)
 
 go: classes
 	CLASSPATH=$(CLASSPATH) java test.Test
+
+you: clean default go
 
 clean:
 	find . -name *.class -exec rm {} \;

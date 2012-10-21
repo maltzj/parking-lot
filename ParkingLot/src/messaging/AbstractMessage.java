@@ -20,6 +20,8 @@ public abstract class AbstractMessage {
 	public static final byte TYPE_MONEY_MESSAGE = 8;
 	public static final byte TYPE_CAR_LEAVING = 9;
 	
+	public static final byte TYPE_CLOSE_CONNECTION = 20;
+	
 	protected int length;
 	protected byte messageType;
 	
@@ -87,6 +89,10 @@ public abstract class AbstractMessage {
 				case TYPE_CAR_LEAVING:
 				{
 					return new CarLeavingMessage();
+				}
+				case TYPE_CLOSE_CONNECTION:
+				{
+					return new SimpleMessage(TYPE_CLOSE_CONNECTION);
 				}
 				default:
 					return null;
@@ -171,6 +177,11 @@ public abstract class AbstractMessage {
 					break;
 				}
 				case TYPE_CAR_LEAVING:
+				{
+					dataOutput.flush();
+					break;
+				}
+				case TYPE_CLOSE_CONNECTION:
 				{
 					dataOutput.flush();
 					break;

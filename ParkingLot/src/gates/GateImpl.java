@@ -1,16 +1,18 @@
 package gates;
+import java.net.*;
 
+import java.net.InetAddress;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import tokentrading.TokenTrader;
-
 import messaging.CarArrivalMessage;
 import messaging.TimeMessage;
+import tokentrading.TokenTrader;
 import car.Car;
+import util.*;
 
-public class GateImpl implements Gate{
+public class GateImpl extends MessageReceiver implements Gate {
 	
 	public static boolean stillRunning = true;
 	
@@ -18,41 +20,34 @@ public class GateImpl implements Gate{
 	long amountOfTimeToWait; //Seconds
 	
 	Thread messageListenerThread;
-	SimulationMessageListener messageListener;
 	
 	int numberOfTokens;
 	TokenTrader tokenTrader;
 	
 	int amountOfMoney;
 	
-	public GateImpl(long timeToWait, int moneyToStartWith, TokenTrader tokenPolicy, int port)
+	public GateImpl(long timeToWait, int moneyToStartWith, TokenTrader tokenPolicy, int port) throws Exception
 	{
+        super(InetAddress.getLocalHost(), port);
+
 		this.amountOfTimeToWait = timeToWait*1000; //dates deal with milliseconds, we want to expose all APIs as seconds
 		this.amountOfMoney = moneyToStartWith;
 		tokenTrader = tokenPolicy;
-		
-		messageListener = new SimulationMessageListener(port, this);
-		messageListenerThread = new Thread(messageListener);
-		messageListenerThread.setName("Simulation Message Listener Thread");
-		messageListenerThread.start();
 	}
 	
 	
 	@Override
 	public void onCarArrived(CarArrivalMessage arrival) {
+        System.out.println("ON CAR ARRRIVVVVVEEEEEED");
 		Car carToQueue = new Car(arrival.getCarSentTime(), arrival.getCarReturnTime());
-		if(numberOfTokens <= 0)
-		{
-			long timeArrived = arrival.getCarSentTime().getTime();
-			long leavingTime = timeArrived + amountOfTimeToWait;
-			Date timeToLeave = new Date();
-			timeToLeave.setTime(leavingTime);
-			CarWrapper carWrapper = new CarWrapper(carToQueue, timeToLeave);
-		}
-		else
-		{
-			//do some logic that puts the car into place
-		}
+		
+		//Add Car to queue
+		long timeArrived = arrival.getCarSentTime().getTime();
+		long leavingTime = timeArrived + amountOfTimeToWait;
+		Date timeToLeave = new Date();
+		timeToLeave.setTime(leavingTime);
+		CarWrapper carWrapper = new CarWrapper(carToQueue, timeToLeave);
+		waitingCars.add(carWrapper);
 	}
 
 	@Override
@@ -71,8 +66,11 @@ public class GateImpl implements Gate{
 		{
 			Calendar carLeaveQueueTime = Calendar.getInstance();
 			carLeaveQueueTime.setTime(currentCar.timeLeaving);
-			if(timeToCheckAgainst.after(carLeaveQueueTime))
+			
+			//Car waited too long and left
+			if(timeToCheckAgainst.after(carLeaveQueueTime)) {
 				waitingCars.remove(currentCar);
+			}
 		}
 	}
 
@@ -129,7 +127,6 @@ public class GateImpl implements Gate{
     public void subscribe(InetAddress ip, int port)
     {
     }
-
 
 	private static class CarWrapper {
 		Car carRepresenting;

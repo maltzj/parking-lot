@@ -1,6 +1,8 @@
 *.swp
 *.class
+
 bin
+.classpath
 
 # Package Files #
 *.jar
