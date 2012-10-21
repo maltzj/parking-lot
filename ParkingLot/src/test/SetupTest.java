@@ -27,7 +27,7 @@ public class SetupTest
 
             Thread trafficGenThread = new Thread(trafficGenerator);
             trafficGenThread.start();
-/*
+
             Thread[] gateThreads = new Thread[config.gates.length];
 
             this.gates = new ArrayList<GateImpl>();
@@ -41,7 +41,6 @@ public class SetupTest
                 gateThreads[i].start();
                 i++;
             }
-            */
 
             System.out.println("Created "+config.gates.length+" gates successfully");
         }

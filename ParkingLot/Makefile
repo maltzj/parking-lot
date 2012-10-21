@@ -19,7 +19,7 @@ default: classes
 classes: $(CLASSES:.java=.class)
 
 go: classes
-	CLASSPATH=$(CLASSPATH) java -ea test.Test
+	CLASSPATH=$(CLASSPATH) java -ea test.ChronosTest
 
 you: clean default go
 

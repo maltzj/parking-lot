@@ -29,20 +29,13 @@ public class Test
         thread2.start();
 
 
-        GateImpl fuck = new GateImpl(100, 100, null, InetAddress.getLocalHost(), 10001);
-        Thread fuckThis = new Thread(fuck);
-        fuckThis.start();
-
-
-
-
         GateImpl g = new GateImpl(100, 100, null, InetAddress.getLocalHost(), 10000);
         Thread thread = new Thread(g);
         thread.start();
 
-            CarArrivalMessage message = new CarArrivalMessage(new Date(), new Date());
+        CarArrivalMessage message = new CarArrivalMessage(new Date(), new Date());
 
-        //sendMessage(message, InetAddress.getLocalHost(), 1234);
+        sendMessage(message, InetAddress.getLocalHost(), 1234);
 
     }
 

@@ -148,7 +148,6 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
     
 	@Override
 	public void onMessageArrived(AbstractMessage message) {
-        System.out.println("IM A FUCKING WHORE");
 		switch(message.getMessageType())
 		{
 			case AbstractMessage.TYPE_TIME_SUBSCRIBE:
@@ -177,7 +176,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 	
 	@Override
 	public void onSubscribeReceived(TimeSubscribeMessage messageReceived) {
-        System.out.println("IM A WHORE");
+        System.out.println("Received a subscribe from "+messageReceived.getPortSubscribingOn());
 		subscribers.add(new HostPort(messageReceived.getAddressSubscribing(), messageReceived.getPortSubscribingOn()));
 	}
 	public void publish()
