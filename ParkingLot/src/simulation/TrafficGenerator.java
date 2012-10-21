@@ -99,9 +99,11 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 		return -Math.log(1 - rdm.nextDouble()) / expectedValue;
 	}
 
-    public long getCurrentTime()
+    public Date getCurrentTime()
     {
-		return this.currentTime;
+		Date d = new Date();
+		d.setTime(this.currentTime * 1000);
+		return d;
     }
 
     private void checkCarLeaving()
@@ -145,7 +147,20 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 	}
 	public void publish()
 	{
-		
+		Date d = getCurrentTime();
+		TimeMessage message = new TimeMessage(d);
+		for(HostPort hp : subscribers)
+		{
+			try 
+			{
+				Socket s = new Socket(ip, port);
+				OutputStream o = s.getOutputStream();
+				AbstractMessage.encodeMessage(o, message);
+       		}
+			catch(Exception e) {
+        	    System.out.println("Sadddnesss");
+        	}
+		}
 	}
 
 	/**You don't need to change the rest of code*/
