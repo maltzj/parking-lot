@@ -14,8 +14,8 @@ public abstract class MessageReceiver implements Runnable {
 	
 	private final int BACKLOG = 10; //Number of concurrent connections to socket
 	
-	protected InetAddress ipAddress;
-	protected int port;
+	public InetAddress ipAddress;
+    public int port;
     protected ServerSocket serverSocket;
 	protected MessageReceiver(ServerSocket socket)
 	{

@@ -25,9 +25,9 @@ public class GateImpl extends MessageReceiver implements Gate {
 	
 	int amountOfMoney;
 	
-	public GateImpl(long timeToWait, int moneyToStartWith, TokenTrader tokenPolicy, int port) throws Exception
+	public GateImpl(long timeToWait, int moneyToStartWith, TokenTrader tokenPolicy, InetAddress addr, int port) throws Exception
 	{
-        super(InetAddress.getLocalHost(), port);
+        super(addr, port);
 
 		this.amountOfTimeToWait = timeToWait*1000; //dates deal with milliseconds, we want to expose all APIs as seconds
 		this.amountOfMoney = moneyToStartWith;
