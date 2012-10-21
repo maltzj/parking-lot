@@ -24,6 +24,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 {
 	
 	public ArrayList<HostPort> subscribers;
+	public ArrayList<HostPort> gates;
 	
 	//Make parking lot a composition, so Gates communicate with the
 	//Traffic Generator only. Makes stuff easier to handle/test
@@ -96,10 +97,9 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 				CarArrivalMessage carToGateMessage = new CarArrivalMessage(carSendDate, carLeaveDate);
 				
 				try {
-					//TODO:HardCoded
-					InetAddress gateIP = InetAddress.getLocalHost();
-					int gatePort = 6001;
-
+					HostPort gateHP = gates.get(nextGate);
+					InetAddress gateIP = gateHP.iaddr;
+					int gatePort = gateHP.port;
 					Socket sock = new Socket(gateIP, gatePort);
 					
 					OutputStream outStream = sock.getOutputStream();
@@ -152,6 +152,11 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 				this.onSubscribeReceived((TimeSubscribeMessage) message);
 				break;
 			}
+			case AbstractMessage.TYPE_GATE_SUBSCRIBE:
+			{
+				this.onGateSubscribe((GateSubscribeMessage) message);
+				break;
+			}
 		}
 		// TODO Auto-generated method stub
 		
@@ -162,10 +167,8 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 	}
 
 	@Override
-	public void onGateSubscribe(GateSubscribeMessage gateSubscribing)
-			throws IOException {
-		// TODO Auto-generated method stub
-		
+	public void onGateSubscribe(GateSubscribeMessage gateSubscribing) {
+		gates.add(new HostPort(gateSubscribing.getAddressOfGate(),gateSubscribing.getPort()));
 	}
 	
 	@Override
