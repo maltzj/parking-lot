@@ -64,15 +64,18 @@ public abstract class MessageReceiver implements Runnable {
 				Socket clientSocket = serverSocket.accept();
 				
 				AbstractMessage messageReceived = AbstractMessage.decodeMessage(clientSocket.getInputStream());
+                System.out.println(messageReceived.getMessageType());
 				switch(messageReceived.getMessageType())
 				{
 					case AbstractMessage.TYPE_CAR_ARRIVAL:
 					{
 						this.onCarArrived((CarArrivalMessage) messageReceived);
+                        break;
 					}
 					case AbstractMessage.TYPE_TIME_MESSAGE:
 					{
 						this.onTimeUpdate((TimeMessage) messageReceived);
+                        break;
 					}
 					default:
 					{

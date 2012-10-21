@@ -36,10 +36,11 @@ public class Test
         try {
             Socket s = new Socket(ip, port);
             
-            ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
+            OutputStream o = s.getOutputStream();
 
-            out.writeObject(message);
-            out.flush();
+         
+
+            AbstractMessage.encodeMessage(o, message);
         } catch(Exception e) {
             System.out.println("Sadddnesss");
         }
