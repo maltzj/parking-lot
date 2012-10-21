@@ -10,6 +10,7 @@ import java.util.Random;
 import messaging.AbstractMessage;
 import messaging.GateSubscribeMessage;
 import messaging.TimeSubscribeMessage;
+import util.HostPort;
 import util.MessageReceiver;
 import car.Car;
 
@@ -17,6 +18,8 @@ import car.Car;
 
 public class TrafficGenerator extends MessageReceiver implements Simulation, Chronos
 {
+	
+	public ArrayList<HostPort> subscribers;
 	
 	//Make parking lot a composition, so Gates communicate with the
 	//Traffic Generator only. Makes stuff easier to handle/test
@@ -211,6 +214,12 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 			}
 			return sum;
 		}
+	}
+
+	@Override
+	public void publish() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }
