@@ -3,18 +3,22 @@ package util;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.UnknownHostException;
+import messaging.*;
 
-public class MessageReceiver {
+/** A message receiver implements a ServerSocket and listens on messages of all types.
+ * In order to subclass this, you have to implement onCarArrivalMessage received and onTimeUpdateMessage received 
+ */
+public abstract class MessageReceiver implements Runnable {
 	
 	private final int BACKLOG = 10; //Number of concurrent connections to socket
 	
 	protected InetAddress ipAddress;
 	protected int port;
-	
     protected ServerSocket serverSocket;
 
-	public MessageReceiver(ServerSocket socket)
+	protected MessageReceiver(ServerSocket socket)
 	{
 		this.serverSocket = socket;
 		this.ipAddress = socket.getInetAddress();
@@ -24,12 +28,12 @@ public class MessageReceiver {
     /** defaults to localhost 
      * @throws IOException 
      * @throws UnknownHostException */
-    public MessageReceiver(int port) throws UnknownHostException, IOException
+    protected MessageReceiver(int port) throws UnknownHostException, IOException
     {
         	this(InetAddress.getLocalHost(), port); 
     }
 	
-	public MessageReceiver(InetAddress ipAddress, int port) throws IOException {
+	protected MessageReceiver(InetAddress ipAddress, int port) throws IOException {
 		this.ipAddress = ipAddress;
 		this.port = port;
 		this.serverSocket = new ServerSocket(port, BACKLOG, ipAddress);
@@ -46,5 +50,38 @@ public class MessageReceiver {
 	public ServerSocket getSocket() {
 		return serverSocket;
 	}
-	
+
+    /** Implement these abstract methods. */
+
+    public abstract void onCarArrived(CarArrivalMessage message);
+    public abstract void onTimeUpdate(TimeMessage message);
+
+	@Override
+	public void run() {
+		while(true)
+		{
+			try {
+				Socket clientSocket = serverSocket.accept();
+				
+				AbstractMessage messageReceived = AbstractMessage.decodeMessage(clientSocket.getInputStream());
+				switch(messageReceived.getMessageType())
+				{
+					case AbstractMessage.TYPE_CAR_ARRIVAL:
+					{
+						this.onCarArrived((CarArrivalMessage) messageReceived);
+					}
+					case AbstractMessage.TYPE_TIME_MESSAGE:
+					{
+						this.onTimeUpdate((TimeMessage) messageReceived);
+					}
+					default:
+					{
+						//Do something
+					}
+				}
+			} catch (IOException e) {
+
+			}
+		}
+	}
 }

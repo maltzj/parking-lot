@@ -7,21 +7,19 @@ import java.util.List;
 import java.util.Random;
 import java.util.ArrayList;
 
-import util.MessageReceiver;
-
 import messaging.GateSubscribeMessage;
 import messaging.TimeSubscribeMessage;
 import car.Car;
 
-public class TrafficGenerator extends Thread implements Chronos, Simulation
+public class TrafficGenerator
 {
 	
 	//Make parking lot a composition, so Gates communicate with the
 	//Traffic Generator only. Makes stuff easier to handle/test
 	ParkingLot parkLot = new ParkingLot();
 	
-	List<MessageReceiver> subscribedTimeElements = new ArrayList<MessageReceiver>();
-	List<CarReceiver> subscribedGates = new ArrayList<CarReceiver>();
+	//List<MessageReceiver> subscribedTimeElements = new ArrayList<MessageReceiver>();
+	//List<CarReceiver> subscribedGates = new ArrayList<CarReceiver>();
 	Date timeFromStart = new Date();
 	
 	private int currentTime;
@@ -84,14 +82,6 @@ public class TrafficGenerator extends Thread implements Chronos, Simulation
 			endCal.setTime(timeFromStart);
 			endCal.add(Calendar.SECOND, leavingTime);
 			
-			onCarGenerated(new Car(startCal.getTime(), endCal.getTime()));
-			try
-  			{
-  				sleep(10);  
-  			}catch (InterruptedException ie)
-  			{
-  				System.out.println(ie.getMessage());
-  			}
 		}
 	}
 
@@ -180,39 +170,6 @@ public class TrafficGenerator extends Thread implements Chronos, Simulation
 				sum = sum + coefficient.get(i) * Math.pow(x, exponent.get(i));
 			}
 			return sum;
-		}
-	}
-		
-
-	@Override
-	public void onCarGenerated(Car newestCar) {
-		synchronized (subscribedGates) {
-			if (subscribedGates.size() == 0) // If there are no gates then we can't really do anything
-				return;
-
-			Random rand = new Random(System.currentTimeMillis());
-			int gateToSendTo = rand.nextInt(subscribedGates.size());
-			subscribedGates.get(gateToSendTo).sendCar(newestCar);
-		}
-	}
-
-	@Override
-	public void onGateSubscribe(GateSubscribeMessage gateSubscribing)
-			throws IOException {
-		// TODO Auto-generated method stub
-		subscribedGates.add(new CarReceiver(gateSubscribing.getAddressOfGate(), gateSubscribing.getPort()));
-	}
-
-	@Override
-	public void onSubscribeReceived(TimeSubscribeMessage messageRecieved) {
-		MessageReceiver messageRecieverToAdd;
-		try {
-			messageRecieverToAdd = new MessageReceiver(
-					messageRecieved.getAddressSubscribing(),
-					messageRecieved.getPortSubscribingOn());
-			this.subscribedTimeElements.add(messageRecieverToAdd);
-		} catch (IOException e) {
-			// do something
 		}
 	}
 }
