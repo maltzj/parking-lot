@@ -34,11 +34,6 @@ public class Config
 			System.out.println(gates[i].iaddr + " " + gates[i].port);
 		}	
 	}
-	public class HostPort
-	{
-		public InetAddress iaddr;
-		public int port;
-	}
 	/*public static void main(String [] args)
 	{
 		Config c = new Config();
