@@ -17,17 +17,18 @@ public class Test
         Car c = new Car(d, e);
         System.out.println(c.getTimeSent());
 
-        TrafficGenerator t = new TrafficGenerator(100, "0,.1");
-        ArrayList<Gate> gates = new ArrayList<Gate>();
-
+        TrafficGenerator t = new TrafficGenerator(100, "0,.1", InetAddress.getLocalHost(), 1234);
 
         GateImpl g = new GateImpl(100, 100, null, 10000);
         Thread thread = new Thread(g);
-        gates.add(g);
         thread.start();
+
+        Thread thread2 = new Thread(t);
+        thread2.start();
 
         CarArrivalMessage message = new CarArrivalMessage(new Date(), new Date());
 
+        sendMessage(message, InetAddress.getLocalHost(), 10000);
     }
 
     public static String sendMessage(AbstractMessage message, InetAddress ip, int port)

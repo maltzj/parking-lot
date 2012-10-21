@@ -7,11 +7,12 @@ import java.util.List;
 import java.util.Random;
 import java.util.ArrayList;
 
-import messaging.GateSubscribeMessage;
-import messaging.TimeSubscribeMessage;
+import messaging.*;
+import util.*;
 import car.Car;
+import java.net.*;
 
-public class TrafficGenerator
+public class TrafficGenerator extends MessageReceiver
 {
 	
 	//Make parking lot a composition, so Gates communicate with the
@@ -28,8 +29,9 @@ public class TrafficGenerator
 	private Random rdm;
 	public static int numGates = 6;
 	
-	public TrafficGenerator(int simLen, String nextTimePoly)
+	public TrafficGenerator(int simLen, String nextTimePoly, InetAddress address, int port) throws Exception
 	{
+        super(address, port);
 		currentTime = 0;
 		simulationLength = simLen;
 		nextTimePolynomial = new Polynomial(nextTimePoly);
@@ -172,4 +174,7 @@ public class TrafficGenerator
 			return sum;
 		}
 	}
+
+    public void onCarArrived(CarArrivalMessage message) { }
+    public void onTimeUpdate(TimeMessage message) { }
 }
