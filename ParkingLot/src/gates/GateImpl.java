@@ -146,7 +146,17 @@ public class GateImpl extends MessageReceiver implements Gate {
      */
     public void subscribe(InetAddress ip, int port)
     {
-    }
+		TimeSubscribeMessage message = new TimeSubscribeMessage(this.ip, this.port);
+		try 
+		{
+            Socket s = new Socket(ip, port);
+            OutputStream o = s.getOutputStream();
+            AbstractMessage.encodeMessage(o, message);
+		} 
+		catch(Exception e) {
+			System.out.println("Sadddnesss");
+		}	
+	}
 
 	private static class CarWrapper {
 		Car carRepresenting;
