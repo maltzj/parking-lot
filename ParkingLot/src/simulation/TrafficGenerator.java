@@ -140,6 +140,10 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 	public void onSubscribeReceived(TimeSubscribeMessage messageReceived) {
 		subscribers.add(new HostPort(messageReceived.getAddressSubscribing(), messageReceived.getPortSubscribingOn()));
 	}
+	public void publish()
+	{
+		
+	}
 
 	/**You don't need to change the rest of code*/
 	private class Polynomial
