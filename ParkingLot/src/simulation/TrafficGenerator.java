@@ -67,11 +67,9 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 		//{
 			nextTime = (int)nextTime(nextTimePolynomial.evaluate(currentTime));
 			stayTime = (int)(Math.abs(rdm.nextGaussian() * ( simulationLength - currentTime )/4 + (simulationLength - currentTime)/2));
-			nextGate = (int)(rdm.nextDouble() * ( numGates + 2 ));
+            //TODO: CHANGE ME TO THE TA'S RETARDED CODE.
+			nextGate = (int)(rdm.nextDouble() * gates.size());
 			leavingGate = (int)(rdm.nextDouble() * (numGates - 1) );
-			if (nextGate >= numGates){
-				nextGate = numGates-1;
-			}
 
             //wait for things to be ready.
 			
@@ -80,7 +78,6 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 			
 			//Make cars leave parking lot
 			checkCarLeaving();
-			System.out.println(currentTime + " asdklfjas;df " + simulationLength);
 			if(currentTime < simulationLength)
 			{
 				System.out.println("Time: " + currentTime + "\tGate: " + nextGate + "\t\tstayTime: " + stayTime + "\t\tleavingGate: " + leavingGate + "\t\tleavingTime: " + leavingTime);
@@ -102,12 +99,13 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 				Date carLeaveDate = new Date(leavingTime*1000);
 				
 				/* Make a car arrival message and send it to the gate */
-				/*CarArrivalMessage carToGateMessage = new CarArrivalMessage(carSendDate, carLeaveDate);
+				CarArrivalMessage carToGateMessage = new CarArrivalMessage(carSendDate, carLeaveDate);
 				
 				try {
 					HostPort gateHP = gates.get(nextGate);
 					InetAddress gateIP = gateHP.iaddr;
 					int gatePort = gateHP.port;
+                    System.out.println("Trying to send a car");
 					Socket sock = new Socket(gateIP, gatePort);
 					
 					OutputStream outStream = sock.getOutputStream();
@@ -119,7 +117,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 					System.err.println("Unknown Host");
 				} catch (IOException e) {
 					e.printStackTrace();
-				}*/
+				}
 				
 				/* End send car to gate message */
 				
@@ -153,7 +151,6 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
     
 	@Override
 	public void onMessageArrived(AbstractMessage message) {
-        System.out.println("fuck chinks" + message.getMessageType());
 		switch(message.getMessageType())
 		{
 			case AbstractMessage.TYPE_TIME_SUBSCRIBE:
@@ -178,7 +175,6 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 	
     public void onGateDone(GateDoneMessage message)
     {
-        System.out.println("fuck niggers");
         step();
     }
 	@Override
@@ -198,12 +194,10 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 	}
 	public void publishTime()
 	{
-        System.out.println("DICK");
 		Date d = getCurrentTime();
 		TimeMessage message = new TimeMessage(d);
 		for(HostPort hp : timeSubscribers)
 		{
-            System.out.println("RAPE");
 			try 
 			{
             System.out.println(hp.iaddr + " " +  hp.port + "send time to");

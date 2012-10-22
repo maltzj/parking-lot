@@ -14,10 +14,12 @@ import messaging.*;
 
 public class GateRecTest extends MessageReceiver
 {
-    private static final int SIMULATION_LENGTH = 100;
-    private static final String MAGIC_POLY = "1,.1";
+    private static final int SIMULATION_LENGTH = 40000;
+    private static final String MAGIC_POLY = "2,.000000000275,1,-.0000099,0,.1";
     private static final long TIME_TO_WAIT = 10;
     private static final int CASH_MONEY_TO_START = 100;
+
+
 
     protected TrafficGenerator trafficGenerator;
     protected ArrayList<GateImpl> gates;
@@ -43,11 +45,19 @@ public class GateRecTest extends MessageReceiver
 
             System.out.println("Created a traffic generator successfully");
 
+            Thread myThread = new Thread(this);
+            myThread.start();
+
+            System.out.println("Listening for car arrivals");
+
+
+
             //subscribe to the Traffic Generator
             GateSubscribeMessage message = new GateSubscribeMessage(this.ipAddress, this.port);
             Everything.sendMessage(message, trafficGenerator.ipAddress, trafficGenerator.port);
 
-            System.out.println("Subscribed to the Traffic Generator successfully");
+            //tell the traffic generator to start generating cars.
+            Everything.sendMessage(new GateDoneMessage(this.ipAddress, this.port), config.trafficGenerator.iaddr, config.trafficGenerator.port);
 
             Thread.sleep(2000);
 
@@ -62,6 +72,7 @@ public class GateRecTest extends MessageReceiver
                 System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             }
 
+
         }
         catch(Exception e) {
             System.out.println("Sadness occurred while trying to do the thing below:");
@@ -74,6 +85,7 @@ public class GateRecTest extends MessageReceiver
         int RANDOM_PORT = 12345;
         GateRecTest test = new GateRecTest(InetAddress.getLocalHost(), RANDOM_PORT);
         test.setup();
+        System.exit(0);
     }
 
     public void onMessageArrived(AbstractMessage message) {

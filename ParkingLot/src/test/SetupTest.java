@@ -7,6 +7,7 @@ import util.Config;
 import util.HostPort;
 import java.net.*;
 import java.io.*;
+import util.*;
 /** Tests the set up of our traffic generator. */
 
 public class SetupTest
@@ -46,6 +47,10 @@ public class SetupTest
             }
 
             System.out.println("Created "+config.gates.length+" gates successfully");
+
+            //TODO: Get rid of me.
+            Everything.sendMessage(new GateDoneMessage(config.trafficGenerator.iaddr, config.trafficGenerator.port), config.trafficGenerator.iaddr, config.trafficGenerator.port);
+
         }
         catch(Exception e) {
             System.out.println("Sadness occurred while trying to do the thing below:");

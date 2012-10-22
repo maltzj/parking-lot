@@ -57,7 +57,6 @@ public class TimeRecTest extends MessageReceiver
                 System.out.println(">>>>>>>>>>>TIME UPDATE WAS NEVER RECEIVED <<<<<<<<<<<");
                 System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             }
-
         }
         catch(Exception e) {
             System.out.println("Sadness occurred while trying to do the thing below:");
@@ -96,5 +95,6 @@ public class TimeRecTest extends MessageReceiver
     {
         TimeRecTest test = new TimeRecTest();
         test.setup();
+        System.exit(0);
     }
 }

@@ -53,6 +53,6 @@ public class GateTest extends SetupTest
         test.sendCarArrival(0);
         test.sendCarArrival(2);
         test.sendCarArrival(5);
-
+        System.exit(0);
     }
 }

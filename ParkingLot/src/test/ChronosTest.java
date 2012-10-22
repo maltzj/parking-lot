@@ -24,5 +24,6 @@ public class ChronosTest extends SetupTest
         ChronosTest test = new ChronosTest();
         test.setup();
         test.testSubscribe();
+        System.exit(0);
     }
 }
