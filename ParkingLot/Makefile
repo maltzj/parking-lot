@@ -21,12 +21,11 @@ default: classes
 
 classes: $(CLASSES:.java=.class)
 
+# This runs all the tests.
 go: classes
+	#This magical code goes through each source file in CLASSES and runs it as a test.
 	$(foreach var, $(CLASSES), CLASSPATH=$(CLASSPATH) echo -e "\n>>>>>> Running $(var) \n"; echo $(var) | cut -c 5- | rev | cut -c 6- | rev | tr '/' '.' | xargs java -ea ;)
 	
-asdf:
-	CLASSPATH=$(CLASSPATH) java -ea test.GateTest
-
 you: clean default go
 
 clean:
