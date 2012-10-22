@@ -34,6 +34,12 @@ public abstract class MessageReceiver implements Runnable {
         	this(InetAddress.getLocalHost(), port); 
     }
 	
+    /**
+     * Initializes a MessageReceiver with a given ipAddress and port.
+     * @param ipAddress
+     * @param port
+     * @throws IOException
+     */
 	protected MessageReceiver(InetAddress ipAddress, int port) throws IOException {
 		this.ipAddress = ipAddress;
 		this.port = port;

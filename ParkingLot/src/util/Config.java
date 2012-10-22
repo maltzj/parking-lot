@@ -2,11 +2,21 @@ package util;
 
 import java.net.InetAddress;
 
-
+/**
+ * 
+ * A configuration for the application which specifies the IP addresses and ports of the gates and traffic generator
+ *
+ */
 public class Config
 {
 	public HostPort trafficGenerator;
 	public HostPort [] gates;
+	
+	/**
+	 * Starts up the config class and initializes the TrafficGenerator and Gates.
+	 * The ipAddress defaults to localhost and the ports default to 7500 (for the Generator)
+	 * and the gates are on ipAddress 7501 up.
+	 */
 	public Config()
 	{
 		try

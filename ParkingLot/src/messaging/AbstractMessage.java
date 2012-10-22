@@ -32,7 +32,13 @@ public abstract class AbstractMessage {
 		this.messageType = type;
 	}
 	
-	
+
+	/**
+	 * Decodes the message being sent on the given InputStream
+	 * @param inputStream The input stream which is being listened on
+	 * @return An AbstractMessage which represents the decoded message
+	 * @throws IOException If an exception occurs
+	 */
 	public static AbstractMessage decodeMessage(InputStream inputStream) throws IOException
 	{
 		synchronized(inputStream)
@@ -119,6 +125,12 @@ public abstract class AbstractMessage {
 		}
 	}
 	
+	/**
+	 * Encodes a given AbstractMessage on a given output stream
+	 * @param outputStream The output stream on which the message is being written
+	 * @param messageWriting The message being written onto the output stream
+	 * @throws IOException If an exception occurs.
+	 */
 	public static void encodeMessage(OutputStream outputStream, AbstractMessage messageWriting) throws IOException
 	{
 		synchronized (outputStream)
