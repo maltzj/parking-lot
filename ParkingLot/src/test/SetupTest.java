@@ -1,9 +1,12 @@
 package test;
 import simulation.TrafficGenerator;
 import gates.GateImpl;
+import messaging.*;
 import java.util.*;
 import util.Config;
 import util.HostPort;
+import java.net.*;
+import java.io.*;
 /** Tests the set up of our traffic generator. */
 
 public class SetupTest
@@ -54,5 +57,20 @@ public class SetupTest
     {
         SetupTest test = new SetupTest();
         test.setup();
+    }
+
+    public void sendMessage(AbstractMessage message, InetAddress ip, int port)
+    {
+        try {
+            Socket s = new Socket(ip, port);
+            
+            OutputStream o = s.getOutputStream();
+
+            AbstractMessage.encodeMessage(o, message);
+            o.flush();
+            s.close();
+        } catch(Exception e) {
+					e.printStackTrace();
+        }
     }
 }

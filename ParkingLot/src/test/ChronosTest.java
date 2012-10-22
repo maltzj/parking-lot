@@ -10,13 +10,12 @@ public class ChronosTest extends SetupTest
     {
         for(GateImpl g: gates)
         {
-            g.subscribe(trafficGenerator.ipAddress, trafficGenerator.port);
+            g.timeSubscribe(trafficGenerator.ipAddress, trafficGenerator.port);
         }
 
         Thread.sleep(1000);
         
-        assert(trafficGenerator.subscribers.size() == gates.size());
-
+        assert(trafficGenerator.timeSubscribers.size() == gates.size());
         System.out.println("We time subscribed all the gates brah");
     }
 
