@@ -50,6 +50,12 @@ public abstract class TokenTradingPolicy implements TokenTrader, Runnable {
 		}	
 	}
 	
+	/**
+	 * Called anytime a TokenTradingPolicy's MessageReceiverListener receives a message.
+	 * This performs the appropriate action with the message depending on its type.
+	 * @param messageReceived, The message which was received
+	 * @param listener, The listener which received it
+	 */
 	public void onMessageReceived(AbstractMessage messageReceived, MessageReceiverListener listener)
 	{	
 		switch(messageReceived.getMessageType())

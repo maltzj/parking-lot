@@ -1,5 +1,6 @@
 package gates;
 import java.net.InetAddress;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -13,6 +14,12 @@ import car.Car;
 import java.net.*;
 import java.io.*;
 
+/**
+ * A concrete implementation of the Gate interface.  This is responsible for handling all the responsibilities of a Gate
+ * This includes trading tokens, listening for messages, and allowing cars into the parking lot.
+ * @author Jonathan
+ *
+ */
 public class GateImpl extends MessageReceiver implements Gate {
 	
 	public static boolean stillRunning = true;
@@ -27,6 +34,16 @@ public class GateImpl extends MessageReceiver implements Gate {
 	
 	int amountOfMoney;
 	
+	/**
+	 * Initializes a gate with all the information necessary to get running
+	 * @param timeToWait, The amount of time a gate should allow cars to wait in the queue before kicking them out
+	 * @param tokensToStartWith, The number of tokens to start with.
+	 * @param moneyToStartWith, The amount of money to start with.
+	 * @param tokenPolicy, The token trading policy to use for this gate.
+	 * @param addr, The IPAddress to initialize this Gate at
+	 * @param port, The port this gate will be listening on.
+	 * @throws Exception
+	 */
 	public GateImpl(long timeToWait, int tokensToStartWith, int moneyToStartWith, TokenTrader tokenPolicy, InetAddress addr, int port) throws Exception
 	{
         super(addr, port);
@@ -210,6 +227,10 @@ public class GateImpl extends MessageReceiver implements Gate {
             e.printStackTrace();
 		}	
 	}
+    
+    /**
+     * Subscribes to another Gate so that it can trade tokens with that Gate.
+     */
 	public void gateSubscribe()
     {
         Config c = new Config();
@@ -226,6 +247,10 @@ public class GateImpl extends MessageReceiver implements Gate {
             e.printStackTrace();
 		}	
 	}
+	
+	/**
+	 * Sends a message to the TrafficSimulator that this gate has completed its responsibilities.
+	 */
     public void sendDone()
     {
         Config c = new Config();
@@ -243,6 +268,10 @@ public class GateImpl extends MessageReceiver implements Gate {
 		}	
 	}
 
+    /**
+     * Sends a Car to the ParkingLot
+     * @param carWrapper, The car which is being sent to the Parking Lot
+     */
     public void sendCarToParkingLot(CarWrapper carWrapper)
     {
         System.out.println(port +": Sending a car to the parking lot. It will leave at "+carWrapper.timeLeaving+" Tokens: "+this.numberOfTokens);
