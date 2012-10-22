@@ -21,3 +21,17 @@ We should probably change this so that the accepting of connections is handled w
 the Gate itself and then delegated as is necessary.  I don't think it will be a huge issue
 for now, but it is worth noting.
 
+
+V's stuff
+
+Right now we have cars being generated, and they're being sent to gates randomly. The gate receives a car, and if it has a token, it sends the car to the parking lot.
+The parking lot checks to see if cars are leaving, and removes them when it's time for them to leave.
+
+need some hardcode testing to ensure that things are working. We noticed that there were like 11k tokens on a gate, when we ran a test last night.
+
+We need to implement cash money per car. When a car gets let in by a gate, it gets some money.
+
+We have not tested cars leaving from the gate's queue when they wait too long.
+
+Token Redistribution does not exist at all
+    - We need to write code for this.
