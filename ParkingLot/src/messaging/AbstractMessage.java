@@ -24,6 +24,12 @@ public abstract class AbstractMessage {
 	public static final byte TYPE_LOT_DONE = 11;
 	public static final byte TYPE_CLOSE_CONNECTION = 20;
 	
+	public static final byte TYPE_MONEY_QUERY_MESSAGE = 21;
+	public static final byte TYPE_TOKEN_QUERY_MESSAGE = 22;
+	
+	public static final byte TYPE_MONEY_AMOUNT_MESSAGE = 23;
+	public static final byte TYPE_TOKEN_AMOUNT_MESSAGE = 24;
+	
 	protected int length;
 	protected byte messageType;
 	
@@ -118,6 +124,24 @@ public abstract class AbstractMessage {
 				case TYPE_CLOSE_CONNECTION:
 				{
 					return new SimpleMessage(TYPE_CLOSE_CONNECTION);
+				}
+				case TYPE_MONEY_QUERY_MESSAGE:
+				{
+					return new SimpleMessage(TYPE_MONEY_QUERY_MESSAGE);
+				}
+				case TYPE_TOKEN_QUERY_MESSAGE:
+				{
+					return new SimpleMessage(TYPE_TOKEN_QUERY_MESSAGE);
+				}
+				case TYPE_MONEY_AMOUNT_MESSAGE:
+				{
+					int amountOfMoney = dataInput.readInt();
+					return new MoneyAmountMessage(amountOfMoney);
+				}
+				case TYPE_TOKEN_AMOUNT_MESSAGE:
+				{
+					int numberOfTokens = dataInput.readInt();
+					return new TokenAmountMessage(numberOfTokens);
 				}
 				default:
 					return null;
@@ -236,6 +260,20 @@ public abstract class AbstractMessage {
 				}
 				case TYPE_CLOSE_CONNECTION:
 				{
+					dataOutput.flush();
+					break;
+				}
+				case TYPE_MONEY_AMOUNT_MESSAGE:
+				{
+					MoneyAmountMessage message = (MoneyAmountMessage) messageWriting;
+					dataOutput.writeInt(message.amountOfMoney);
+					dataOutput.flush();
+					break;
+				}
+				case TYPE_TOKEN_AMOUNT_MESSAGE:
+				{
+					TokenAmountMessage tokenAmount = (TokenAmountMessage) messageWriting;
+					dataOutput.writeInt(tokenAmount.numberOfTokens);
 					dataOutput.flush();
 					break;
 				}
