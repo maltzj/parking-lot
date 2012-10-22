@@ -199,7 +199,7 @@ public class GateImpl extends MessageReceiver implements Gate {
             s.close();
 		} 
 		catch(Exception e) {
-			System.out.println("Sadddnesss");
+            e.printStackTrace();
 		}	
 	}
 	public void gateSubscribe()
@@ -215,7 +215,7 @@ public class GateImpl extends MessageReceiver implements Gate {
             s.close();
 		} 
 		catch(Exception e) {
-			System.out.println("Sadddnesss");
+            e.printStackTrace();
 		}	
 	}
     public void sendDone()
@@ -231,7 +231,7 @@ public class GateImpl extends MessageReceiver implements Gate {
             s.close();
 		} 
 		catch(Exception e) {
-			System.out.println("Sadddnesss");
+            e.printStackTrace();
 		}	
 	}
 
@@ -251,7 +251,7 @@ public class GateImpl extends MessageReceiver implements Gate {
             s.close();
 		} 
 		catch(Exception e) {
-			System.out.println("Sadddnesss");
+            e.printStackTrace();
 		}	    
     }
 

@@ -122,6 +122,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 
         } else {
             //TODO: Send shutdown messages to everyone.
+            killAllDashNine();
             
         } 
     }
@@ -258,6 +259,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
                 e.printStackTrace();
         	}
 		}
+        this.die = true;
 	}
 
 
