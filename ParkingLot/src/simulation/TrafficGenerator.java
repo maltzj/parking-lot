@@ -51,6 +51,10 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 		rdm = new Random();
 		timeSubscribers = new ArrayList<HostPort>();
 		gates = new ArrayList<HostPort>();
+
+        //Create thread for listening on socket.
+        Thread listeningThread = new Thread(this);
+        listeningThread.start();
 	}
 	public void step()
 	{
@@ -200,7 +204,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 		{
 			try 
 			{
-            System.out.println(hp.iaddr + " " +  hp.port + "send time to");
+                System.out.println("Sent time to "+hp.iaddr+":"+hp.port);
 				Socket s = new Socket(hp.iaddr, hp.port);
 				OutputStream o = s.getOutputStream();
 				AbstractMessage.encodeMessage(o, message);

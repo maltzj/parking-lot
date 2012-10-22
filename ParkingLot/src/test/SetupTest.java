@@ -29,18 +29,12 @@ public class SetupTest
 
             System.out.println("Created a traffic generator successfully");
 
-            Thread trafficGenThread = new Thread(trafficGenerator);
-            trafficGenThread.start();
-
-            Thread[] gateThreads = new Thread[config.gates.length];
-
             this.gates = new ArrayList<GateImpl>();
 
-            int i=0;
             for(HostPort h: config.gates)
             {
                 GateImpl g = new GateImpl(TIME_TO_WAIT, CASH_MONEY_TO_START, null, h.iaddr, h.port);
-                i++;
+                this.gates.add(g);
             }
 
             System.out.println("Created "+config.gates.length+" gates successfully");
@@ -55,6 +49,7 @@ public class SetupTest
     {
         SetupTest test = new SetupTest();
         test.setup();
+        Thread.sleep(10000);
         System.exit(0);
     }
 }

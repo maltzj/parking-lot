@@ -8,12 +8,7 @@ CLASSPATH = $(CURRPATH)/src
 	CLASSPATH=$(CLASSPATH) $(JC) $(JFLAGS) $*.java
 
 CLASSES = \
-        src/test/Test.java \
-        src/test/SetupTest.java \
-        src/test/ChronosTest.java \
-        src/test/TimeRecTest.java \
-        src/test/GateRecTest.java \
-        src/test/GateTest.java
+        src/test/SetupTest.java
 
 fuck: you
 
