@@ -11,11 +11,11 @@ public class Config
 	{
 		try
 		{
-			trafficGenerator = new HostPort(InetAddress.getByName("localhost"),6000);
+			trafficGenerator = new HostPort(InetAddress.getByName("localhost"),7500);
 			gates = new HostPort [6];
 			for(int i = 0; i < 6; i++)
 			{
-				gates[i] = new HostPort(InetAddress.getByName("localhost"), 6001 + i);
+				gates[i] = new HostPort(InetAddress.getByName("localhost"), 7501 + i);
 			}
 		}
 		catch(Exception e)

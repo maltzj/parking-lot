@@ -64,6 +64,7 @@ public abstract class MessageReceiver implements Runnable {
 				
 				AbstractMessage messageReceived = AbstractMessage.decodeMessage(clientSocket.getInputStream());
                 this.onMessageArrived(messageReceived);
+                clientSocket.close();
 			} catch (IOException e) {
 
 			}

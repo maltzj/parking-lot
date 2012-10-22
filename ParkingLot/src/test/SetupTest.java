@@ -12,11 +12,12 @@ import util.*;
 
 public class SetupTest
 {
-    private static final int SIMULATION_LENGTH = 40000;
-    private static final String MAGIC_POLY = "2,.000000000275,1,-.0000099,0,.1";
-    private static final long TIME_TO_WAIT = 10;
+    private static final int SIMULATION_LENGTH = 4000;
+    private static final String MAGIC_POLY = "0,.5";
+    //private static final String MAGIC_POLY = "2,.000000000275,1,-.0000099,0,.1";
+    private static final long TIME_TO_WAIT = 4000;
     private static final int CASH_MONEY_TO_START = 100;
-    private static final int TOKENS_TO_START = 5;
+    private static final int TOKENS_TO_START = 50;
 
     protected TrafficGenerator trafficGenerator;
     protected ArrayList<GateImpl> gates;

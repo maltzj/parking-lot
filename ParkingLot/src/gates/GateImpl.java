@@ -122,6 +122,7 @@ public class GateImpl extends MessageReceiver implements Gate {
 			}
             case AbstractMessage.TYPE_CLOSE_CONNECTION:
             {
+                System.out.println(port+": I have "+numberOfTokens+" tokens");
                 this.die = true;
                 break;
             }
@@ -130,6 +131,7 @@ public class GateImpl extends MessageReceiver implements Gate {
             {
                 TokenMessage tokenMessage = (TokenMessage) message;
                 this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
+                break;
             }
 			default:
 			{
@@ -243,7 +245,7 @@ public class GateImpl extends MessageReceiver implements Gate {
 
     public void sendCarToParkingLot(CarWrapper carWrapper)
     {
-        System.out.println("Sending a car to the parking lot. It will leave at "+carWrapper.timeLeaving+" Tokens: "+this.numberOfTokens);
+        System.out.println(port +": Sending a car to the parking lot. It will leave at "+carWrapper.timeLeaving+" Tokens: "+this.numberOfTokens);
 
         Config c = new Config();
 

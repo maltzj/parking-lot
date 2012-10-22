@@ -69,7 +69,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 		int leavingTime;
 
         try{
-            Thread.sleep(100);
+            Thread.sleep(10);
         } catch(Exception e) {
             e.printStackTrace();
             System.out.println("FUCK JHAVA");
@@ -108,7 +108,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
                 HostPort gateHP = gates.get(nextGate);
                 InetAddress gateIP = gateHP.iaddr;
                 int gatePort = gateHP.port;
-                System.out.println("Trying to send a car");
+                System.out.println("Trying to send a car to port "+gatePort);
                 Socket sock = new Socket(gateIP, gatePort);
 
                 OutputStream outStream = sock.getOutputStream();
@@ -291,6 +291,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
                 e.printStackTrace();
         	}
 		}
+        System.out.println("ParkingLot has "+parkingLot.size()+" cars.");
         this.die = true;
 	}
 
