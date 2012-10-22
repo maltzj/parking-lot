@@ -15,7 +15,6 @@ CLASSES = \
         src/test/GateRecTest.java \
         src/test/GateTest.java
 
-
 fuck: you
 
 default: classes
@@ -23,6 +22,9 @@ default: classes
 classes: $(CLASSES:.java=.class)
 
 go: classes
+	$(foreach var, $(CLASSES), CLASSPATH=$(CLASSPATH) echo -e "\n>>>>>> Running $(var) \n"; echo $(var) | cut -c 5- | rev | cut -c 6- | rev | tr '/' '.' | xargs java -ea ;)
+	
+asdf:
 	CLASSPATH=$(CLASSPATH) java -ea test.GateTest
 
 you: clean default go

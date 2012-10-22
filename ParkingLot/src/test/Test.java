@@ -38,5 +38,6 @@ public class Test
 
         Everything.sendMessage(message, InetAddress.getLocalHost(), 1234);
 
+        System.exit(0);
     }
 }
