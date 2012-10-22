@@ -68,6 +68,13 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 		int leavingGate;
 		int leavingTime;
 
+        try{
+            Thread.sleep(100);
+        } catch(Exception e) {
+            e.printStackTrace();
+            System.out.println("FUCK JHAVA");
+        }
+
         nextTime = (int)nextTime(nextTimePolynomial.evaluate(currentTime));
         stayTime = (int)(Math.abs(rdm.nextGaussian() * ( simulationLength - currentTime )/4 + (simulationLength - currentTime)/2));
         //TODO: CHANGE ME TO THE TA'S RETARDED CODE.
@@ -150,6 +157,13 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
         {
             if (currentTime.compareTo(c.getTimeDeparts())  >= 0)
             {
+                //generate random gate
+                int gate = (int) (this.rdm.nextDouble()*numGates);
+
+                HostPort h = gates.get(gate);
+
+                sendTokenMessage(h.iaddr, h.port);
+                
                 toRemove.add(c);
             }
         }
@@ -159,6 +173,24 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
     {
 	/**Iterate over the timeSubscribers and send each of them the current time*/
     }
+
+    private void sendTokenMessage(InetAddress ip, int port)
+    {
+        //TODO: Perhaps, we need to send money here.
+        TokenMessage message = new TokenMessage(1);
+        try 
+        {
+            Socket s = new Socket(ip, port);
+            OutputStream o = s.getOutputStream();
+            AbstractMessage.encodeMessage(o, message);
+            o.close();
+            s.close();
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     
 	@Override
 	public void onMessageArrived(AbstractMessage message) {

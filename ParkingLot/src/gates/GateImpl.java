@@ -125,6 +125,12 @@ public class GateImpl extends MessageReceiver implements Gate {
                 this.die = true;
                 break;
             }
+
+            case AbstractMessage.TYPE_TOKEN_MESSAGE:
+            {
+                TokenMessage tokenMessage = (TokenMessage) message;
+                this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
+            }
 			default:
 			{
 				//Do something
