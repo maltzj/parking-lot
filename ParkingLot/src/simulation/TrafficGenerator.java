@@ -1,39 +1,61 @@
 package simulation;
 
 import java.io.IOException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Random;
 
-import util.MessageReceiver;
-
+import messaging.*;
+import messaging.AbstractMessage;
+import messaging.CarArrivalMessage;
 import messaging.GateSubscribeMessage;
+import messaging.TimeMessage;
 import messaging.TimeSubscribeMessage;
+import util.HostPort;
+import util.MessageReceiver;
 import car.Car;
 
-public class TrafficGenerator extends Thread implements Chronos, Simulation
+
+
+public class TrafficGenerator extends MessageReceiver implements Chronos
 {
-	List<MessageReceiver> subscribedTimeElements = new ArrayList<MessageReceiver>();
-	List<CarReceiver> subscribedGates = new ArrayList<CarReceiver>();
+	
+	public ArrayList<HostPort> timeSubscribers;
+	public ArrayList<HostPort> gates;
+
+    public ArrayList<Car> parkingLot;
+
+	
 	Date timeFromStart = new Date();
 	
 	private int currentTime;
 	private int simulationLength;
 	private Polynomial nextTimePolynomial;
 	private Random rdm;
-	private static int numGates = 6;
+    private int numGatesDone;
+	public static int numGates = 6;
 	
-	public TrafficGenerator(int simLen, String nextTimePoly)
+	public TrafficGenerator(int simLen, String nextTimePoly, InetAddress address, int port) throws Exception
 	{
+        super(address, port);
+        numGatesDone = 0;
 		currentTime = 0;
 		simulationLength = simLen;
 		nextTimePolynomial = new Polynomial(nextTimePoly);
 		rdm = new Random();
-	}
+		timeSubscribers = new ArrayList<HostPort>();
+		gates = new ArrayList<HostPort>();
+        parkingLot = new ArrayList<Car>();
 
-	public void run()
+        //Create thread for listening on socket.
+        Thread listeningThread = new Thread(this);
+        listeningThread.start();
+	}
+	public void step()
 	{
 		/**
 			You may want to wait for a signal here, instead of start sending a car right away.
@@ -45,67 +67,239 @@ public class TrafficGenerator extends Thread implements Chronos, Simulation
 		int nextGate;
 		int leavingGate;
 		int leavingTime;
-		
-		while(currentTime < simulationLength)
-		{
-			nextTime = (int)nextTime(nextTimePolynomial.evaluate(currentTime));
-			stayTime = (int)(Math.abs(rdm.nextGaussian() * ( simulationLength - currentTime )/4 + (simulationLength - currentTime)/2));
-			nextGate = (int)(rdm.nextDouble() * ( numGates + 2 ));
-			leavingGate = (int)(rdm.nextDouble() * numGates );
-			if (nextGate >= numGates){
-				nextGate = numGates-1;
-			}
-			
-			currentTime = currentTime + nextTime;
-			leavingTime = currentTime + stayTime;
-			checkCarLeaving();
-			if(currentTime < simulationLength)
-			{
-				System.out.println("Time: " + currentTime + "\tGate: " + nextGate + "\t\tstayTime: " + stayTime + "\t\tleavingGate: " + leavingGate + "\t\tleavingTime: " + leavingTime);
-				/**
-				Here you should send a massage to the gate and insert the car to parking lot array (you need to implement the array).
-				Remember to handle the situation that car may get reject by the gate so that it won't be in the parking lot.
-				*/
-			}
-			
-			Calendar startCal = Calendar.getInstance();
-			startCal.setTime(timeFromStart);
-			startCal.add(Calendar.SECOND, currentTime);
-			
-			Calendar endCal = Calendar.getInstance();
-			endCal.setTime(timeFromStart);
-			endCal.add(Calendar.SECOND, leavingTime);
-			
-			onCarGenerated(new Car(startCal.getTime(), endCal.getTime()));
-			try
-  			{
-  				sleep(10);  
-  			}catch (InterruptedException ie)
-  			{
-  				System.out.println(ie.getMessage());
-  			}
-		}
-	}
+
+        try{
+            Thread.sleep(10);
+        } catch(Exception e) {
+            e.printStackTrace();
+            System.out.println("FUCK JHAVA");
+        }
+
+        nextTime = (int)nextTime(nextTimePolynomial.evaluate(currentTime));
+        stayTime = (int)(Math.abs(rdm.nextGaussian() * ( simulationLength - currentTime )/4 + (simulationLength - currentTime)/2));
+        //TODO: CHANGE ME TO THE TA'S RETARDED CODE.
+        nextGate = (int)(rdm.nextDouble() * gates.size());
+        leavingGate = (int)(rdm.nextDouble() * (numGates - 1) );
+
+        //wait for things to be ready.
+
+        currentTime = currentTime + nextTime;
+        leavingTime = currentTime + stayTime;
+
+        //Make cars leave parking lot
+        checkCarLeaving();
+        if(currentTime < simulationLength)
+        {
+            System.out.println("Time: " + currentTime + "\tGate: " + nextGate + "\t\tstayTime: " + stayTime + "\t\tleavingGate: " + leavingGate + "\t\tleavingTime: " + leavingTime);
+            /**
+              Here you should send a {massage} (MASSAGES FOR ALL) to the gate and insert the car to parking lot array (you need to implement the array).
+              Remember to handle the situation that car may get reject by the gate so that it won't be in the parking lot.
+              */
+
+            //publishCar
+
+            Date carSendDate = getCurrentTime();
+            Date carLeaveDate = new Date(leavingTime*1000);
+
+            /* Make a car arrival message and send it to the gate */
+            CarArrivalMessage carToGateMessage = new CarArrivalMessage(carSendDate, carLeaveDate);
+
+            try {
+                HostPort gateHP = gates.get(nextGate);
+                InetAddress gateIP = gateHP.iaddr;
+                int gatePort = gateHP.port;
+                System.out.println("Trying to send a car to port "+gatePort);
+                Socket sock = new Socket(gateIP, gatePort);
+
+                OutputStream outStream = sock.getOutputStream();
+                AbstractMessage.encodeMessage(outStream, carToGateMessage);
+                outStream.close();
+                sock.close();
+
+            } catch (UnknownHostException e) {
+                // TODO Auto-generated catch block
+                System.err.println("Unknown Host");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            /* End send car to gate message */
+
+            publishTime();
+
+        } else {
+            //TODO: Send shutdown messages to everyone.
+            killAllDashNine();
+            
+        } 
+    }
 
 	public double nextTime(double expectedValue)
 	{
 		return -Math.log(1 - rdm.nextDouble()) / expectedValue;
 	}
 
-    public long getCurrentTime()
+    public Date getCurrentTime()
     {
-		return this.currentTime;
+		Date d = new Date();
+		d.setTime(this.currentTime * 1000);
+		return d;
     }
 
+	/**Base on current time, check your parking lot array whether there is car should be leaving*/
     private void checkCarLeaving()
     {
-	/**Base on current time, check your parking lot array whether there is car should be leaving*/
+
+        ArrayList<Car> toRemove = new ArrayList<Car>();
+
+        Date currentTime = getCurrentTime();
+        for(Car c: parkingLot)
+        {
+            if (currentTime.compareTo(c.getTimeDeparts())  >= 0)
+            {
+                //generate random gate
+                int gate = (int) (this.rdm.nextDouble()*numGates);
+
+                HostPort h = gates.get(gate);
+
+                sendTokenMessage(h.iaddr, h.port);
+                
+                toRemove.add(c);
+            }
+        }
+
+        for(Car c: toRemove)
+        {
+            parkingLot.remove(c);
+        }
     }
     
     private void notifySubscribers()
     {
-	/**Iterate over the subscribers and send each of them the current time*/
+	/**Iterate over the timeSubscribers and send each of them the current time*/
     }
+
+    private void sendTokenMessage(InetAddress ip, int port)
+    {
+        //TODO: Perhaps, we need to send money here.
+        TokenMessage message = new TokenMessage(1);
+        try 
+        {
+            Socket s = new Socket(ip, port);
+            OutputStream o = s.getOutputStream();
+            AbstractMessage.encodeMessage(o, message);
+            o.close();
+            s.close();
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    
+	@Override
+	public void onMessageArrived(AbstractMessage message) {
+		switch(message.getMessageType())
+		{
+			case AbstractMessage.TYPE_TIME_SUBSCRIBE:
+			{
+				this.onTimeSubscribeReceived((TimeSubscribeMessage) message);
+				break;
+			}
+			case AbstractMessage.TYPE_GATE_SUBSCRIBE:
+			{
+				this.onGateSubscribe((GateSubscribeMessage) message);
+				break;
+			}
+            case AbstractMessage.TYPE_GATE_DONE:
+			{
+				this.onGateDone((GateDoneMessage) message);
+				break;
+			}
+            case AbstractMessage.TYPE_CAR_ARRIVAL:
+			{
+				this.onCarArrived((CarArrivalMessage) message);
+				break;
+			}
+
+		}
+		// TODO Auto-generated method stub
+		
+	}
+
+    /** This gets called when a car is sent to the parking lot.
+     * It will add stuff to our arraylist, and then check to see if cars need to leave every timestep.
+     */
+    public void onCarArrived(CarArrivalMessage message)
+    {
+        System.out.println("TrafficGenerator got a car leaving at "+message.getCarReturnTime());
+
+        parkingLot.add(new Car(message.getCarSentTime(), message.getCarReturnTime()));
+    }
+
+	
+    public void onGateDone(GateDoneMessage message)
+    {
+        numGatesDone++;
+        if(numGatesDone == numGates)
+        {
+            numGatesDone = 0;
+            step();
+        }
+    }
+	public void onGateSubscribe(GateSubscribeMessage gateSubscribing) {
+		gates.add(new HostPort(gateSubscribing.getAddressOfGate(),gateSubscribing.getPort()));
+	}
+	
+	public void onTimeSubscribeReceived(TimeSubscribeMessage messageReceived) {
+        System.out.println("Received a subscribe from "+messageReceived.getPortSubscribingOn());
+		timeSubscribers.add(new HostPort(messageReceived.getAddressSubscribing(), messageReceived.getPortSubscribingOn()));
+	}
+
+	public void publishTime()
+	{
+		Date d = getCurrentTime();
+		TimeMessage message = new TimeMessage(d);
+		for(HostPort hp : timeSubscribers)
+		{
+			try 
+			{
+                System.out.println("Sent time to "+hp.iaddr+":"+hp.port);
+				Socket s = new Socket(hp.iaddr, hp.port);
+				OutputStream o = s.getOutputStream();
+				AbstractMessage.encodeMessage(o, message);
+                o.close();
+                s.close();
+       		}
+			catch(Exception e) {
+                e.printStackTrace();
+        	}
+		}
+	}
+
+    public void killAllDashNine()
+    {
+		Date d = getCurrentTime();
+        SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_CLOSE_CONNECTION);
+		for(HostPort hp : timeSubscribers)
+		{
+			try 
+			{
+                System.out.println("Killing "+hp.iaddr+":"+hp.port);
+				Socket s = new Socket(hp.iaddr, hp.port);
+				OutputStream o = s.getOutputStream();
+				AbstractMessage.encodeMessage(o, message);
+                o.close();
+                s.close();
+       		}
+			catch(Exception e) {
+                e.printStackTrace();
+        	}
+		}
+        System.out.println("ParkingLot has "+parkingLot.size()+" cars.");
+        this.die = true;
+	}
+
 
 	/**You don't need to change the rest of code*/
 	private class Polynomial
@@ -174,43 +368,5 @@ public class TrafficGenerator extends Thread implements Chronos, Simulation
 			return sum;
 		}
 	}
-		
-	public static void main(String [] args)
-	{
-		TrafficGenerator gt = new TrafficGenerator(40000, "2,0.000000000275,1,-0.0000099,0,0.1");
-		gt.run();
-	}
 
-	@Override
-	public void onCarGenerated(Car newestCar) {
-		synchronized (subscribedGates) {
-			if (subscribedGates.size() == 0) // If there are no gates then we can't really do anything
-				return;
-
-			Random rand = new Random(System.currentTimeMillis());
-			int gateToSendTo = rand.nextInt(subscribedGates.size());
-			subscribedGates.get(gateToSendTo).sendCar(newestCar);
-		}
-	}
-
-	@Override
-	public void onGateSubscribe(GateSubscribeMessage gateSubscribing)
-			throws IOException {
-		// TODO Auto-generated method stub
-		subscribedGates.add(new CarReceiver(gateSubscribing.getAddressOfGate(), gateSubscribing.getPort()));
-		
-	}
-
-	@Override
-	public void onSubscribeReceived(TimeSubscribeMessage messageRecieved) {
-		MessageReceiver messageRecieverToAdd;
-		try {
-			messageRecieverToAdd = new MessageReceiver(
-					messageRecieved.getAddressSubscribing(),
-					messageRecieved.getPortSubscribingOn());
-			this.subscribedTimeElements.add(messageRecieverToAdd);
-		} catch (IOException e) {
-			// do something
-		}
-	}
 }

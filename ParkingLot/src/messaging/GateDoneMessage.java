@@ -2,18 +2,16 @@ package messaging;
 
 import java.net.InetAddress;
 
-public class TimeSubscribeMessage extends AbstractMessage{
+public class GateDoneMessage extends AbstractMessage{
 
 	private InetAddress addressSubscribing;
 	private int portSubscribingOn;
 	
 	
-	public TimeSubscribeMessage(InetAddress address, int port) {
-		super(AbstractMessage.TYPE_TIME_SUBSCRIBE);
+	public GateDoneMessage(InetAddress address, int port) {
+		super(AbstractMessage.TYPE_GATE_DONE);
 		this.addressSubscribing = address;
 		this.portSubscribingOn = port;
-		
-		
 	}
 	
 	public InetAddress getAddressSubscribing() {

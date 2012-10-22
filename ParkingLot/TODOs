@@ -14,6 +14,10 @@ Create a manager class
 
 TEST!!!!
 
-There is a design flaw currently in the code that I just realized.  Basically the TokenTrader object for each gate is responsible for accepting connections.  This is a flaw because it assumes that only gates will want to connect to other gates.
-We should probably change this so that the accepting of connections is handled within the Gate itself and then delegated as is necessary.  I don't think it will be a huge issue for now, but it is worth noting.
+There is a design flaw currently in the code that I just realized.
+Basically the TokenTrader object for each gate is responsible for accepting connections.
+This is a flaw because it assumes that only gates will want to connect to other gates.
+We should probably change this so that the accepting of connections is handled within
+the Gate itself and then delegated as is necessary.  I don't think it will be a huge issue
+for now, but it is worth noting.
 
