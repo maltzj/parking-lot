@@ -167,6 +167,11 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
                 toRemove.add(c);
             }
         }
+
+        for(Car c: toRemove)
+        {
+            parkingLot.remove(c);
+        }
     }
     
     private void notifySubscribers()
