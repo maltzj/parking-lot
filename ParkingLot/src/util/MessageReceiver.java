@@ -44,6 +44,7 @@ public abstract class MessageReceiver implements Runnable {
 		this.ipAddress = ipAddress;
 		this.port = port;
 		this.serverSocket = new ServerSocket(port, BACKLOG, ipAddress);
+		this.serverSocket.setReuseAddress(true);
 	}
 	
 	public InetAddress getIpAddress() {
@@ -58,21 +59,31 @@ public abstract class MessageReceiver implements Runnable {
 		return serverSocket;
 	}
 
-    /** Implement these abstract methods. */
-	public abstract void onMessageArrived(AbstractMessage message);
+    /** Implement these abstract methods. 
+     * @throws IOException */
+	public abstract void onMessageArrived(AbstractMessage message) throws IOException;
 
 	@Override
 	public void run() {
+		
 		while(!die)
 		{
+			Socket clientSocket = null;
 			try {
-				Socket clientSocket = serverSocket.accept();
-				
+				clientSocket = serverSocket.accept();
 				AbstractMessage messageReceived = AbstractMessage.decodeMessage(clientSocket.getInputStream());
                 this.onMessageArrived(messageReceived);
                 clientSocket.close();
 			} catch (IOException e) {
 
+			}
+			finally{
+				try {
+					clientSocket.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}
