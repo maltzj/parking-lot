@@ -8,21 +8,24 @@ import util.Config;
 import util.HostPort;
 import java.net.*;
 import java.io.*;
+import util.*;
 /** Tests the set up of our traffic generator. */
 
 public class TimeRecTest extends MessageReceiver
 {
-    private static final int SIMULATION_LENGTH = 100;
-    private static final String MAGIC_POLY = "1,.1";
+    private static final int SIMULATION_LENGTH = 40000;
+    private static final String MAGIC_POLY = "2,.000000000275,1,-.0000099,0,.1";
     private static final long TIME_TO_WAIT = 10;
     private static final int CASH_MONEY_TO_START = 100;
 
     protected TrafficGenerator trafficGenerator;
     protected ArrayList<GateImpl> gates;
 
+    private boolean timeReceived = false;
+
     public TimeRecTest() throws Exception
     {
-        super(InetAddress.getByName("localhost"), 6001);
+        super(InetAddress.getByName("localhost"), 6101);
     }
     public void setup() throws Exception
     {
@@ -36,7 +39,25 @@ public class TimeRecTest extends MessageReceiver
             Thread trafficGenThread = new Thread(trafficGenerator);
             trafficGenThread.start();
 
-            sendMessage(new TimeSubscribeMessage(this.ipAddress, this.port), config.trafficGenerator.iaddr, config.trafficGenerator.port);
+            Thread listeningThread = new Thread(this);
+            listeningThread.start();
+
+            Everything.sendMessage(new TimeSubscribeMessage(this.ipAddress, this.port), config.trafficGenerator.iaddr, config.trafficGenerator.port);
+            Everything.sendMessage(new GateDoneMessage(this.ipAddress, this.port), config.trafficGenerator.iaddr, config.trafficGenerator.port);
+
+            Thread.sleep(1000);
+
+            if(this.timeReceived)
+            {
+                System.out.println("Time Update was received successfully");
+            }
+            else
+            {
+                System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                System.out.println(">>>>>>>>>>>TIME UPDATE WAS NEVER RECEIVED <<<<<<<<<<<");
+                System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            }
+
         }
         catch(Exception e) {
             System.out.println("Sadness occurred while trying to do the thing below:");
@@ -45,13 +66,14 @@ public class TimeRecTest extends MessageReceiver
     }
     
     public void onTimeUpdate(TimeMessage messageFromChronos){
-		
+        this.timeReceived = true;	
 		Date newTime = messageFromChronos.getNewTime();
-        System.out.println(newTime.getTime());
+        System.out.println(newTime.getTime() / 1000);
 	}
 
 	@Override
 	public void onMessageArrived(AbstractMessage message) {
+        System.out.println(message.getMessageType() + "adslfkldfaj ");
 		switch(message.getMessageType())
 		{
 			/*case AbstractMessage.TYPE_CAR_ARRIVAL:
@@ -74,20 +96,5 @@ public class TimeRecTest extends MessageReceiver
     {
         TimeRecTest test = new TimeRecTest();
         test.setup();
-    }
-
-    public void sendMessage(AbstractMessage message, InetAddress ip, int port)
-    {
-        try {
-            Socket s = new Socket(ip, port);
-            
-            OutputStream o = s.getOutputStream();
-
-            AbstractMessage.encodeMessage(o, message);
-            o.flush();
-            s.close();
-        } catch(Exception e) {
-					e.printStackTrace();
-        }
     }
 }

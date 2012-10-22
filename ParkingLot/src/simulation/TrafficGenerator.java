@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
 
+import messaging.*;
 import messaging.AbstractMessage;
 import messaging.CarArrivalMessage;
 import messaging.GateSubscribeMessage;
@@ -25,6 +26,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 	
 	public ArrayList<HostPort> timeSubscribers;
 	public ArrayList<HostPort> gates;
+
 	
 	//Make parking lot a composition, so Gates communicate with the
 	//Traffic Generator only. Makes stuff easier to handle/test
@@ -48,8 +50,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 		timeSubscribers = new ArrayList<HostPort>();
 		gates = new ArrayList<HostPort>();
 	}
-
-	public void notRun()
+	public void step()
 	{
 		/**
 			You may want to wait for a signal here, instead of start sending a car right away.
@@ -61,9 +62,9 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 		int nextGate;
 		int leavingGate;
 		int leavingTime;
-		
-		while(currentTime < simulationLength)
-		{
+
+		//while(currentTime < simulationLength)
+		//{
 			nextTime = (int)nextTime(nextTimePolynomial.evaluate(currentTime));
 			stayTime = (int)(Math.abs(rdm.nextGaussian() * ( simulationLength - currentTime )/4 + (simulationLength - currentTime)/2));
 			nextGate = (int)(rdm.nextDouble() * ( numGates + 2 ));
@@ -79,7 +80,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 			
 			//Make cars leave parking lot
 			checkCarLeaving();
-			
+			System.out.println(currentTime + " asdklfjas;df " + simulationLength);
 			if(currentTime < simulationLength)
 			{
 				System.out.println("Time: " + currentTime + "\tGate: " + nextGate + "\t\tstayTime: " + stayTime + "\t\tleavingGate: " + leavingGate + "\t\tleavingTime: " + leavingTime);
@@ -87,13 +88,21 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 				Here you should send a {massage} (MASSAGES FOR ALL) to the gate and insert the car to parking lot array (you need to implement the array).
 				Remember to handle the situation that car may get reject by the gate so that it won't be in the parking lot.
 				*/
+                try
+                {
+                    Thread.sleep(1000);
+                }
+                catch(Exception e)
+                {
+                    e.printStackTrace();
+                }
 				publishTime();
 				
 				Date carSendDate = getCurrentTime();
 				Date carLeaveDate = new Date(leavingTime*1000);
 				
 				/* Make a car arrival message and send it to the gate */
-				CarArrivalMessage carToGateMessage = new CarArrivalMessage(carSendDate, carLeaveDate);
+				/*CarArrivalMessage carToGateMessage = new CarArrivalMessage(carSendDate, carLeaveDate);
 				
 				try {
 					HostPort gateHP = gates.get(nextGate);
@@ -110,13 +119,13 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 					System.err.println("Unknown Host");
 				} catch (IOException e) {
 					e.printStackTrace();
-				}
+				}*/
 				
 				/* End send car to gate message */
 				
 			}
 			
-		}
+		//}
 	}
 
 	public double nextTime(double expectedValue)
@@ -144,6 +153,7 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
     
 	@Override
 	public void onMessageArrived(AbstractMessage message) {
+        System.out.println("fuck chinks" + message.getMessageType());
 		switch(message.getMessageType())
 		{
 			case AbstractMessage.TYPE_TIME_SUBSCRIBE:
@@ -156,11 +166,21 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 				this.onGateSubscribe((GateSubscribeMessage) message);
 				break;
 			}
+            case AbstractMessage.TYPE_GATE_DONE:
+			{
+				this.onGateDone((GateDoneMessage) message);
+				break;
+			}
 		}
 		// TODO Auto-generated method stub
 		
 	}
 	
+    public void onGateDone(GateDoneMessage message)
+    {
+        System.out.println("fuck niggers");
+        step();
+    }
 	@Override
 	public void onCarGenerated(Car newestCar) {
 	//SUCK DICK TODO	
@@ -178,12 +198,15 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 	}
 	public void publishTime()
 	{
+        System.out.println("DICK");
 		Date d = getCurrentTime();
 		TimeMessage message = new TimeMessage(d);
 		for(HostPort hp : timeSubscribers)
 		{
+            System.out.println("RAPE");
 			try 
 			{
+            System.out.println(hp.iaddr + " " +  hp.port + "send time to");
 				Socket s = new Socket(hp.iaddr, hp.port);
 				OutputStream o = s.getOutputStream();
 				AbstractMessage.encodeMessage(o, message);
