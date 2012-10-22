@@ -55,5 +55,6 @@ public class SetupTest
     {
         SetupTest test = new SetupTest();
         test.setup();
+        System.exit(0);
     }
 }
