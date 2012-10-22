@@ -11,6 +11,7 @@ CLASSES = \
         src/test/Test.java \
         src/test/SetupTest.java \
         src/test/ChronosTest.java \
+        src/test/TimeRecTest.java \
         src/test/GateTest.java
 
 
@@ -21,7 +22,7 @@ default: classes
 classes: $(CLASSES:.java=.class)
 
 go: classes
-	CLASSPATH=$(CLASSPATH) java -ea test.GateTest
+	CLASSPATH=$(CLASSPATH) java -ea test.TimeRecTest
 
 you: clean default go
 
