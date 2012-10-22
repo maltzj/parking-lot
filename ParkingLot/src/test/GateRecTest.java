@@ -49,9 +49,19 @@ public class GateRecTest extends MessageReceiver
 
             System.out.println("Subscribed to the Traffic Generator successfully");
 
-            Thread.sleep(5000);
+            Thread.sleep(2000);
 
-            
+            if(this.carArrived)
+            {
+                System.out.println("Car Arrival was successful");
+            }
+            else
+            {
+                System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                System.out.println(">>>>>>>>>>>>>>>CAR NEVER ARRIVED<<<<<<<<<<<<<<<<<");
+                System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            }
+
         }
         catch(Exception e) {
             System.out.println("Sadness occurred while trying to do the thing below:");
