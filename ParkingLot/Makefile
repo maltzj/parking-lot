@@ -23,7 +23,7 @@ default: classes
 classes: $(CLASSES:.java=.class)
 
 go: classes
-	CLASSPATH=$(CLASSPATH) java -ea test.GateTest
+	CLASSPATH=$(CLASSPATH) java -ea test.SetupTest
 
 you: clean default go
 

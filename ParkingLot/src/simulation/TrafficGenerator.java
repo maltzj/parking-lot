@@ -21,7 +21,7 @@ import car.Car;
 
 
 
-public class TrafficGenerator extends MessageReceiver implements Simulation, Chronos
+public class TrafficGenerator extends MessageReceiver implements Chronos
 {
 	
 	public ArrayList<HostPort> timeSubscribers;
@@ -38,11 +38,13 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 	private int simulationLength;
 	private Polynomial nextTimePolynomial;
 	private Random rdm;
+    private int numGatesDone;
 	public static int numGates = 6;
 	
 	public TrafficGenerator(int simLen, String nextTimePoly, InetAddress address, int port) throws Exception
 	{
         super(address, port);
+        numGatesDone = 0;
 		currentTime = 0;
 		simulationLength = simLen;
 		nextTimePolynomial = new Polynomial(nextTimePoly);
@@ -175,19 +177,17 @@ public class TrafficGenerator extends MessageReceiver implements Simulation, Chr
 	
     public void onGateDone(GateDoneMessage message)
     {
-        step();
+        numGatesDone++;
+        if(numGatesDone == numGates)
+        {
+            numGatesDone = 0;
+            step();
+        }
     }
-	@Override
-	public void onCarGenerated(Car newestCar) {
-	//SUCK DICK TODO	
-	}
-
-	@Override
 	public void onGateSubscribe(GateSubscribeMessage gateSubscribing) {
 		gates.add(new HostPort(gateSubscribing.getAddressOfGate(),gateSubscribing.getPort()));
 	}
 	
-	@Override
 	public void onTimeSubscribeReceived(TimeSubscribeMessage messageReceived) {
         System.out.println("Received a subscribe from "+messageReceived.getPortSubscribingOn());
 		timeSubscribers.add(new HostPort(messageReceived.getAddressSubscribing(), messageReceived.getPortSubscribingOn()));

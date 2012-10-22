@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import messaging.*;
 import tokentrading.TokenTrader;
 import util.MessageReceiver;
+import util.Config;
 import car.Car;
 import java.net.*;
 import java.io.*;
@@ -32,6 +33,12 @@ public class GateImpl extends MessageReceiver implements Gate {
 		this.amountOfTimeToWait = timeToWait*1000; //dates deal with milliseconds, we want to expose all APIs as seconds
 		this.amountOfMoney = moneyToStartWith;
 		tokenTrader = tokenPolicy;
+        Config config = new Config();
+        timeSubscribe(config.trafficGenerator.iaddr, config.trafficGenerator.port);
+        gateSubscribe(config.trafficGenerator.iaddr, config.trafficGenerator.port);
+        sendDone(config.trafficGenerator.iaddr, config.trafficGenerator.port);
+        Thread listeningThread = new Thread(this);
+        listeningThread.start();
 	}
 	
 	
@@ -58,6 +65,7 @@ public class GateImpl extends MessageReceiver implements Gate {
 	public void onTimeUpdate(TimeMessage messageFromChronos){
 		
 		Date newTime = messageFromChronos.getNewTime();
+        System.out.println("currentTime: " + (newTime.getTime() / 1000));
 		Calendar timeToCheckAgainst = Calendar.getInstance();
 		timeToCheckAgainst.setTime(newTime);
 		for(CarWrapper currentCar: waitingCars)
@@ -165,6 +173,21 @@ public class GateImpl extends MessageReceiver implements Gate {
 	public void gateSubscribe(InetAddress ip, int port)
     {
 		GateSubscribeMessage message = new GateSubscribeMessage(this.ipAddress, this.port);
+		try 
+		{
+            Socket s = new Socket(ip, port);
+            OutputStream o = s.getOutputStream();
+            AbstractMessage.encodeMessage(o, message);
+            o.close();
+            s.close();
+		} 
+		catch(Exception e) {
+			System.out.println("Sadddnesss");
+		}	
+	}
+    public void sendDone(InetAddress ip, int port)
+    {
+		GateDoneMessage message = new GateDoneMessage(this.ipAddress, this.port);
 		try 
 		{
             Socket s = new Socket(ip, port);
