@@ -11,6 +11,7 @@ import messaging.AbstractMessage;
 import messaging.CarArrivalMessage;
 import simulation.TrafficGenerator;
 import car.Car;
+import util.Everything;
 
 
 public class Test
@@ -35,26 +36,7 @@ public class Test
 
         CarArrivalMessage message = new CarArrivalMessage(new Date(), new Date());
 
-        sendMessage(message, InetAddress.getLocalHost(), 1234);
+        Everything.sendMessage(message, InetAddress.getLocalHost(), 1234);
 
-    }
-
-    public static String sendMessage(AbstractMessage message, InetAddress ip, int port)
-    {
-        try {
-            Socket s = new Socket(ip, port);
-            
-            OutputStream o = s.getOutputStream();
-            o.flush();
-
-         
-
-            AbstractMessage.encodeMessage(o, message);
-            o.flush();
-            s.close();
-        } catch(Exception e) {
-            System.out.println("Sadddnesss");
-        }
-        return null;
     }
 }

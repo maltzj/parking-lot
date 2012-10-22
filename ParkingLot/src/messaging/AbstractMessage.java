@@ -20,6 +20,8 @@ public abstract class AbstractMessage {
 	public static final byte TYPE_MONEY_MESSAGE = 8;
 	public static final byte TYPE_CAR_LEAVING = 9;
 	
+	public static final byte TYPE_GATE_DONE = 10;
+	public static final byte TYPE_LOT_DONE = 11;
 	public static final byte TYPE_CLOSE_CONNECTION = 20;
 	
 	protected int length;
@@ -89,6 +91,23 @@ public abstract class AbstractMessage {
 				case TYPE_CAR_LEAVING:
 				{
 					return new CarLeavingMessage();
+				}				
+                case TYPE_GATE_DONE:
+				{
+
+					int length = dataInput.readInt();
+					int port = dataInput.readInt();
+					String inetAddress = getIpAddress(dataInput, length - 4);
+                
+					return new GateDoneMessage(InetAddress.getByName(inetAddress), port);
+				}
+                case TYPE_LOT_DONE:
+				{
+					int length = dataInput.readInt();
+					int port = dataInput.readInt();
+					String inetAddress = getIpAddress(dataInput, length - 4);
+                
+					return new LotDoneMessage(InetAddress.getByName(inetAddress), port);
 				}
 				case TYPE_CLOSE_CONNECTION:
 				{
@@ -178,6 +197,28 @@ public abstract class AbstractMessage {
 				}
 				case TYPE_CAR_LEAVING:
 				{
+					dataOutput.flush();
+					break;
+				}
+				case TYPE_GATE_DONE:
+				{
+					GateDoneMessage gateMessage = (GateDoneMessage) messageWriting;
+					String addressAsString = gateMessage.getAddressSubscribing().getHostAddress();
+					byte[] addressAsBytes = addressAsString.getBytes("UTF-8");
+					dataOutput.writeInt(addressAsBytes.length + 4);
+					dataOutput.writeInt(gateMessage.getPortSubscribingOn());
+					dataOutput.write(addressAsBytes);
+					dataOutput.flush();
+					break;
+				}
+				case TYPE_LOT_DONE:
+				{
+					LotDoneMessage lotMessage = (LotDoneMessage) messageWriting;
+					String addressAsString = lotMessage.getAddressSubscribing().getHostAddress();
+					byte[] addressAsBytes = addressAsString.getBytes("UTF-8");
+					dataOutput.writeInt(addressAsBytes.length + 4);
+					dataOutput.writeInt(lotMessage.getPortSubscribingOn());
+					dataOutput.write(addressAsBytes);
 					dataOutput.flush();
 					break;
 				}
