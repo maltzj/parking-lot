@@ -23,6 +23,8 @@ public abstract class MessageReceiver implements Runnable {
 		this.ipAddress = socket.getInetAddress();
 		this.port = socket.getLocalPort();
 	}
+
+    protected boolean die = false;
 	
     /** defaults to localhost 
      * @throws IOException 
@@ -55,7 +57,7 @@ public abstract class MessageReceiver implements Runnable {
 
 	@Override
 	public void run() {
-		while(true)
+		while(!die)
 		{
 			try {
 				Socket clientSocket = serverSocket.accept();

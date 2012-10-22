@@ -16,6 +16,7 @@ public class SetupTest
     private static final String MAGIC_POLY = "2,.000000000275,1,-.0000099,0,.1";
     private static final long TIME_TO_WAIT = 10;
     private static final int CASH_MONEY_TO_START = 100;
+    private static final int TOKENS_TO_START = 5;
 
     protected TrafficGenerator trafficGenerator;
     protected ArrayList<GateImpl> gates;
@@ -33,7 +34,7 @@ public class SetupTest
 
             for(HostPort h: config.gates)
             {
-                GateImpl g = new GateImpl(TIME_TO_WAIT, CASH_MONEY_TO_START, null, h.iaddr, h.port);
+                GateImpl g = new GateImpl(TIME_TO_WAIT, TOKENS_TO_START, CASH_MONEY_TO_START, null, h.iaddr, h.port);
                 this.gates.add(g);
             }
 
@@ -49,7 +50,5 @@ public class SetupTest
     {
         SetupTest test = new SetupTest();
         test.setup();
-        Thread.sleep(10000);
-        System.exit(0);
     }
 }

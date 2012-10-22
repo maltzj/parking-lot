@@ -3,6 +3,7 @@ import java.net.InetAddress;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.*;
 
 import messaging.*;
 import tokentrading.TokenTrader;
@@ -15,7 +16,7 @@ import java.io.*;
 public class GateImpl extends MessageReceiver implements Gate {
 	
 	public static boolean stillRunning = true;
-	
+
 	ConcurrentLinkedQueue<CarWrapper> waitingCars = new ConcurrentLinkedQueue<CarWrapper>();
 	long amountOfTimeToWait; //Seconds
 	
@@ -26,19 +27,20 @@ public class GateImpl extends MessageReceiver implements Gate {
 	
 	int amountOfMoney;
 	
-	public GateImpl(long timeToWait, int moneyToStartWith, TokenTrader tokenPolicy, InetAddress addr, int port) throws Exception
+	public GateImpl(long timeToWait, int tokensToStartWith, int moneyToStartWith, TokenTrader tokenPolicy, InetAddress addr, int port) throws Exception
 	{
         super(addr, port);
 
 		this.amountOfTimeToWait = timeToWait*1000; //dates deal with milliseconds, we want to expose all APIs as seconds
 		this.amountOfMoney = moneyToStartWith;
+        this.numberOfTokens = tokensToStartWith;
+
 		tokenTrader = tokenPolicy;
         
         //Subscribe to car and time updates.
-        Config config = new Config();
-        timeSubscribe(config.trafficGenerator.iaddr, config.trafficGenerator.port);
-        gateSubscribe(config.trafficGenerator.iaddr, config.trafficGenerator.port);
-        sendDone(config.trafficGenerator.iaddr, config.trafficGenerator.port);
+        timeSubscribe();
+        gateSubscribe();
+        sendDone();
 
         //Create thread for listening to time and gate subscriptions
         Thread listeningThread = new Thread(this);
@@ -53,6 +55,7 @@ public class GateImpl extends MessageReceiver implements Gate {
 		//Add Car to queue
 		long timeArrived = arrival.getCarSentTime().getTime();
 		long leavingTime = timeArrived + amountOfTimeToWait;
+
 		Date timeToLeave = new Date();
 		timeToLeave.setTime(leavingTime);
 		CarWrapper carWrapper = new CarWrapper(carToQueue, timeToLeave);
@@ -72,6 +75,10 @@ public class GateImpl extends MessageReceiver implements Gate {
         System.out.println("currentTime: " + (newTime.getTime() / 1000));
 		Calendar timeToCheckAgainst = Calendar.getInstance();
 		timeToCheckAgainst.setTime(newTime);
+
+        ArrayList<CarWrapper> toRemove = new ArrayList<CarWrapper>();
+        
+
 		for(CarWrapper currentCar: waitingCars)
 		{
 			Calendar carLeaveQueueTime = Calendar.getInstance();
@@ -79,9 +86,24 @@ public class GateImpl extends MessageReceiver implements Gate {
 			
 			//Car waited too long and left
 			if(timeToCheckAgainst.after(carLeaveQueueTime)) {
-				waitingCars.remove(currentCar);
-			}
+                toRemove.add(currentCar);
+			} else {
+                //we have enough tokens.
+                if(this.numberOfTokens > 0) {
+                    this.numberOfTokens--;
+                    this.sendCarToParkingLot(currentCar);
+
+                    toRemove.add(currentCar);
+                }
+            }
 		}
+
+        for(CarWrapper car: toRemove)
+        {
+            waitingCars.remove(car);
+        }
+
+        sendDone();
 	}
 
 	@Override
@@ -98,6 +120,11 @@ public class GateImpl extends MessageReceiver implements Gate {
 				this.onTimeUpdate((TimeMessage) message);
 				break;
 			}
+            case AbstractMessage.TYPE_CLOSE_CONNECTION:
+            {
+                this.die = true;
+                break;
+            }
 			default:
 			{
 				//Do something
@@ -159,12 +186,13 @@ public class GateImpl extends MessageReceiver implements Gate {
      * @param ip - IP Address of Traffic Generator
      * @param port - Port of Traffic Generator
      */
-    public void timeSubscribe(InetAddress ip, int port)
+    public void timeSubscribe()
     {
+        Config c = new Config();
 		TimeSubscribeMessage message = new TimeSubscribeMessage(this.ipAddress, this.port);
 		try 
 		{
-            Socket s = new Socket(ip, port);
+            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
             OutputStream o = s.getOutputStream();
             AbstractMessage.encodeMessage(o, message);
             o.close();
@@ -174,12 +202,13 @@ public class GateImpl extends MessageReceiver implements Gate {
 			System.out.println("Sadddnesss");
 		}	
 	}
-	public void gateSubscribe(InetAddress ip, int port)
+	public void gateSubscribe()
     {
+        Config c = new Config();
 		GateSubscribeMessage message = new GateSubscribeMessage(this.ipAddress, this.port);
 		try 
 		{
-            Socket s = new Socket(ip, port);
+            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
             OutputStream o = s.getOutputStream();
             AbstractMessage.encodeMessage(o, message);
             o.close();
@@ -189,12 +218,13 @@ public class GateImpl extends MessageReceiver implements Gate {
 			System.out.println("Sadddnesss");
 		}	
 	}
-    public void sendDone(InetAddress ip, int port)
+    public void sendDone()
     {
+        Config c = new Config();
 		GateDoneMessage message = new GateDoneMessage(this.ipAddress, this.port);
 		try 
 		{
-            Socket s = new Socket(ip, port);
+            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
             OutputStream o = s.getOutputStream();
             AbstractMessage.encodeMessage(o, message);
             o.close();
@@ -204,6 +234,28 @@ public class GateImpl extends MessageReceiver implements Gate {
 			System.out.println("Sadddnesss");
 		}	
 	}
+
+    public void sendCarToParkingLot(CarWrapper carWrapper)
+    {
+        System.out.println("Sending a car to the parking lot. It will leave at "+carWrapper.timeLeaving+" Tokens: "+this.numberOfTokens);
+
+        Config c = new Config();
+
+        CarArrivalMessage message = new CarArrivalMessage(new Date(), carWrapper.timeLeaving);
+		try 
+		{
+            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
+            OutputStream o = s.getOutputStream();
+            AbstractMessage.encodeMessage(o, message);
+            o.close();
+            s.close();
+		} 
+		catch(Exception e) {
+			System.out.println("Sadddnesss");
+		}	    
+    }
+
+    /** TODO: WTF DOES THIS DO? */
 	private static class CarWrapper {
 		Car carRepresenting;
 		Date timeLeaving;
@@ -229,7 +281,5 @@ public class GateImpl extends MessageReceiver implements Gate {
 		public void setTimeLeaving(Date timeLeaving) {
 			this.timeLeaving = timeLeaving;
 		}
-		
-		
 	}
 }
