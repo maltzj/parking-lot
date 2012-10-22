@@ -33,6 +33,7 @@ public class GateImpl extends MessageReceiver implements Gate {
 	TokenTrader tokenTrader;
 	
 	int amountOfMoney;
+	int moneyPerCarPassed;
 	
 	/**
 	 * Initializes a gate with all the information necessary to get running
@@ -44,7 +45,7 @@ public class GateImpl extends MessageReceiver implements Gate {
 	 * @param port, The port this gate will be listening on.
 	 * @throws Exception
 	 */
-	public GateImpl(long timeToWait, int tokensToStartWith, int moneyToStartWith, TokenTrader tokenPolicy, InetAddress addr, int port) throws Exception
+	public GateImpl(long timeToWait, int tokensToStartWith, int moneyToStartWith, TokenTrader tokenPolicy, InetAddress addr, int port, int moneyPerCarPassed) throws Exception
 	{
         super(addr, port);
 
@@ -52,7 +53,8 @@ public class GateImpl extends MessageReceiver implements Gate {
 		this.amountOfMoney = moneyToStartWith;
         this.numberOfTokens = tokensToStartWith;
 
-		tokenTrader = tokenPolicy;
+		this.moneyPerCarPassed = moneyPerCarPassed;
+	tokenTrader = tokenPolicy;
         
         //Subscribe to car and time updates.
         timeSubscribe();
@@ -109,7 +111,7 @@ public class GateImpl extends MessageReceiver implements Gate {
                 if(this.numberOfTokens > 0) {
                     this.numberOfTokens--;
                     this.sendCarToParkingLot(currentCar);
-
+					this.amountOfMoney += moneyPerCarPassed;
                     toRemove.add(currentCar);
                 }
             }

@@ -37,7 +37,7 @@ public class SetupTest
 
             for(HostPort h: config.gates)
             {
-                GateImpl g = new GateImpl(TIME_TO_WAIT, TOKENS_TO_START, CASH_MONEY_TO_START, null, h.iaddr, h.port);
+                GateImpl g = new GateImpl(TIME_TO_WAIT, TOKENS_TO_START, CASH_MONEY_TO_START, null, h.iaddr, h.port, CASH_MONEY_PER_CAR);
                 this.gates.add(g);
             }
 
