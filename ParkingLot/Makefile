@@ -25,3 +25,4 @@ you: clean default go
 
 clean:
 	find . -name *.class -exec rm {} \;
+
