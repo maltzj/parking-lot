@@ -135,13 +135,19 @@ public abstract class AbstractMessage {
 				}
 				case TYPE_MONEY_AMOUNT_MESSAGE:
 				{
+					int length = dataInput.readInt();
 					int amountOfMoney = dataInput.readInt();
-					return new MoneyAmountMessage(amountOfMoney);
+					int port = dataInput.readInt();
+					String inetAddString = getIpAddress(dataInput, length -8);
+					return new MoneyAmountMessage(amountOfMoney, InetAddress.getByName(inetAddString), port);
 				}
 				case TYPE_TOKEN_AMOUNT_MESSAGE:
 				{
+					int length = dataInput.readInt();
 					int numberOfTokens = dataInput.readInt();
-					return new TokenAmountMessage(numberOfTokens);
+					int port = dataInput.readInt();
+					String inetAddString = getIpAddress(dataInput, length -8);
+					return new MoneyAmountMessage(numberOfTokens, InetAddress.getByName(inetAddString), port);
 				}
 				default:
 					return null;
@@ -265,15 +271,25 @@ public abstract class AbstractMessage {
 				}
 				case TYPE_MONEY_AMOUNT_MESSAGE:
 				{
-					MoneyAmountMessage message = (MoneyAmountMessage) messageWriting;
-					dataOutput.writeInt(message.amountOfMoney);
+					MoneyAmountMessage moneyAmountMessage = (MoneyAmountMessage) messageWriting;
+					String addressAsString = moneyAmountMessage.getIpAddress().getHostAddress();
+					byte[] addressAsBytes = addressAsString.getBytes("UTF-8");
+					dataOutput.writeInt(addressAsBytes.length + 8);
+					dataOutput.writeInt(moneyAmountMessage.getAmountOfMoney());
+					dataOutput.writeInt(moneyAmountMessage.getPort());
+					dataOutput.write(addressAsBytes);
 					dataOutput.flush();
 					break;
 				}
 				case TYPE_TOKEN_AMOUNT_MESSAGE:
 				{
 					TokenAmountMessage tokenAmount = (TokenAmountMessage) messageWriting;
-					dataOutput.writeInt(tokenAmount.numberOfTokens);
+					String addressAsString = tokenAmount.getIpAddress().getHostAddress();
+					byte[] addressAsBytes = addressAsString.getBytes("UTF-8");
+					dataOutput.writeInt(addressAsBytes.length + 8);
+					dataOutput.writeInt(tokenAmount.getNumberOfTokens());
+					dataOutput.writeInt(tokenAmount.getPort());
+					dataOutput.write(addressAsBytes);
 					dataOutput.flush();
 					break;
 				}
