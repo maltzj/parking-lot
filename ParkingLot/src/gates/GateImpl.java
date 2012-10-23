@@ -188,7 +188,7 @@ public class GateImpl extends MessageReceiver implements Gate {
         if(!this.die)
         {
             this.die = true;
-            double averageWaitingTime = (double)this.totalCarWait/(numberOfSadnessCars + numberOfCarsLetThrough);
+            double averageWaitingTime = (double)this.totalCarWait/(numberOfSadnessCars + numberOfCarsLetThrough) * 1000;
             if(Double.isNaN(averageWaitingTime))
             {
                 averageWaitingTime = 0;
