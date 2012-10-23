@@ -1,18 +1,24 @@
 package gates;
+import java.io.OutputStream;
 import java.net.InetAddress;
-
+import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.*;
 
-import messaging.*;
-import tokentrading.TokenTrader;
-import util.MessageReceiver;
+import messaging.AbstractMessage;
+import messaging.CarArrivalMessage;
+import messaging.GateDoneMessage;
+import messaging.GateSubscribeMessage;
+import messaging.MoneyAmountMessage;
+import messaging.TimeMessage;
+import messaging.TimeSubscribeMessage;
+import messaging.TokenAmountMessage;
+import messaging.TokenMessage;
 import util.Config;
+import util.MessageReceiver;
 import car.Car;
-import java.net.*;
-import java.io.*;
 
 /**
  * A concrete implementation of the Gate interface.  This is responsible for handling all the responsibilities of a Gate
@@ -30,7 +36,6 @@ public class GateImpl extends MessageReceiver implements Gate {
 	Thread messageListenerThread;
 	
 	int numberOfTokens;
-	TokenTrader tokenTrader;
 	
 	int amountOfMoney;
 	int moneyPerCarPassed;
@@ -45,7 +50,7 @@ public class GateImpl extends MessageReceiver implements Gate {
 	 * @param port, The port this gate will be listening on.
 	 * @throws Exception
 	 */
-	public GateImpl(long timeToWait, int tokensToStartWith, int moneyToStartWith, TokenTrader tokenPolicy, InetAddress addr, int port, int moneyPerCarPassed) throws Exception
+	public GateImpl(long timeToWait, int tokensToStartWith, int moneyToStartWith,InetAddress addr, int port, int moneyPerCarPassed) throws Exception
 	{
         super(addr, port);
 
@@ -54,8 +59,7 @@ public class GateImpl extends MessageReceiver implements Gate {
         this.numberOfTokens = tokensToStartWith;
 
 		this.moneyPerCarPassed = moneyPerCarPassed;
-	tokenTrader = tokenPolicy;
-        
+		
         //Subscribe to car and time updates.
         timeSubscribe();
         gateSubscribe();
@@ -79,6 +83,7 @@ public class GateImpl extends MessageReceiver implements Gate {
 		timeToLeave.setTime(leavingTime);
 		CarWrapper carWrapper = new CarWrapper(carToQueue, timeToLeave);
 		waitingCars.add(carWrapper);
+		
 	}
 
 	@Override
@@ -91,7 +96,6 @@ public class GateImpl extends MessageReceiver implements Gate {
 	public void onTimeUpdate(TimeMessage messageFromChronos){
 		
 		Date newTime = messageFromChronos.getNewTime();
-        System.out.println("currentTime: " + (newTime.getTime() / 1000));
 		Calendar timeToCheckAgainst = Calendar.getInstance();
 		timeToCheckAgainst.setTime(newTime);
 
@@ -124,6 +128,41 @@ public class GateImpl extends MessageReceiver implements Gate {
 
         sendDone();
 	}
+	
+	public void onTokenAmountQuery(){
+		 Config c = new Config();
+			TokenAmountMessage message = new TokenAmountMessage(this.numberOfTokens, this.ipAddress, this.port);
+			try 
+			{
+	            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
+	      
+	            OutputStream o = s.getOutputStream();
+	            AbstractMessage.encodeMessage(o, message);
+	            o.close();
+	            s.close();
+			} 
+			catch(Exception e) {
+	            e.printStackTrace();
+			}	
+	}
+	
+	public void onMoneyAmountQuery(){
+		MoneyAmountMessage message = new MoneyAmountMessage(this.amountOfMoney, this.ipAddress, this.port);
+		 Config c = new Config();
+			try 
+			{
+	            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
+	      
+	            OutputStream o = s.getOutputStream();
+	            AbstractMessage.encodeMessage(o, message);
+	            o.close();
+	            s.close();
+			} 
+			catch(Exception e) {
+	            e.printStackTrace();
+			}	
+		
+	}
 
 	@Override
 	public void onMessageArrived(AbstractMessage message) {
@@ -145,12 +184,19 @@ public class GateImpl extends MessageReceiver implements Gate {
                 this.die = true;
                 break;
             }
-
             case AbstractMessage.TYPE_TOKEN_MESSAGE:
             {
                 TokenMessage tokenMessage = (TokenMessage) message;
                 this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
                 break;
+            }
+            case AbstractMessage.TYPE_MONEY_QUERY_MESSAGE:
+            {
+            	this.onMoneyAmountQuery();
+            }
+            case AbstractMessage.TYPE_TOKEN_QUERY_MESSAGE:
+            {
+            	this.onTokenAmountQuery();
             }
 			default:
 			{
@@ -260,6 +306,7 @@ public class GateImpl extends MessageReceiver implements Gate {
 		try 
 		{
             Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
+      
             OutputStream o = s.getOutputStream();
             AbstractMessage.encodeMessage(o, message);
             o.close();
@@ -276,7 +323,7 @@ public class GateImpl extends MessageReceiver implements Gate {
      */
     public void sendCarToParkingLot(CarWrapper carWrapper)
     {
-        System.out.println(port +": Sending a car to the parking lot. It will leave at "+carWrapper.timeLeaving+" Tokens: "+this.numberOfTokens);
+        System.out.println(port +": Sending a car to the parking lot. It will leave at "+carWrapper.timeLeaving+" Tokens: "+this.numberOfTokens + " amount of money is: " + this.amountOfMoney + " length of queue is " + this.getCarsWaiting());
 
         Config c = new Config();
 
