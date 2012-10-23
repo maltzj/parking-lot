@@ -302,7 +302,7 @@ public class TrafficGenerator implements Chronos
 
             sendMoney(listener, money);
             sendTokens(listener, tokens);
-            System.out.println(hp.port+" has $"+money);
+            System.out.println(listener.getPort()+" has $"+money);
         }
 
     }
@@ -341,25 +341,25 @@ public class TrafficGenerator implements Chronos
     public void scaleProfit()
     {
         //TODO: FIXME
-        List<HostPort> buyers = new ArrayList<HostPort>();
+        List<GateMessageListener> buyers = new ArrayList<GateMessageListener>();
 
-        for(HostPort hp: gates)
+        for(GateMessageListener listener : this.gateListeners)
         {
-            int tokens = hostPortToTokensMap.get(hp);
+            int tokens = hostPortToTokensMap.get(listener);
             if(tokens == 0)
             {
-                buyers.add(hp);
+                buyers.add(listener);
             }
         }
 
-        for(HostPort buyer: buyers)
+        for(GateMessageListener buyer: buyers)
         {
             int buyerCashMoney = hostPortToMoneyMap.get(buyer);
 
             //if the buyer has enough money to buy a token, buy one token.
             if(buyerCashMoney > SetupTest.CASH_MONEY_PER_TOKEN)
             {
-                for(HostPort seller: gates)
+                for(GateMessageListener seller: this.gateListeners)
                 {
                     int sellerTokens = hostPortToTokensMap.get(seller);
                     int sellerCashMoney = hostPortToMoneyMap.get(seller);
