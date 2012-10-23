@@ -33,8 +33,9 @@ public class TrafficGenerator implements Chronos
     private Polynomial nextTimePolynomial;
     private Random rdm;
     private int numGatesDone;
-    public static int numGates = 6;
-    private int distributeType = 1;
+
+	public static int numGates = 6;
+    private int distributeType = 0;
 
     Thread serverThread;
 
@@ -70,15 +71,15 @@ public class TrafficGenerator implements Chronos
     }
 
 
-    public void step() throws IOException
-    {
-        /**
-          You may want to wait for a signal here, instead of start sending a car right away.
-          And maybe you want to hard code all your six gates' IP and port number here. That depends your implementation.
-          */
-
-        int nextTime;
-        int leavingTime;
+	public void step() throws IOException
+	{
+		/**
+			You may want to wait for a signal here, instead of start sending a car right away.
+			And maybe you want to hard code all your six gates' IP and port number here. That depends your implementation.
+		*/
+		
+		int nextTime;
+		int leavingTime;
 
         try{
             Thread.sleep(10);
@@ -277,19 +278,19 @@ public class TrafficGenerator implements Chronos
                         break;
                     }
                 case 1:
-                    {
-                        distributeEqually();
-                        break;
-                    }
+                {
+                    distributeEqually();
+                    break;
+                }
                 case 2:
-                    {
-                        scaleProfit();
-                        break;
-                    }
+                {
+                    scaleProfit();
+                    break;
+                }
             }
             generateCar();
-        }	
-    }
+		}	
+	}
 
    public void doNotDistribute()
    {
@@ -304,8 +305,7 @@ public class TrafficGenerator implements Chronos
             sendTokens(listener, tokens);
             System.out.println(listener.getPort()+" has $"+money);
         }
-
-    }
+   }
 
     public void distributeEqually()
     { 
@@ -340,7 +340,6 @@ public class TrafficGenerator implements Chronos
      */
     public void scaleProfit()
     {
-        //TODO: FIXME
         List<GateMessageListener> buyers = new ArrayList<GateMessageListener>();
 
         for(GateMessageListener listener : this.gateListeners)
