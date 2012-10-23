@@ -36,6 +36,9 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
     private int numGatesDone;
 	public static int numGates = 6;
     private int distributeType = 0;
+
+    //Putting this here because we generate a car before advancing time.
+    private int stayTime = 0;
 	
 	public static boolean tokenTradingStepComplete = false;
 	
@@ -58,6 +61,8 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
         Thread listeningThread = new Thread(this);
         listeningThread.start();
 	}
+
+
 	public void step() throws IOException
 	{
 		/**
@@ -66,7 +71,6 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 		*/
 		
 		int nextTime;
-		int stayTime;
 		int nextGate;
 		int leavingGate;
 		int leavingTime;
@@ -80,31 +84,32 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 
         nextTime = (int)nextTime(nextTimePolynomial.evaluate(currentTime));
         stayTime = (int)(Math.abs(rdm.nextGaussian() * ( simulationLength - currentTime )/4 + (simulationLength - currentTime)/2));
-        //TODO: CHANGE ME TO THE TA'S RETARDED CODE.
-        nextGate = (int)(rdm.nextDouble() * gates.size());
-        leavingGate = (int)(rdm.nextDouble() * (numGates - 1) );
 
         //wait for things to be ready.
 
         currentTime = currentTime + nextTime;
-        leavingTime = currentTime + stayTime;
 
         //Make cars leave parking lot
         checkCarLeaving();
         tokenTradingStepComplete = false;
         askForTokens();
-        
-        while(!tokenTradingStepComplete)
-        {
-        	try {
-				Thread.sleep(200);
-			} catch (InterruptedException e) {
-			}
-        }
-        
+   }
+
+
+    public void generateCar()
+    {
+
+        int nextGate, leavingGate;
+
+        //TODO: CHANGE ME TO THE TA'S RETARDED CODE.
+        nextGate = (int)(rdm.nextDouble() * gates.size());
+        leavingGate = (int)(rdm.nextDouble() * (numGates - 1) );
+
+        int leavingTime = stayTime + currentTime;
+
         if(currentTime < simulationLength)
         {
-            System.out.println("Time: " + currentTime + "\tGate: " + nextGate + "\t\tstayTime: " + stayTime + "\t\tleavingGate: " + leavingGate + "\t\tleavingTime: " + leavingTime);
+            System.out.println("Generated a car: Time: " + currentTime + "\tGate: " + nextGate + "\t\tstayTime: " + stayTime + "\t\tleavingGate: " + leavingGate + "\t\tleavingTime: " + leavingTime);
             /**
               Here you should send a {massage} (MASSAGES FOR ALL) to the gate and insert the car to parking lot array (you need to implement the array).
               Remember to handle the situation that car may get reject by the gate so that it won't be in the parking lot.
@@ -137,9 +142,6 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            finally{
-            	sock.close();
-            }
 
             /* End send car to gate message */
 
@@ -150,6 +152,8 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
             killAllDashNine();
             
         } 
+ 
+
     }
 	
 	
@@ -256,7 +260,6 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 	}
 
 	private void askForMoney(){
-        System.out.println("askForMoney");
 		SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_MONEY_QUERY_MESSAGE);
 		for(HostPort hp : timeSubscribers)
 		{
@@ -272,10 +275,10 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
                 e.printStackTrace();
         	}
 		}
+        //once you've received all the tokens and money.
 	}
 	
     private void onMoneyAmountArrived(MoneyAmountMessage message) {
-        System.out.println("onMoneyAmountArrived");
 		HostPort hostPort = new HostPort(message.getIpAddress(), message.getPort());
 		this.hostPortToMoneyMap.put(hostPort, new Integer(message.getAmountOfMoney()));
 		
@@ -290,12 +293,14 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
                     break;
                 }
             }
+            hostPortToMoneyMap.clear();
+            hostPortToTokensMap.clear(); 
+            generateCar();
 		}	
 	}
     
    public void doNotDistribute()
    {
-        System.out.println("doNotDistribute");
         int tokens = 0;
         int money = 0;
         for(HostPort hp : gates)
@@ -305,7 +310,6 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
             sendMoney(hp, money);
             sendTokens(hp, tokens);
         }
-        tokenTradingStepComplete = true;
    }
    public void sendMoney(HostPort hp, int money)
    {
@@ -339,7 +343,6 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
    }
     
 	private void askForTokens() {
-        System.out.println("askForTokens");
 		SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_TOKEN_QUERY_MESSAGE);
 		for(HostPort hp : timeSubscribers)
 		{
@@ -358,7 +361,6 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 	}
 	
 	private void onTokenAmountArrived(TokenAmountMessage message) {
-    System.out.println("onTokenAmountArrived");
     	HostPort hostPort = new HostPort(message.getIpAddress(), message.getPort());
 		this.hostPortToTokensMap.put(hostPort, new Integer(message.getNumberOfTokens()));
 		
@@ -401,6 +403,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 	public void publishTime()
 	{
 		Date d = getCurrentTime();
+        System.out.println("TrafficGenerator: Publishing Time "+d);
 		TimeMessage message = new TimeMessage(d);
 		for(HostPort hp : timeSubscribers)
 		{

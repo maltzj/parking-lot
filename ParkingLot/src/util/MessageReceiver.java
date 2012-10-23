@@ -75,6 +75,7 @@ public abstract class MessageReceiver implements Runnable {
                 this.onMessageArrived(messageReceived);
                 clientSocket.close();
 			} catch (IOException e) {
+                e.printStackTrace();
 
 			}
 			finally{

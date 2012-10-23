@@ -22,4 +22,19 @@ public class HostPort
 		iaddr = i;
 		port = p;
 	}
+
+    public int hashCode()
+    {
+        return (""+this.iaddr.hashCode() + ""+ port).hashCode();
+    }
+
+    public boolean equals(Object other)
+    {
+        if(other instanceof HostPort)
+        {
+            HostPort h = (HostPort) other;
+            return this.iaddr.equals(h.iaddr) && this.port == h.port;
+        }
+        return false;
+    }
 }

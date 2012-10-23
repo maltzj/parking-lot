@@ -29,7 +29,7 @@ The parking lot checks to see if cars are leaving, and removes them when it's ti
 
 need some hardcode testing to ensure that things are working. We noticed that there were like 11k tokens on a gate, when we ran a test last night.
 
-We need to implement cash money per car. When a car gets let in by a gate, it gets some money.
+//We need to implement cash money per car. When a car gets let in by a gate, it gets some money.
 
 We have not tested cars leaving from the gate's queue when they wait too long.
 

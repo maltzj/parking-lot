@@ -147,7 +147,7 @@ public abstract class AbstractMessage {
 					int numberOfTokens = dataInput.readInt();
 					int port = dataInput.readInt();
 					String inetAddString = getIpAddress(dataInput, length -8);
-					return new MoneyAmountMessage(numberOfTokens, InetAddress.getByName(inetAddString), port);
+					return new TokenAmountMessage(numberOfTokens, InetAddress.getByName(inetAddString), port);
 				}
 				default:
 					return null;
