@@ -1,0 +1,149 @@
+Tue Oct 23 04:00:07 2012 - Vaibhav Verma: Merge branch 'master' of github.com:/JetFault/parking-lot
+Tue Oct 23 03:58:29 2012 - Vaibhav Verma: More Stress Testing
+Tue Oct 23 03:51:37 2012 - Vaibhav Verma: Testing under stress.
+Tue Oct 23 03:25:28 2012 - Vaibhav Verma: Fixed an issue with Money Messages not being cleared.
+Tue Oct 23 03:58:29 2012 - Vaibhav Verma: More Stress Testing
+Tue Oct 23 03:57:38 2012 - Jonathan Maltz: Docs for the Gate
+Tue Oct 23 03:51:37 2012 - Vaibhav Verma: Testing under stress.
+Tue Oct 23 03:25:28 2012 - Vaibhav Verma: Fixed an issue with Money messages not being cleared.
+Tue Oct 23 02:56:46 2012 - Vaibhav Verma: Merge branch 'master' of github.com:/JetFault/parking-lot
+Tue Oct 23 02:51:08 2012 - Vaibhav Verma: It compiles again after refactoring the Messaging protocol.
+Tue Oct 23 02:33:37 2012 - Vaibhav Verma: Refactoring Messaging Protocol.
+Tue Oct 23 01:26:16 2012 - Vaibhav Verma: We have code working but Message Protocol fails.
+Tue Oct 23 02:33:47 2012 - Vaibhav Verma: Merge branch 'master' of github.com:/JetFault/parking-lot
+Tue Oct 23 02:27:54 2012 - Jonathan Maltz: Refactoring the Messaging Protocol to use GateMessageListener.
+Tue Oct 23 00:06:14 2012 - Vaibhav Verma: Removing the old version of Money Amount Query and Token amount query.
+Tue Oct 23 00:05:06 2012 - Vaibhav Verma: Merge branch 'persistentsockets' of github.com:/JetFault/parking-lot into persistentsockets
+Mon Oct 22 23:54:58 2012 - jmaltz: Using persistent Sockets instead of recreating them each time.
+Mon Oct 22 23:53:35 2012 - Vaibhav Verma: Fixing bugs in the redistribution strategy.
+Mon Oct 22 21:40:38 2012 - William Brozas: Fixing issues with TokenAmount.
+Mon Oct 22 20:38:47 2012 - jmaltz: Made it so that sending token responses actually redistributes the tokens to the manager.
+Mon Oct 22 20:34:12 2012 - jmaltz: Fixed the tests to go along with the new constructor.
+Mon Oct 22 20:33:26 2012 - jmaltz: Gate is now up and running
+Mon Oct 22 20:32:41 2012 - jmaltz: Added the necessary messages
+Mon Oct 22 20:32:17 2012 - jmaltz: Added stuff for the TrafficGenerator
+Mon Oct 22 19:34:43 2012 - jmaltz: Added Token and Money AmountMessages
+Mon Oct 22 18:43:28 2012 - jmaltz: hopefully fixed the message receiver
+Mon Oct 22 18:10:19 2012 - Jonathan Maltz: Added code gates to get money for every car passed
+Mon Oct 22 18:04:51 2012 - Jonathan Maltz: Getting rid of the stupid old traffic generator
+Mon Oct 22 17:59:11 2012 - Vaibhav Verma: Changing TODO
+Mon Oct 22 08:28:58 2012 - jmaltz: Added a journal about all of our "meetings" where we were "very productive"
+Mon Oct 22 08:18:38 2012 - jmaltz: Every day I'm shuffling (and documenting)
+Mon Oct 22 07:31:14 2012 - jmaltz: DOCUMENT ALL THE THINGS
+Mon Oct 22 07:08:17 2012 - jmaltz: Merge branch 'master' of https://github.com/JetFault/parking-lot.git
+Mon Oct 22 03:06:32 2012 - William Brozas: Removing cars from the parking lot when they leave.
+Mon Oct 22 01:45:36 2012 - Vaibhav Verma: SO many open files
+Mon Oct 22 01:19:42 2012 - William Brozas: Printing the stack trace everywhere.
+Mon Oct 22 00:24:16 2012 - Vaibhav Verma: Removing all the unit tests we don't need.
+Mon Oct 22 00:13:29 2012 - William Brozas: Merge branch 'master' of github.com:JetFault/parking-lot
+Mon Oct 22 00:12:35 2012 - William Brozas: Setup test with new methods for gate subscribe and time subscribe.
+Mon Oct 22 00:02:40 2012 - Vaibhav Verma: Writing a magical makefile.
+Mon Oct 22 00:00:54 2012 - Vaibhav Verma: Running all tests when you test.
+Sun Oct 21 23:42:15 2012 - Vaibhav Verma: Removing Kyle's debug messages.
+Sun Oct 21 23:12:18 2012 - Vaibhav Verma: Merge branch 'master' of github.com:/JetFault/parking-lot
+Sun Oct 21 23:11:18 2012 - Vaibhav Verma: Changing GateRec test.
+Sun Oct 21 23:11:18 2012 - William Brozas: Changing the step function to generate car arrivals properly.
+Sun Oct 21 22:33:41 2012 - Vaibhav Verma: Merge branch 'master' of github.com:/JetFault/parking-lot
+Sun Oct 21 22:33:30 2012 - William Brozas: Adding a test to check time subscription.
+Sun Oct 21 22:33:14 2012 - Vaibhav Verma: Added Lot Done Message/GateDoneMessage
+Sun Oct 21 21:07:30 2012 - Vaibhav Verma: Merge branch 'master' of github.com:/JetFault/parking-lot
+Sun Oct 21 21:07:04 2012 - Vaibhav Verma: modified makefile
+Sun Oct 21 02:02:24 2012 - Jerry Reptak: Gate message sending and car arrival testing passed
+Sun Oct 21 01:47:03 2012 - Jerry Reptak: Merge branch 'master' of github.com:/JetFault/parking-lot
+Sun Oct 21 01:46:35 2012 - Jerry Reptak: Gate send car arrival test
+Sun Oct 21 01:46:23 2012 - William Brozas: Writing a function to subscribe for car arrival messages.
+Sun Oct 21 01:44:12 2012 - William Brozas: Refactoring the time subscription messages.
+Sun Oct 21 01:33:30 2012 - William Brozas: Merge branch 'master' of github.com:JetFault/parking-lot
+Sun Oct 21 01:31:48 2012 - William Brozas: Changing the test for time subscription.
+Sun Oct 21 01:26:03 2012 - Vaibhav Verma: Merge branch 'master' of github.com:/JetFault/parking-lot
+Sun Oct 21 01:25:48 2012 - Vaibhav Verma: fixing ChronosTest to exit upon failure.
+Sun Oct 21 01:21:56 2012 - William Brozas: Merge branch 'master' of github.com:JetFault/parking-lot
+Sun Oct 21 01:19:51 2012 - William Brozas: Making Dates as Dates instead of longs.
+Sun Oct 21 01:14:54 2012 - Vaibhav Verma: Got the Traffic Generator working.
+Sun Oct 21 01:06:20 2012 - Vaibhav Verma: Renaming the run method.
+Sun Oct 21 00:50:10 2012 - Vaibhav Verma: Debugging the traffic generator
+Sun Oct 21 00:44:57 2012 - Jerry Reptak: Encode and send car send to gate message
+Sun Oct 21 00:26:41 2012 - Vaibhav Verma: Fixing a compile time error.
+Sun Oct 21 00:21:08 2012 - Jerry Reptak: Closing our sockets.
+Sun Oct 21 00:19:05 2012 - Jerry Reptak: Merge branch 'master' of github.com:/JetFault/parking-lot
+Sun Oct 21 00:18:53 2012 - Jerry Reptak: Car send to gate
+Sun Oct 21 00:15:22 2012 - William Brozas: Merge branch 'master' of github.com:JetFault/parking-lot
+Sun Oct 21 00:15:11 2012 - William Brozas: Adding a Time Subscribe message.
+Sun Oct 21 00:08:21 2012 - Vaibhav Verma: Trying to get subscriptions working.k
+Sun Oct 21 00:06:21 2012 - Jerry Reptak: Merge branch 'master' of github.com:/JetFault/parking-lot
+Sun Oct 21 00:00:55 2012 - Jerry Reptak: car arrival message
+Sat Oct 20 23:56:03 2012 - William Brozas: writing a publish method to publish times.
+Sat Oct 20 23:48:16 2012 - William Brozas: changing more longs to dates.
+Sat Oct 20 23:28:14 2012 - William Brozas: Merge branch 'master' of github.com:JetFault/parking-lot
+Sat Oct 20 23:27:57 2012 - William Brozas: jerry derps soo hard
+Sat Oct 20 23:27:34 2012 - Jerry Reptak: Chronos
+Sat Oct 20 23:22:29 2012 - William Brozas: Merge branch 'master' of github.com:JetFault/parking-lot
+Sat Oct 20 23:21:48 2012 - William Brozas: Adding a publish method stub
+Sat Oct 20 23:20:12 2012 - William Brozas: renaming a method
+Sat Oct 20 23:18:50 2012 - Jerry Reptak: Merge branch 'master' of github.com:/JetFault/parking-lot
+Sat Oct 20 23:18:23 2012 - William Brozas: Adding subscribers
+Sat Oct 20 23:18:21 2012 - Jerry Reptak: Moved Config, HostPort to util. Makefile does not work.
+Sat Oct 20 23:14:04 2012 - William Brozas: Writing Hostport
+Sat Oct 20 23:02:00 2012 - William Brozas: Making changes to Chronos
+Sat Oct 20 22:55:01 2012 - Jerry Reptak: Merge branch 'master' of github.com:/JetFault/parking-lot
+Sat Oct 20 22:54:43 2012 - Jerry Reptak: Simulation and Chronos
+Sat Oct 20 22:47:41 2012 - William Brozas: remove json
+Sat Oct 20 22:46:42 2012 - William Brozas: Trying to get JSON working with config
+Sat Oct 20 22:25:47 2012 - Jerry Reptak: Fixing out messaging protocol.
+Sat Oct 20 22:14:28 2012 - Vaibhav Verma: Merge branch 'master' of github.com:/JetFault/parking-lot
+Sat Oct 20 22:14:15 2012 - Vaibhav Verma: Making Gates listen on server sockets.
+Sat Oct 20 21:56:51 2012 - William Brozas: Merge branch 'master' of github.com:JetFault/parking-lot
+Sat Oct 20 21:56:45 2012 - William Brozas: Adding a Config
+Sat Oct 20 21:50:57 2012 - Vaibhav Verma: Making stuff extend MessageReceiver
+Sat Oct 20 21:50:19 2012 - Jerry Reptak: CRLF to LF
+Sat Oct 20 21:31:56 2012 - Vaibhav Verma: Merge branch 'master' of github.com:/JetFault/parking-lot
+Sat Oct 20 21:30:56 2012 - Vaibhav Verma: Makefile always compiles
+Sat Oct 20 21:18:03 2012 - Jerry Reptak: Adding cars to the queue.
+Sat Oct 20 21:16:15 2012 - Jerry Reptak: Close Connection Message
+Sat Oct 20 19:22:55 2012 - Jerry Reptak: gitignore classpath
+Sat Oct 20 19:19:57 2012 - Jerry Reptak: Server Sockets in MessageReceiver
+Sat Oct 20 18:34:12 2012 - Vaibhav Verma: Merge branch 'master' of github.com:/JetFault/parking-lot
+Sat Oct 20 18:34:05 2012 - Vaibhav Verma: Adding Tests
+Sat Oct 20 18:33:12 2012 - Jerry Reptak: Merge branch 'master' of github.com:/JetFault/parking-lot
+Sat Oct 20 18:32:52 2012 - Jerry Reptak: Gate Simulation messages
+Sat Oct 20 18:31:41 2012 - Vaibhav Verma: adding a config for kyleski
+Sat Oct 20 17:57:28 2012 - Jerry Reptak: Merge branch 'master' of github.com:/JetFault/parking-lot
+Sat Oct 20 17:57:14 2012 - Jerry Reptak: Schematics for project
+Thu Oct 18 18:05:33 2012 - Jerry Reptak: made todo be about ~80 columns
+Wed Oct 17 23:02:24 2012 - jmaltz: Added more TODOs
+Wed Oct 17 22:56:11 2012 - jmaltz: Adding TODOs
+Wed Oct 17 22:52:44 2012 - jmaltz: Added CarLeaving messages to AbstractMessages
+Wed Oct 17 22:51:24 2012 - jmaltz: Added Kyle's Generator.  Still not fully implemented, see TODOs for how it needs to be done.
+Wed Oct 17 22:48:15 2012 - jmaltz: Added the logic of how gates deal with waiting cars into the Gate itself
+Wed Oct 17 22:45:38 2012 - jmaltz: Moved the amount of time a car waits at the gate into the Gate
+Wed Oct 17 22:00:55 2012 - jmaltz: Added the ability for external code to get money from the gate and add money to the gate.
+Wed Oct 17 22:00:19 2012 - jmaltz: Added a MoneyMessage type
+Wed Oct 17 22:00:05 2012 - jmaltz: Added the profit token trading policy
+Tue Oct 16 22:24:42 2012 - jmaltz: Added the ability for pieces to query about how many tokens a gate has.
+Tue Oct 16 22:23:06 2012 - jmaltz: TokenTrader architecture added
+Tue Oct 16 21:34:13 2012 - jmaltz: Added TokenTrading infrastructure.
+Tue Oct 16 21:26:57 2012 - jmaltz: Added more Gate architecture.
+Tue Oct 16 18:48:22 2012 - jmaltz: Adding more messaging architecture.
+Wed Oct 3 18:51:13 2012 - jmaltz: Added the functionality for gates to send and receive tokens.
+Tue Oct 2 23:21:14 2012 - jmaltz: A couple of minor changes to Gate and AbstractMessage including how AbstractMessages can now have their type queried.
+Tue Oct 2 23:19:58 2012 - jmaltz: Added a placeholder for tokenrequestmessage.  We can implement it later.
+Tue Oct 2 23:19:04 2012 - jmaltz: Split up the ability of a gate to be a listener and a token trader
+Tue Oct 2 23:12:53 2012 - jmaltz: Moved MessageReceiver to its own package and had CarReceiver extend it.
+Tue Oct 2 09:19:11 2012 - jmaltz: Merge branch 'master' of https://github.com/JetFault/parking-lot.git
+Thu Sep 27 21:28:19 2012 - William Brozas: new stuff
+Tue Sep 25 23:35:08 2012 - jmaltz: Finished writing the AbstractMessage class read and write message.
+Tue Sep 25 00:42:19 2012 - jmaltz: More files that didn't get added :(
+Tue Sep 25 00:40:10 2012 - jmaltz: Ooops, forgot to add new files
+Tue Sep 25 00:38:21 2012 - jmaltz: Added additonal fields to Car
+Tue Sep 25 00:37:50 2012 - jmaltz: Added some more simulation classes and interfaces.
+Tue Sep 25 00:36:07 2012 - jmaltz: Added more messaging types.
+Fri Sep 21 14:42:18 2012 - William Brozas: newer version
+Thu Sep 20 13:02:15 2012 - William Brozas: Traffic Gen for Oct 2 NOT DONE ask b4 edit
+Sun Sep 16 20:53:05 2012 - jmaltz: Just a whole bunch of boiler plate code really
+Sat Sep 15 22:18:52 2012 - jmaltz: Some basic interfaces, will do more work on them tomorrow.
+Sat Sep 15 22:11:07 2012 - jmaltz: Added Project file
+Sat Sep 15 19:56:25 2012 - jmaltz: Update README.md
+Tue Sep 11 14:29:45 2012 - William Brozas: read my comment
+Tue Sep 11 14:29:25 2012 - Vaibhav Verma: I can change this too
+Tue Sep 11 14:28:05 2012 - William Brozas: Commit Message
+Tue Sep 11 14:21:45 2012 - Jerry Reptak: Initial commit
