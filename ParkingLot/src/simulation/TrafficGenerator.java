@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.*;
+import test.*;
 
 import messaging.*;
 import util.HostPort;
@@ -23,61 +25,59 @@ public class TrafficGenerator implements Chronos
 
     public ArrayList<Car> parkingLot;
 
-	
-	Date timeFromStart = new Date();
-	
-	private int currentTime;
-	private int simulationLength;
-	private Polynomial nextTimePolynomial;
-	private Random rdm;
+
+    Date timeFromStart = new Date();
+
+    private int currentTime;
+    private int simulationLength;
+    private Polynomial nextTimePolynomial;
+    private Random rdm;
     private int numGatesDone;
-	public static int numGates = 6;
+    public static int numGates = 6;
     private int distributeType = 1;
-    
+
     Thread serverThread;
 
     //Putting this here because we generate a car before advancing time.
     private int stayTime = 0;
-	
-	public static boolean tokenTradingStepComplete = false;
-	
-	Map<GateMessageListener, Integer> hostPortToTokensMap = new HashMap<GateMessageListener, Integer>();
-	Map<GateMessageListener, Integer> hostPortToMoneyMap = new HashMap<GateMessageListener, Integer>();
-	public static boolean die = false;
-	
-	List<GateMessageListener> gateListeners = new ArrayList<GateMessageListener>();
-	
-	MessageReceiver receiver;
-	
-	public TrafficGenerator(int simLen, String nextTimePoly, InetAddress address, int port) throws Exception
-	{
+
+    public static boolean tokenTradingStepComplete = false;
+
+    Map<GateMessageListener, Integer> hostPortToTokensMap = new HashMap<GateMessageListener, Integer>();
+    Map<GateMessageListener, Integer> hostPortToMoneyMap = new HashMap<GateMessageListener, Integer>();
+    public static boolean die = false;
+
+    List<GateMessageListener> gateListeners = new ArrayList<GateMessageListener>();
+
+    MessageReceiver receiver;
+
+    public TrafficGenerator(int simLen, String nextTimePoly, InetAddress address, int port) throws Exception
+    {
         MessageReceiver receiver = new MessageReceiver(address, port, this);
         this.receiver = receiver;
         numGatesDone = 0;
-		currentTime = 0;
-		simulationLength = simLen;
-		nextTimePolynomial = new Polynomial(nextTimePoly);
-		rdm = new Random();
+        currentTime = 0;
+        simulationLength = simLen;
+        nextTimePolynomial = new Polynomial(nextTimePoly);
+        rdm = new Random();
         parkingLot = new ArrayList<Car>();
 
         //Create thread for listening on socket.
         Thread serverThread = new Thread(receiver);
         serverThread.start();
-        
-	}
+
+    }
 
 
-	public void step() throws IOException
-	{
-		/**
-			You may want to wait for a signal here, instead of start sending a car right away.
-			And maybe you want to hard code all your six gates' IP and port number here. That depends your implementation.
-		*/
-		
-		int nextTime;
-		int nextGate;
-		int leavingGate;
-		int leavingTime;
+    public void step() throws IOException
+    {
+        /**
+          You may want to wait for a signal here, instead of start sending a car right away.
+          And maybe you want to hard code all your six gates' IP and port number here. That depends your implementation.
+          */
+
+        int nextTime;
+        int leavingTime;
 
         try{
             Thread.sleep(10);
@@ -88,6 +88,7 @@ public class TrafficGenerator implements Chronos
 
         nextTime = (int)nextTime(nextTimePolynomial.evaluate(currentTime));
         stayTime = (int)(Math.abs(rdm.nextGaussian() * ( simulationLength - currentTime )/4 + (simulationLength - currentTime)/2));
+        stayTime = 100;
 
         //wait for things to be ready.
 
@@ -97,7 +98,7 @@ public class TrafficGenerator implements Chronos
         checkCarLeaving();
         tokenTradingStepComplete = false;
         askForTokens();
-   }
+    }
 
 
     public void generateCar()
@@ -105,9 +106,11 @@ public class TrafficGenerator implements Chronos
 
         int nextGate, leavingGate;
 
-        //TODO: CHANGE ME TO THE TA'S RETARDED CODE.
-        nextGate = (int)(rdm.nextDouble() * this.gateListeners.size());
-        leavingGate = (int)(rdm.nextDouble() * (numGates - 1) );
+        nextGate = (int)(rdm.nextDouble() * ( numGates + 2 ));
+        leavingGate = (int)(rdm.nextDouble() * numGates );
+        if (nextGate >= numGates){
+            nextGate = numGates-1;
+        }
 
         int leavingTime = stayTime + currentTime;
 
@@ -145,26 +148,26 @@ public class TrafficGenerator implements Chronos
         } else {
             //TODO: Send shutdown messages to everyone.
             killAllDashNine();
-            
+
         } 
- 
+
 
     }
-	
-	
-	public double nextTime(double expectedValue)
-	{
-		return -Math.log(1 - rdm.nextDouble()) / expectedValue;
-	}
+
+
+    public double nextTime(double expectedValue)
+    {
+        return -Math.log(1 - rdm.nextDouble()) / expectedValue;
+    }
 
     public Date getCurrentTime()
     {
-		Date d = new Date();
-		d.setTime(this.currentTime * 1000);
-		return d;
+        Date d = new Date();
+        d.setTime(this.currentTime * 1000);
+        return d;
     }
 
-	/**Base on current time, check your parking lot array whether there is car should be leaving*/
+    /**Base on current time, check your parking lot array whether there is car should be leaving*/
     private void checkCarLeaving()
     {
 
@@ -179,7 +182,7 @@ public class TrafficGenerator implements Chronos
                 int gate = (int) (this.rdm.nextDouble()*this.gateListeners.size());
 
                 sendTokenMessage(this.gateListeners.get(gate));
-                
+
                 toRemove.add(c);
             }
         }
@@ -189,197 +192,245 @@ public class TrafficGenerator implements Chronos
             parkingLot.remove(c);
         }
     }
-    
+
     private void notifySubscribers()
     {
-	/**Iterate over the timeSubscribers and send each of them the current time*/
+        /**Iterate over the timeSubscribers and send each of them the current time*/
     }
 
     private void sendTokenMessage(GateMessageListener listener)
     {
-    	try {
-			listener.writeMessage(new TokenMessage(1));
-		} catch (IOException e) {
-			//cry
-		}
+        try {
+            listener.writeMessage(new TokenMessage(1));
+        } catch (IOException e) {
+            //cry
+        }
     }
 
-    
-	public void onMessageArrived(AbstractMessage message, GateMessageListener stream) throws IOException {
-		synchronized(this){
-			switch(message.getMessageType())
-			{
-				case AbstractMessage.TYPE_TIME_SUBSCRIBE:
-				{
-					this.onTimeSubscribeReceived((TimeSubscribeMessage) message);
-					break;
-				}
-				case AbstractMessage.TYPE_GATE_SUBSCRIBE:
-				{
-					this.onGateSubscribe((GateSubscribeMessage) message);
-					break;
-				}
-	            case AbstractMessage.TYPE_GATE_DONE:
-				{
-					this.onGateDone((GateDoneMessage) message);
-					break;
-				}
-	            case AbstractMessage.TYPE_CAR_ARRIVAL:
-				{
-					this.onCarArrived((CarArrivalMessage) message);
-					break;
-				}
-	            case AbstractMessage.TYPE_TOKEN_AMOUNT_MESSAGE:
-	            {
-	            	this.onTokenAmountArrived((TokenAmountMessage) message, stream);
-	            	break;
-	            }
-	            
-	            case AbstractMessage.TYPE_MONEY_AMOUNT_MESSAGE:
-	            {
-	            	this.onMoneyAmountArrived((MoneyAmountMessage) message, stream);
-	            }
-			}
-		}
-	}
 
-	private void askForMoney(){
-		System.out.println("ask for money");
-		SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_MONEY_QUERY_MESSAGE);
-		for(GateMessageListener gateListener: gateListeners)
-		{
-			try {
-				gateListener.writeMessage(message);
-			} catch (IOException e) {
-				//cry
-			}
-		}
+    public void onMessageArrived(AbstractMessage message, GateMessageListener stream) throws IOException {
+        synchronized(this){
+            switch(message.getMessageType())
+            {
+                case AbstractMessage.TYPE_TIME_SUBSCRIBE:
+                    {
+                        this.onTimeSubscribeReceived((TimeSubscribeMessage) message);
+                        break;
+                    }
+                case AbstractMessage.TYPE_GATE_SUBSCRIBE:
+                    {
+                        this.onGateSubscribe((GateSubscribeMessage) message);
+                        break;
+                    }
+                case AbstractMessage.TYPE_GATE_DONE:
+                    {
+                        this.onGateDone((GateDoneMessage) message);
+                        break;
+                    }
+                case AbstractMessage.TYPE_CAR_ARRIVAL:
+                    {
+                        this.onCarArrived((CarArrivalMessage) message);
+                        break;
+                    }
+                case AbstractMessage.TYPE_TOKEN_AMOUNT_MESSAGE:
+                    {
+                        this.onTokenAmountArrived((TokenAmountMessage) message, stream);
+                        break;
+                    }
+
+                case AbstractMessage.TYPE_MONEY_AMOUNT_MESSAGE:
+                    {
+                        this.onMoneyAmountArrived((MoneyAmountMessage) message, stream);
+                    }
+            }
+        }
+    }
+
+    private void askForMoney(){
+        System.out.println("ask for money");
+        SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_MONEY_QUERY_MESSAGE);
+        for(GateMessageListener gateListener: gateListeners)
+        {
+            try {
+                gateListener.writeMessage(message);
+            } catch (IOException e) {
+                //cry
+            }
+        }
         //once you've received all the tokens and money.
-	}
-	
+    }
+
     private void onMoneyAmountArrived(MoneyAmountMessage message, GateMessageListener stream) {
-    	System.out.println("do we make it to moneyAmountArrived");
-		this.hostPortToMoneyMap.put(stream, new Integer(message.getAmountOfMoney()));
-		
-		if(this.hostPortToMoneyMap.keySet().size() == this.numGates)
-		{
-			System.out.println("We need to distribute now");
-			//create the redistribution method
+        System.out.println("do we make it to moneyAmountArrived");
+        this.hostPortToMoneyMap.put(stream, new Integer(message.getAmountOfMoney()));
+
+        if(this.hostPortToMoneyMap.keySet().size() == this.numGates)
+        {
+            System.out.println("We need to distribute now");
+            //create the redistribution method
             switch(distributeType)
             {
                 case 0:
-                {
-                    doNotDistribute();
-                    break;
-                }
+                    {
+                        doNotDistribute();
+                        break;
+                    }
                 case 1:
-                {
-                    distributeEqually();
-                    break;
-                }
+                    {
+                        distributeEqually();
+                        break;
+                    }
+                case 2:
+                    {
+                        scaleProfit();
+                        break;
+                    }
             }
             hostPortToMoneyMap.clear();
             hostPortToTokensMap.clear(); 
             generateCar();
-		}	
-	}
-    
-   public void doNotDistribute()
-   {
+        }	
+    }
+
+    public void doNotDistribute()
+    {
         int tokens = 0;
         int money = 0;
         for(GateMessageListener listener : this.gateListeners)
         {
             tokens = hostPortToTokensMap.get(listener);            
             money = hostPortToMoneyMap.get(listener);
-            
+
             sendMoney(listener, money);
             sendTokens(listener, tokens);
+            System.out.println(hp.port+" has $"+money);
         }
-   }
 
-   public void distributeEqually()
-   { 
-       int totalTokens = 0;
-       int numLeft = numGates;
-       int money = 0;
+    }
 
-       for(GateMessageListener listener: this.gateListeners)
-       {
-    	   totalTokens += hostPortToTokensMap.get(listener);
-			  
-       }
+    public void distributeEqually()
+    { 
+        int totalTokens = 0;
+        int numLeft = numGates;
+        int money = 0;
+
+        for(GateMessageListener listener: this.gateListeners)
+        {
+            totalTokens += hostPortToTokensMap.get(listener);
+
+        }
 
 
-       for(GateMessageListener listener: this.gateListeners)
-       {	   
-           money = hostPortToMoneyMap.get(listener);            
-           //send the money as is.
-           sendMoney(listener, money);
+        for(GateMessageListener listener: this.gateListeners)
+        {	   
+            money = hostPortToMoneyMap.get(listener);            
+            //send the money as is.
+            sendMoney(listener, money);
 
-           //send the tokens equally distributed.
-           int sendingTokens = totalTokens/numLeft--;
-           
-           
-           sendTokens(listener, sendingTokens);
-           totalTokens -= sendingTokens;
-       }
-   }
+            //send the tokens equally distributed.
+            int sendingTokens = totalTokens/numLeft--;
 
-   public void scaleProfit()
-   {
-         
-   }
 
-   public void sendMoney(GateMessageListener gateListener, int money)
-   {
+            sendTokens(listener, sendingTokens);
+            totalTokens -= sendingTokens;
+        }
+    }
+
+    /** Ensure that all gates have atleast one token.
+     * This will ensure that a car can always pass through a gate unless we reach the case where each gate has one token.
+     */
+    public void scaleProfit()
+    {
+        List<HostPort> buyers = new ArrayList<HostPort>();
+
+        for(HostPort hp: gates)
+        {
+            int tokens = hostPortToTokensMap.get(hp);
+            if(tokens == 0)
+            {
+                buyers.add(hp);
+            }
+        }
+
+        for(HostPort buyer: buyers)
+        {
+            int buyerCashMoney = hostPortToMoneyMap.get(buyer);
+
+            //if the buyer has enough money to buy a token, buy one token.
+            if(buyerCashMoney > SetupTest.CASH_MONEY_PER_TOKEN)
+            {
+                for(HostPort seller: gates)
+                {
+                    int sellerTokens = hostPortToTokensMap.get(seller);
+                    int sellerCashMoney = hostPortToMoneyMap.get(seller);
+
+                    if(sellerTokens > 1)
+                    {
+                        hostPortToTokensMap.put(seller, sellerTokens - 1);
+                        hostPortToMoneyMap.put(seller, sellerCashMoney + SetupTest.CASH_MONEY_PER_TOKEN);
+
+                        hostPortToTokensMap.put(buyer, 1);
+                        hostPortToMoneyMap.put(buyer, buyerCashMoney - SetupTest.CASH_MONEY_PER_TOKEN);
+
+                        break;
+                    }
+                }
+            }
+        }
+
+
+        doNotDistribute();
+    }
+
+    public void sendMoney(GateMessageListener gateListener, int money)
+    {
         MoneyMessage message = new MoneyMessage(money);
-    	try 
-		{
+        try 
+        {
             gateListener.writeMessage(message);
-       	}
-		catch(Exception e) {
+        }
+        catch(Exception e) {
             e.printStackTrace();
         }
-   }
-   public void sendTokens(GateMessageListener listener, int tokens)
-   {
+    }
+    public void sendTokens(GateMessageListener listener, int tokens)
+    {
         TokenMessage message = new TokenMessage(tokens);
-    	try 
-		{
+        try 
+        {
             listener.writeMessage(message);
-       	}
-		catch(Exception e) {
+        }
+        catch(Exception e) {
             e.printStackTrace();
         }
-   }
-    
-	private void askForTokens() {
+    }
 
-		SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_TOKEN_QUERY_MESSAGE);
-		for(GateMessageListener listener : this.gateListeners)
-		{
-			try 
-			{
+    private void askForTokens() {
+
+        SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_TOKEN_QUERY_MESSAGE);
+        for(GateMessageListener listener : this.gateListeners)
+        {
+            try 
+            {
                 listener.writeMessage(message);
-       		}
-			catch(Exception e) {
+            }
+            catch(Exception e) {
                 e.printStackTrace();
-        	}
-		}
-	}
-	
-	private void onTokenAmountArrived(TokenAmountMessage message, GateMessageListener stream) {
-		this.hostPortToTokensMap.put(stream, new Integer(message.getNumberOfTokens()));
-		if(this.hostPortToTokensMap.keySet().size() == numGates)
-		{
-			askForMoney();
-		}
+            }
+        }
+    }
 
-	}
-    
-    
-	/** This gets called when a car is sent to the parking lot.
+    private void onTokenAmountArrived(TokenAmountMessage message, GateMessageListener stream) {
+        this.hostPortToTokensMap.put(stream, new Integer(message.getNumberOfTokens()));
+        if(this.hostPortToTokensMap.keySet().size() == numGates)
+        {
+            askForMoney();
+        }
+
+    }
+
+
+    /** This gets called when a car is sent to the parking lot.
      * It will add stuff to our arraylist, and then check to see if cars need to leave every timestep.
      */
     public void onCarArrived(CarArrivalMessage message)
@@ -389,7 +440,7 @@ public class TrafficGenerator implements Chronos
         parkingLot.add(new Car(message.getCarSentTime(), message.getCarReturnTime()));
     }
 
-	
+
     public void onGateDone(GateDoneMessage message) throws IOException
     {
         numGatesDone++;
@@ -399,132 +450,132 @@ public class TrafficGenerator implements Chronos
             step();
         }
     }
-	public void onGateSubscribe(GateSubscribeMessage gateSubscribing) {
-		//gates.add(new HostPort(gateSubscribing.getAddressOfGate(),gateSubscribing.getPort()));
-	}
-	
-	public void onTimeSubscribeReceived(TimeSubscribeMessage messageReceived) {
-        System.out.println("Received a subscribe from "+messageReceived.getPortSubscribingOn());
-	}
+    public void onGateSubscribe(GateSubscribeMessage gateSubscribing) {
+        //gates.add(new HostPort(gateSubscribing.getAddressOfGate(),gateSubscribing.getPort()));
+    }
 
-	public void publishTime()
-	{
-		Date d = getCurrentTime();
+    public void onTimeSubscribeReceived(TimeSubscribeMessage messageReceived) {
+        System.out.println("Received a subscribe from "+messageReceived.getPortSubscribingOn());
+    }
+
+    public void publishTime()
+    {
+        Date d = getCurrentTime();
         System.out.println("TrafficGenerator: Publishing Time "+d);
-		TimeMessage message = new TimeMessage(d);
-		for(GateMessageListener listener : this.gateListeners)
-		{
-			try 
-			{
+        TimeMessage message = new TimeMessage(d);
+        for(GateMessageListener listener : this.gateListeners)
+        {
+            try 
+            {
                 listener.writeMessage(message);
-       		}
-			catch(Exception e) {
+            }
+            catch(Exception e) {
                 e.printStackTrace();
-        	}
-		}
-	}
+            }
+        }
+    }
 
     public void killAllDashNine()
     {
-		Date d = getCurrentTime();
+        Date d = getCurrentTime();
         SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_CLOSE_CONNECTION);
-		for(GateMessageListener listener: this.gateListeners)
-		{
-			try 
-			{
+        for(GateMessageListener listener: this.gateListeners)
+        {
+            try 
+            {
                 listener.writeMessage(message);
-       		}
-			catch(Exception e) {
+            }
+            catch(Exception e) {
                 e.printStackTrace();
-        	}
-		}
+            }
+        }
         System.out.println("ParkingLot has "+parkingLot.size()+" cars.");
         die  = true;
-	}
-    
+    }
+
     public void onConnectionReceived(Socket socketReceived){
-    	GateMessageListener listener = new GateMessageListener(this, socketReceived);
-    	listener.start(); 	
-    	this.gateListeners.add(listener);
+        GateMessageListener listener = new GateMessageListener(this, socketReceived);
+        listener.start(); 	
+        this.gateListeners.add(listener);
     }
 
 
-	/**You don't need to change the rest of code*/
-	private class Polynomial
-	{
-		private ArrayList<Integer> exponent;
-		private ArrayList<Double> coefficient; 		
-		public Polynomial(String str)
-		{
-			createPolynomial(str);
-		}
+    /**You don't need to change the rest of code*/
+    private class Polynomial
+    {
+        private ArrayList<Integer> exponent;
+        private ArrayList<Double> coefficient; 		
+        public Polynomial(String str)
+        {
+            createPolynomial(str);
+        }
 
-		private void createPolynomial(String poly)
-		{
-			int i;
-			int exp;
-			double coeff;
-	
-			i = poly.indexOf(',');
-			exp = Integer.parseInt(poly.substring(0,i));
-			poly = poly.substring(i+1);
-			i = poly.indexOf(',');
-			if(i == -1)
-			{
-				coeff = Double.parseDouble(poly);
-				poly = "";
-			}
-			else
-			{
-				coeff = Double.parseDouble(poly.substring(0,i));
-				poly = poly.substring(i+1);
-			}
+        private void createPolynomial(String poly)
+        {
+            int i;
+            int exp;
+            double coeff;
 
-			exponent = new ArrayList<Integer>();
-			coefficient = new ArrayList<Double>();
-			exponent.add(exp);
-			coefficient.add(coeff);
+            i = poly.indexOf(',');
+            exp = Integer.parseInt(poly.substring(0,i));
+            poly = poly.substring(i+1);
+            i = poly.indexOf(',');
+            if(i == -1)
+            {
+                coeff = Double.parseDouble(poly);
+                poly = "";
+            }
+            else
+            {
+                coeff = Double.parseDouble(poly.substring(0,i));
+                poly = poly.substring(i+1);
+            }
 
-			while(!poly.equals(""))
-			{
-				i = poly.indexOf(',');
-				exp = Integer.parseInt(poly.substring(0,i));
-				poly = poly.substring(i+1);
-				i = poly.indexOf(',');
-				if(i == -1)
-				{
-					coeff = Double.parseDouble(poly);
-					poly = "";
-				}
-				else
-				{
-					coeff = Double.parseDouble(poly.substring(0,i));
-					poly = poly.substring(i+1);
-				}
-				exponent.add(exp);
-				coefficient.add(coeff);
-			}	
-		}	
-		
-		public double evaluate(double x)
-		{
-			double sum = 0;
-			for(int i = 0; i < exponent.size(); i++)
-			{
-				sum = sum + coefficient.get(i) * Math.pow(x, exponent.get(i));
-			}
-			return sum;
-		}
-	}
-	
-	private GateMessageListener getArrayLocationOfHostPort(HostPort hostPort)
-	{
-		for(int i = 0; i < this.gateListeners.size(); i++)
-		{
-			if(this.gateListeners.get(i).getIpAddress().equals(hostPort.iaddr) && this.gateListeners.get(i).getPort() == hostPort.port)
-				return this.gateListeners.get(i);
-		}
-		return null;
-	}
+            exponent = new ArrayList<Integer>();
+            coefficient = new ArrayList<Double>();
+            exponent.add(exp);
+            coefficient.add(coeff);
+
+            while(!poly.equals(""))
+            {
+                i = poly.indexOf(',');
+                exp = Integer.parseInt(poly.substring(0,i));
+                poly = poly.substring(i+1);
+                i = poly.indexOf(',');
+                if(i == -1)
+                {
+                    coeff = Double.parseDouble(poly);
+                    poly = "";
+                }
+                else
+                {
+                    coeff = Double.parseDouble(poly.substring(0,i));
+                    poly = poly.substring(i+1);
+                }
+                exponent.add(exp);
+                coefficient.add(coeff);
+            }	
+        }	
+
+        public double evaluate(double x)
+        {
+            double sum = 0;
+            for(int i = 0; i < exponent.size(); i++)
+            {
+                sum = sum + coefficient.get(i) * Math.pow(x, exponent.get(i));
+            }
+            return sum;
+        }
+    }
+
+    private GateMessageListener getArrayLocationOfHostPort(HostPort hostPort)
+    {
+        for(int i = 0; i < this.gateListeners.size(); i++)
+        {
+            if(this.gateListeners.get(i).getIpAddress().equals(hostPort.iaddr) && this.gateListeners.get(i).getPort() == hostPort.port)
+                return this.gateListeners.get(i);
+        }
+        return null;
+    }
 
 }
