@@ -82,13 +82,6 @@ public class TrafficGenerator implements Chronos
 		int nextTime;
 		int leavingTime;
 
-        try{
-            Thread.sleep(10);
-        } catch(Exception e) {
-            e.printStackTrace();
-            System.out.println("FUCK JHAVA");
-        }
-
         nextTime = (int)nextTime(nextTimePolynomial.evaluate(currentTime));
         stayTime = (int)(Math.abs(rdm.nextGaussian() * ( simulationLength - currentTime )/4 + (simulationLength - currentTime)/2));
         stayTime = 100;
