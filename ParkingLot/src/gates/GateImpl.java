@@ -165,50 +165,6 @@ public class GateImpl extends MessageReceiver implements Gate {
 		}
 		
 	}
->>>>>>> 788fadfe2a4dd9609c9048058e76ee9cbeddb124
-
-    public void onTokenAmountQuery(){
-        Config c = new Config();
-        TokenAmountMessage message = new TokenAmountMessage(this.numberOfTokens, this.ipAddress, this.port);
-        System.out.println(port+": Gave up "+numberOfTokens);
-        this.numberOfTokens = 0;
-        try 
-        {
-            Socket s = new Socket();
-            s.setReuseAddress(true);
-            s.connect(new InetSocketAddress(c.trafficGenerator.iaddr, c.trafficGenerator.port));
-
-
-            OutputStream o = s.getOutputStream();
-            AbstractMessage.encodeMessage(o, message);
-            o.close();
-            s.close();
-        } 
-        catch(Exception e) {
-            e.printStackTrace();
-        }	
-    }
-
-    public void onMoneyAmountQuery(){
-        MoneyAmountMessage message = new MoneyAmountMessage(this.amountOfMoney, this.ipAddress, this.port);
-        this.amountOfMoney = 0;
-        Config c = new Config();
-        try 
-        {
-            Socket s = new Socket();
-            s.setReuseAddress(true);
-            s.connect(new InetSocketAddress(c.trafficGenerator.iaddr, c.trafficGenerator.port));
-
-            OutputStream o = s.getOutputStream();
-            AbstractMessage.encodeMessage(o, message);
-            o.close();
-            s.close();
-        } 
-        catch(Exception e) {
-            e.printStackTrace();
-        }	
-
-    }
 
     @Override
         public void onMessageArrived(AbstractMessage message) {
