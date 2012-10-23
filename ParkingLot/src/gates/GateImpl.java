@@ -1,4 +1,5 @@
 package gates;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -40,6 +41,8 @@ public class GateImpl extends MessageReceiver implements Gate {
 	int amountOfMoney;
 	int moneyPerCarPassed;
 	
+	SimulationMessageListener messageListener;
+	Thread listenerThread;
 	/**
 	 * Initializes a gate with all the information necessary to get running
 	 * @param timeToWait, The amount of time a gate should allow cars to wait in the queue before kicking them out
@@ -60,14 +63,14 @@ public class GateImpl extends MessageReceiver implements Gate {
 
 		this.moneyPerCarPassed = moneyPerCarPassed;
 		
-        //Subscribe to car and time updates.
-        timeSubscribe();
-        gateSubscribe();
-        sendDone();
+		Config c = new Config();
+		messageListener = new SimulationMessageListener(this, new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port));
+		listenerThread = new Thread(messageListener);
+		listenerThread.start();
+		messageListener.writeMessage(new TimeSubscribeMessage(this.ipAddress, this.port));
+		messageListener.writeMessage(new GateSubscribeMessage(this.ipAddress, this.port));
+		messageListener.writeMessage( new GateDoneMessage(this.ipAddress, this.port));
 
-        //Create thread for listening to time and gate subscriptions
-        Thread listeningThread = new Thread(this);
-        listeningThread.start();
 	}
 	
 	
@@ -132,37 +135,26 @@ public class GateImpl extends MessageReceiver implements Gate {
 	public void onTokenAmountQuery(){
 		 Config c = new Config();
 			TokenAmountMessage message = new TokenAmountMessage(this.numberOfTokens, this.ipAddress, this.port);
-			this.numberOfTokens = 0;
-			try 
-			{
-	            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
-	      
-	            OutputStream o = s.getOutputStream();
-	            AbstractMessage.encodeMessage(o, message);
-	            o.close();
-	            s.close();
-			} 
-			catch(Exception e) {
-	            e.printStackTrace();
-			}	
+
+			try {
+				this.messageListener.writeMessage(message);
+				this.numberOfTokens = 0;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				this.stillRunning = false;
+			}
 	}
 	
 	public void onMoneyAmountQuery(){
 		MoneyAmountMessage message = new MoneyAmountMessage(this.amountOfMoney, this.ipAddress, this.port);
-		this.amountOfMoney = 0;
-		 Config c = new Config();
-			try 
-			{
-	            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
-	      
-	            OutputStream o = s.getOutputStream();
-	            AbstractMessage.encodeMessage(o, message);
-	            o.close();
-	            s.close();
-			} 
-			catch(Exception e) {
-	            e.printStackTrace();
-			}	
+		try{
+			this.messageListener.writeMessage(message);
+			this.numberOfTokens = 0;
+		}
+		catch(IOException e)
+		{
+			this.stillRunning = false;
+		}
 		
 	}
 
@@ -263,19 +255,12 @@ public class GateImpl extends MessageReceiver implements Gate {
      */
     public void timeSubscribe()
     {
-        Config c = new Config();
 		TimeSubscribeMessage message = new TimeSubscribeMessage(this.ipAddress, this.port);
-		try 
-		{
-            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
-            OutputStream o = s.getOutputStream();
-            AbstractMessage.encodeMessage(o, message);
-            o.close();
-            s.close();
-		} 
-		catch(Exception e) {
-            e.printStackTrace();
-		}	
+		try {
+			this.messageListener.writeMessage(message);
+		} catch (IOException e) {
+			//do stuff
+		}
 	}
     
     /**
@@ -283,19 +268,12 @@ public class GateImpl extends MessageReceiver implements Gate {
      */
 	public void gateSubscribe()
     {
-        Config c = new Config();
 		GateSubscribeMessage message = new GateSubscribeMessage(this.ipAddress, this.port);
-		try 
-		{
-            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
-            OutputStream o = s.getOutputStream();
-            AbstractMessage.encodeMessage(o, message);
-            o.close();
-            s.close();
-		} 
-		catch(Exception e) {
-            e.printStackTrace();
-		}	
+		try {
+			this.messageListener.writeMessage(message);
+		} catch (IOException e) {
+			//do stuff
+		}
 	}
 	
 	/**
@@ -305,18 +283,12 @@ public class GateImpl extends MessageReceiver implements Gate {
     {
         Config c = new Config();
 		GateDoneMessage message = new GateDoneMessage(this.ipAddress, this.port);
-		try 
-		{
-            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
-      
-            OutputStream o = s.getOutputStream();
-            AbstractMessage.encodeMessage(o, message);
-            o.close();
-            s.close();
-		} 
-		catch(Exception e) {
-            e.printStackTrace();
-		}	
+		try {
+			this.messageListener.writeMessage(message);
+		} catch (IOException e) {
+			//do stuff
+		}
+		
 	}
 
     /**
@@ -330,17 +302,12 @@ public class GateImpl extends MessageReceiver implements Gate {
         Config c = new Config();
 
         CarArrivalMessage message = new CarArrivalMessage(new Date(), carWrapper.timeLeaving);
-		try 
-		{
-            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
-            OutputStream o = s.getOutputStream();
-            AbstractMessage.encodeMessage(o, message);
-            o.close();
-            s.close();
-		} 
-		catch(Exception e) {
-            e.printStackTrace();
-		}	    
+		try {
+			this.messageListener.writeMessage(message);
+		} catch (IOException e) {
+			//Do stuff
+		}
+		
     }
 
     /** TODO: WTF DOES THIS DO? */
