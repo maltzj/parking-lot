@@ -7,14 +7,11 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import messaging.*;
-import messaging.AbstractMessage;
-import messaging.CarArrivalMessage;
-import messaging.GateSubscribeMessage;
-import messaging.TimeMessage;
-import messaging.TimeSubscribeMessage;
 import util.HostPort;
 import util.MessageReceiver;
 import car.Car;
@@ -39,6 +36,11 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
     private int numGatesDone;
 	public static int numGates = 6;
 	
+	public static boolean tokenTradingStepComplete = false;
+	
+	Map<HostPort, Integer> hostPortToTokensMap = new HashMap<HostPort, Integer>();
+	Map<HostPort, Integer> hostPortToMoneyMap = new HashMap<HostPort, Integer>();
+	
 	public TrafficGenerator(int simLen, String nextTimePoly, InetAddress address, int port) throws Exception
 	{
         super(address, port);
@@ -55,7 +57,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
         Thread listeningThread = new Thread(this);
         listeningThread.start();
 	}
-	public void step()
+	public void step() throws IOException
 	{
 		/**
 			You may want to wait for a signal here, instead of start sending a car right away.
@@ -88,6 +90,16 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 
         //Make cars leave parking lot
         checkCarLeaving();
+        askForMoney();
+        
+        while(!tokenTradingStepComplete)
+        {
+        	try {
+				Thread.sleep(200);
+			} catch (InterruptedException e) {
+			}
+        }
+        
         if(currentTime < simulationLength)
         {
             System.out.println("Time: " + currentTime + "\tGate: " + nextGate + "\t\tstayTime: " + stayTime + "\t\tleavingGate: " + leavingGate + "\t\tleavingTime: " + leavingTime);
@@ -104,12 +116,13 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
             /* Make a car arrival message and send it to the gate */
             CarArrivalMessage carToGateMessage = new CarArrivalMessage(carSendDate, carLeaveDate);
 
+            Socket sock = null;
             try {
                 HostPort gateHP = gates.get(nextGate);
                 InetAddress gateIP = gateHP.iaddr;
                 int gatePort = gateHP.port;
                 System.out.println("Trying to send a car to port "+gatePort);
-                Socket sock = new Socket(gateIP, gatePort);
+                sock = new Socket(gateIP, gatePort);
 
                 OutputStream outStream = sock.getOutputStream();
                 AbstractMessage.encodeMessage(outStream, carToGateMessage);
@@ -122,6 +135,9 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            finally{
+            	sock.close();
+            }
 
             /* End send car to gate message */
 
@@ -133,7 +149,8 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
             
         } 
     }
-
+	
+	
 	public double nextTime(double expectedValue)
 	{
 		return -Math.log(1 - rdm.nextDouble()) / expectedValue;
@@ -198,7 +215,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 
     
 	@Override
-	public void onMessageArrived(AbstractMessage message) {
+	public void onMessageArrived(AbstractMessage message) throws IOException {
 		switch(message.getMessageType())
 		{
 			case AbstractMessage.TYPE_TIME_SUBSCRIBE:
@@ -221,13 +238,82 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 				this.onCarArrived((CarArrivalMessage) message);
 				break;
 			}
+            case AbstractMessage.TYPE_TOKEN_AMOUNT_MESSAGE:
+            {
+            	this.onTokenAmountArrived((TokenAmountMessage) message);
+            	break;
+            }
+            
+            case AbstractMessage.TYPE_MONEY_AMOUNT_MESSAGE:
+            {
+            	this.onMoneyAmountArrived((MoneyAmountMessage) message);
+            }
 
 		}
-		// TODO Auto-generated method stub
 		
 	}
 
-    /** This gets called when a car is sent to the parking lot.
+	private void askForMoney(){
+		SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_MONEY_QUERY_MESSAGE);
+		for(HostPort hp : timeSubscribers)
+		{
+			try 
+			{
+				Socket s = new Socket(hp.iaddr, hp.port);
+				OutputStream o = s.getOutputStream();
+				AbstractMessage.encodeMessage(o, message);
+                o.close();
+                s.close();
+       		}
+			catch(Exception e) {
+                e.printStackTrace();
+        	}
+		}
+	}
+	
+    private void onMoneyAmountArrived(MoneyAmountMessage message) {
+		HostPort hostPort = new HostPort(message.getIpAddress(), message.getPort());
+		this.hostPortToMoneyMap.put(hostPort, new Integer(message.getAmountOfMoney()));
+		
+		if(this.hostPortToMoneyMap.keySet().size() == this.numGates)
+		{
+			//create the redistribution method
+		}	
+	}
+    
+    
+    
+    
+	private void askForTokens() {
+		SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_TOKEN_QUERY_MESSAGE);
+		for(HostPort hp : timeSubscribers)
+		{
+			try 
+			{
+				Socket s = new Socket(hp.iaddr, hp.port);
+				OutputStream o = s.getOutputStream();
+				AbstractMessage.encodeMessage(o, message);
+                o.close();
+                s.close();
+       		}
+			catch(Exception e) {
+                e.printStackTrace();
+        	}
+		}
+	}
+	
+	private void onTokenAmountArrived(TokenAmountMessage message) {
+    	HostPort hostPort = new HostPort(message.getIpAddress(), message.getPort());
+		this.hostPortToTokensMap.put(hostPort, new Integer(message.getNumberOfTokens()));
+		
+		if(this.hostPortToTokensMap.keySet().size() == this.numGates)
+		{
+			askForMoney();
+		}
+	}
+    
+    
+	/** This gets called when a car is sent to the parking lot.
      * It will add stuff to our arraylist, and then check to see if cars need to leave every timestep.
      */
     public void onCarArrived(CarArrivalMessage message)
@@ -238,7 +324,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
     }
 
 	
-    public void onGateDone(GateDoneMessage message)
+    public void onGateDone(GateDoneMessage message) throws IOException
     {
         numGatesDone++;
         if(numGatesDone == numGates)
@@ -264,7 +350,6 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 		{
 			try 
 			{
-                System.out.println("Sent time to "+hp.iaddr+":"+hp.port);
 				Socket s = new Socket(hp.iaddr, hp.port);
 				OutputStream o = s.getOutputStream();
 				AbstractMessage.encodeMessage(o, message);
