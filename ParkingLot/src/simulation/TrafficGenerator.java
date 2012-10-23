@@ -55,6 +55,7 @@ public class TrafficGenerator implements Chronos
     {
         MessageReceiver receiver = new MessageReceiver(address, port, this);
         this.receiver = receiver;
+
         numGatesDone = 0;
         currentTime = 0;
         simulationLength = simLen;
@@ -286,14 +287,12 @@ public class TrafficGenerator implements Chronos
                         break;
                     }
             }
-            hostPortToMoneyMap.clear();
-            hostPortToTokensMap.clear(); 
             generateCar();
         }	
     }
 
-    public void doNotDistribute()
-    {
+   public void doNotDistribute()
+   {
         int tokens = 0;
         int money = 0;
         for(GateMessageListener listener : this.gateListeners)
@@ -341,6 +340,7 @@ public class TrafficGenerator implements Chronos
      */
     public void scaleProfit()
     {
+        //TODO: FIXME
         List<HostPort> buyers = new ArrayList<HostPort>();
 
         for(HostPort hp: gates)
