@@ -35,7 +35,8 @@ public class GateImpl extends MessageReceiver implements Gate {
     ConcurrentLinkedQueue<CarWrapper> waitingCars = new ConcurrentLinkedQueue<CarWrapper>();
     long amountOfTimeToWait; //Seconds
 
-    Thread messageListenerThread;
+    SimulationMessageListener messageListener;
+    Thread listenerThread;
 
     int numberOfTokens;
 
