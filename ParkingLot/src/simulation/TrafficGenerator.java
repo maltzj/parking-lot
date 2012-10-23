@@ -10,6 +10,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.*;
+import test.*;
 
 import messaging.*;
 import util.HostPort;
@@ -35,7 +37,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 	private Random rdm;
     private int numGatesDone;
 	public static int numGates = 6;
-    private int distributeType = 1;
+    private int distributeType = 0;
 
     //Putting this here because we generate a car before advancing time.
     private int stayTime = 0;
@@ -44,7 +46,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 	
 	Map<HostPort, Integer> hostPortToTokensMap = new HashMap<HostPort, Integer>();
 	Map<HostPort, Integer> hostPortToMoneyMap = new HashMap<HostPort, Integer>();
-	
+
 	public TrafficGenerator(int simLen, String nextTimePoly, InetAddress address, int port) throws Exception
 	{
         super(address, port);
@@ -71,8 +73,6 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 		*/
 		
 		int nextTime;
-		int nextGate;
-		int leavingGate;
 		int leavingTime;
 
         try{
@@ -84,6 +84,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 
         nextTime = (int)nextTime(nextTimePolynomial.evaluate(currentTime));
         stayTime = (int)(Math.abs(rdm.nextGaussian() * ( simulationLength - currentTime )/4 + (simulationLength - currentTime)/2));
+        stayTime = 100;
 
         //wait for things to be ready.
 
@@ -101,9 +102,11 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 
         int nextGate, leavingGate;
 
-        //TODO: CHANGE ME TO THE TA'S RETARDED CODE.
-        nextGate = (int)(rdm.nextDouble() * gates.size());
-        leavingGate = (int)(rdm.nextDouble() * (numGates - 1) );
+        nextGate = (int)(rdm.nextDouble() * ( numGates + 2 ));
+        leavingGate = (int)(rdm.nextDouble() * numGates );
+        if (nextGate >= numGates){
+            nextGate = numGates-1;
+        }
 
         int leavingTime = stayTime + currentTime;
 
@@ -306,13 +309,18 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
                     distributeEqually();
                     break;
                 }
+                case 2:
+                {
+                    scaleProfit();
+                    break;
+                }
             }
             hostPortToMoneyMap.clear();
             hostPortToTokensMap.clear(); 
             generateCar();
 		}	
 	}
-    
+
    public void doNotDistribute()
    {
         int tokens = 0;
@@ -323,7 +331,9 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
             money = hostPortToMoneyMap.get(hp);            
             sendMoney(hp, money);
             sendTokens(hp, tokens);
+            System.out.println(hp.port+" has $"+money);
         }
+
    }
 
    public void distributeEqually()
@@ -351,9 +361,50 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
        }
    }
 
+   /** Ensure that all gates have atleast one token.
+    * This will ensure that a car can always pass through a gate unless we reach the case where each gate has one token.
+    */
    public void scaleProfit()
    {
-         
+       List<HostPort> buyers = new ArrayList<HostPort>();
+    
+       for(HostPort hp: gates)
+       {
+           int tokens = hostPortToTokensMap.get(hp);
+           if(tokens == 0)
+           {
+               buyers.add(hp);
+           }
+       }
+
+       for(HostPort buyer: buyers)
+       {
+           int buyerCashMoney = hostPortToMoneyMap.get(buyer);
+
+           //if the buyer has enough money to buy a token, buy one token.
+           if(buyerCashMoney > SetupTest.CASH_MONEY_PER_TOKEN)
+           {
+               for(HostPort seller: gates)
+               {
+                   int sellerTokens = hostPortToTokensMap.get(seller);
+                   int sellerCashMoney = hostPortToMoneyMap.get(seller);
+
+                   if(sellerTokens > 1)
+                   {
+                       hostPortToTokensMap.put(seller, sellerTokens - 1);
+                       hostPortToMoneyMap.put(seller, sellerCashMoney + SetupTest.CASH_MONEY_PER_TOKEN);
+
+                       hostPortToTokensMap.put(buyer, 1);
+                       hostPortToMoneyMap.put(buyer, buyerCashMoney - SetupTest.CASH_MONEY_PER_TOKEN);
+
+                       break;
+                   }
+               }
+           }
+       }
+
+
+       doNotDistribute();
    }
 
    public void sendMoney(HostPort hp, int money)

@@ -18,6 +18,7 @@ import messaging.TimeMessage;
 import messaging.TimeSubscribeMessage;
 import messaging.TokenAmountMessage;
 import messaging.TokenMessage;
+import messaging.*;
 import util.Config;
 import util.MessageReceiver;
 import car.Car;
@@ -29,32 +30,32 @@ import car.Car;
  *
  */
 public class GateImpl extends MessageReceiver implements Gate {
-	public static boolean stillRunning = true;
+    public static boolean stillRunning = true;
 
-	ConcurrentLinkedQueue<CarWrapper> waitingCars = new ConcurrentLinkedQueue<CarWrapper>();
-	long amountOfTimeToWait; //Seconds
-	
-	Thread messageListenerThread;
-	
-	int numberOfTokens;
-	
-	int amountOfMoney;
-	int moneyPerCarPassed;
-	
-	SimulationMessageListener messageListener;
-	Thread listenerThread;
-	/**
-	 * Initializes a gate with all the information necessary to get running
-	 * @param timeToWait, The amount of time a gate should allow cars to wait in the queue before kicking them out
-	 * @param tokensToStartWith, The number of tokens to start with.
-	 * @param moneyToStartWith, The amount of money to start with.
-	 * @param tokenPolicy, The token trading policy to use for this gate.
-	 * @param addr, The IPAddress to initialize this Gate at
-	 * @param port, The port this gate will be listening on.
-	 * @throws Exception
-	 */
-	public GateImpl(long timeToWait, int tokensToStartWith, int moneyToStartWith,InetAddress addr, int port, int moneyPerCarPassed) throws Exception
-	{
+    ConcurrentLinkedQueue<CarWrapper> waitingCars = new ConcurrentLinkedQueue<CarWrapper>();
+    long amountOfTimeToWait; //Seconds
+
+    Thread messageListenerThread;
+
+    int numberOfTokens;
+
+    private int numberOfCarsLetThrough = 0;
+
+    int amountOfMoney;
+    int moneyPerCarPassed;
+
+    /**
+     * Initializes a gate with all the information necessary to get running
+     * @param timeToWait, The amount of time a gate should allow cars to wait in the queue before kicking them out
+     * @param tokensToStartWith, The number of tokens to start with.
+     * @param moneyToStartWith, The amount of money to start with.
+     * @param tokenPolicy, The token trading policy to use for this gate.
+     * @param addr, The IPAddress to initialize this Gate at
+     * @param port, The port this gate will be listening on.
+     * @throws Exception
+     */
+    public GateImpl(long timeToWait, int tokensToStartWith, int moneyToStartWith,InetAddress addr, int port, int moneyPerCarPassed) throws Exception
+    {
         super(addr, port);
 
         this.amountOfTimeToWait = timeToWait*1000; //dates deal with milliseconds, we want to expose all APIs as seconds
@@ -125,7 +126,10 @@ public class GateImpl extends MessageReceiver implements Gate {
                     if(this.numberOfTokens > 0) {
                         this.numberOfTokens--;
                         this.sendCarToParkingLot(currentCar);
+                        
                         this.amountOfMoney += moneyPerCarPassed;
+                        this.numberOfCarsLetThrough++;
+
                         toRemove.add(currentCar);
                     }
                 }
@@ -182,8 +186,8 @@ public class GateImpl extends MessageReceiver implements Gate {
                     }
                 case AbstractMessage.TYPE_CLOSE_CONNECTION:
                     {
-                        System.out.println(port+": I have "+numberOfTokens+" tokens");
                         this.die = true;
+                        System.out.println(port+": I have "+numberOfTokens+" tokens and $"+amountOfMoney+" left. I let "+numberOfCarsLetThrough+" cars through.");
                         break;
                     }
                 case AbstractMessage.TYPE_TOKEN_MESSAGE:
@@ -204,8 +208,16 @@ public class GateImpl extends MessageReceiver implements Gate {
                         this.onTokenAmountQuery();
                         break;
                     }
+                case AbstractMessage.TYPE_MONEY_MESSAGE:
+                    {
+                        MoneyMessage money = (MoneyMessage) message;
+                        this.amountOfMoney += money.getAmountOfMoney();
+                        break;
+                    }
                 default:
                     {
+                        System.out.println("What the fuck are you doing Message Type = "+message.getMessageType());
+                        System.exit(1);
                         //Do something
                     }
             }
