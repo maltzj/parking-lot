@@ -14,8 +14,7 @@ import util.*;
 public class RunSimulation
 {
     private static int SIMULATION_LENGTH = 4000;
-    private static String MAGIC_POLY = "0,.5";
-    //private   String MAGIC_POLY = "2,.000000000275,1,-.0000099,0,.1";
+    private  static String MAGIC_POLY = "2,.000000000275,1,-.0000099,0,.1";
     /** This is the time that a car waits in the gate's queue before it leaves. */
     private static long TIME_TO_WAIT = 100;
     private static int CASH_MONEY_TO_START = 100;
@@ -56,41 +55,114 @@ public class RunSimulation
     {
         RunSimulation test = new RunSimulation();
     	BufferedReader reader = new BufferedReader(new InputStreamReader(System.in)); 
-    	System.out.print("Please input the length of the simulation in seconds (default 4000): ");
-    	String simulationLength = reader.readLine();
     	
-    	if(!simulationLength.equals(""))
-    	{
-    		test.setSIMULATION_LENGTH(Integer.parseInt(simulationLength));
-    	} 
+    	while(true)
+    		{
+    			System.out.print("Please input the length of the simulation in seconds (default 4000): ");
+    			String simulationLength = reader.readLine();
     	
-    	System.out.print("Please input the time of the cars to wait in seconds(defaults to 100): ");
-    	String timeToWait = reader.readLine();
-    	if(!timeToWait.equals(""))
+    			if(!simulationLength.equals(""))
+    			{
+    				try
+    				{
+    					test.setSIMULATION_LENGTH(Integer.parseInt(simulationLength));
+    					break;
+    				}
+    				catch(NumberFormatException e)
+    				{
+    					System.out.println("Sorry, please enter a number ");
+    				}
+    			}
+    			else
+    				break;
+    		}
+    	
+    	while(true)
     	{
-    		test.setTIME_TO_WAIT(Integer.parseInt(timeToWait));
+    		System.out.print("Please input the time of the cars to wait in seconds(defaults to 100): ");
+    		String timeToWait = reader.readLine();
+    		
+    		if(!timeToWait.equals(""))
+    		{
+    			try
+    			{
+    				test.setTIME_TO_WAIT(Integer.parseInt(timeToWait));
+    				break;
+    			}
+    			catch(NumberFormatException e)
+    			{
+    				System.out.println("Sorry, please enter a number ");
+    			}
+    		}
+    		else
+    			break;
     	}
     	
-    	System.out.print("Please input the amount of money a car gets from passing a car through (defaults to 5): ");
-    	String moneyPerCar = reader.readLine();
-    	if(!timeToWait.equals(""))
+    	
+    	while(true)
     	{
-    		test.setCASH_MONEY_PER_CAR(Integer.parseInt(moneyPerCar));
+    		System.out.print("Please input the amount of money a car gets from passing a car through (defaults to 5): ");
+    		String moneyPerCar = reader.readLine();
+    		if(!moneyPerCar.equals(""))
+    		{
+    			try
+    			{
+    				test.setCASH_MONEY_PER_CAR(Integer.parseInt(moneyPerCar));
+    				break;
+    			}
+    			catch(NumberFormatException e)
+    			{
+    				System.out.println("Sorry, please enter a number or the empty string ");
+    			}
+    		}
+    		else
+    			break;
     	}
     	
-    	System.out.print("Please input the amount of money a token costs (defaults to 3): ");
-    	String costPerToken = reader.readLine();
-    	if(!timeToWait.equals(""))
+    	while(true)
     	{
-    		test.setCASH_MONEY_PER_TOKEN(Integer.parseInt(costPerToken));
+    		System.out.print("Please input the amount of money a token costs (defaults to 3): ");
+    		String costPerToken = reader.readLine();
+    		if(!costPerToken.equals(""))
+    		{
+    			try
+    			{
+    				test.setCASH_MONEY_PER_TOKEN(Integer.parseInt(costPerToken));
+    				break;
+    			}
+    			catch(NumberFormatException e)
+    			{
+    				System.out.println("Sorry, please enter a number or the empty string");
+    			}
+    		}
+    		else
+    			break;
     	}
     	
-    	System.out.print("Please input the total number of tokens per gate (defaults to 22): ");
-    	String numberOfTokens = reader.readLine();
-    	if(!numberOfTokens.equals(""))
+    	while(true)
     	{
-    		test.setTOKENS_TO_START(Integer.parseInt(numberOfTokens));
+    		System.out.print("Please input the total number of tokens per gate (defaults to 22): ");
+    		String numberOfTokens = reader.readLine();
+    		if(!numberOfTokens.equals(""))
+    		{
+    			try
+    			{
+    				test.setTOKENS_TO_START(Integer.parseInt(numberOfTokens));
+    				break;
+    			}
+    			catch(NumberFormatException e)
+    			{
+    				System.out.println("Sorry, please enter a number or the empty string");
+    			}
+    		}
+    		else
+    			break;
     	}
+    	
+    	System.out.print("Please enter the polynomial which will represent the distribution function (Defaults to " + test.getMAGIC_POLY() + ")");
+    	String poly = reader.readLine();
+    	if(!poly.equals(""))
+    		test.setMAGIC_POLY(poly);
     	
     	
         test.setup();
