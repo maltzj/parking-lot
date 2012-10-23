@@ -132,6 +132,7 @@ public class GateImpl extends MessageReceiver implements Gate {
 	public void onTokenAmountQuery(){
 		 Config c = new Config();
 			TokenAmountMessage message = new TokenAmountMessage(this.numberOfTokens, this.ipAddress, this.port);
+			this.numberOfTokens = 0;
 			try 
 			{
 	            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
@@ -148,6 +149,7 @@ public class GateImpl extends MessageReceiver implements Gate {
 	
 	public void onMoneyAmountQuery(){
 		MoneyAmountMessage message = new MoneyAmountMessage(this.amountOfMoney, this.ipAddress, this.port);
+		this.amountOfMoney = 0;
 		 Config c = new Config();
 			try 
 			{

@@ -90,7 +90,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 
         //Make cars leave parking lot
         checkCarLeaving();
-        askForMoney();
+        askForTokens();
         
         while(!tokenTradingStepComplete)
         {
