@@ -1,4 +1,5 @@
 package gates;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -28,91 +29,96 @@ import car.Car;
  *
  */
 public class GateImpl extends MessageReceiver implements Gate {
+	public static boolean stillRunning = true;
 
-    public static boolean stillRunning = true;
-
-    ConcurrentLinkedQueue<CarWrapper> waitingCars = new ConcurrentLinkedQueue<CarWrapper>();
-    long amountOfTimeToWait; //Seconds
-
-    Thread messageListenerThread;
-
-    int numberOfTokens;
-
-    int amountOfMoney;
-    int moneyPerCarPassed;
-
-    /**
-     * Initializes a gate with all the information necessary to get running
-     * @param timeToWait, The amount of time a gate should allow cars to wait in the queue before kicking them out
-     * @param tokensToStartWith, The number of tokens to start with.
-     * @param moneyToStartWith, The amount of money to start with.
-     * @param tokenPolicy, The token trading policy to use for this gate.
-     * @param addr, The IPAddress to initialize this Gate at
-     * @param port, The port this gate will be listening on.
-     * @throws Exception
-     */
-    public GateImpl(long timeToWait, int tokensToStartWith, int moneyToStartWith,InetAddress addr, int port, int moneyPerCarPassed) throws Exception
-    {
+	ConcurrentLinkedQueue<CarWrapper> waitingCars = new ConcurrentLinkedQueue<CarWrapper>();
+	long amountOfTimeToWait; //Seconds
+	
+	Thread messageListenerThread;
+	
+	int numberOfTokens;
+	
+	int amountOfMoney;
+	int moneyPerCarPassed;
+	
+	SimulationMessageListener messageListener;
+	Thread listenerThread;
+	/**
+	 * Initializes a gate with all the information necessary to get running
+	 * @param timeToWait, The amount of time a gate should allow cars to wait in the queue before kicking them out
+	 * @param tokensToStartWith, The number of tokens to start with.
+	 * @param moneyToStartWith, The amount of money to start with.
+	 * @param tokenPolicy, The token trading policy to use for this gate.
+	 * @param addr, The IPAddress to initialize this Gate at
+	 * @param port, The port this gate will be listening on.
+	 * @throws Exception
+	 */
+	public GateImpl(long timeToWait, int tokensToStartWith, int moneyToStartWith,InetAddress addr, int port, int moneyPerCarPassed) throws Exception
+	{
         super(addr, port);
 
         this.amountOfTimeToWait = timeToWait*1000; //dates deal with milliseconds, we want to expose all APIs as seconds
         this.amountOfMoney = moneyToStartWith;
         this.numberOfTokens = tokensToStartWith;
 
-        this.moneyPerCarPassed = moneyPerCarPassed;
+		this.moneyPerCarPassed = moneyPerCarPassed;
+		
+		Config c = new Config();
+		messageListener = new SimulationMessageListener(this, new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port));
+		listenerThread = new Thread(messageListener);
+		listenerThread.start();
+		messageListener.writeMessage(new TimeSubscribeMessage(this.ipAddress, this.port));
+		messageListener.writeMessage(new GateSubscribeMessage(this.ipAddress, this.port));
+		messageListener.writeMessage( new GateDoneMessage(this.ipAddress, this.port));
 
-        //Subscribe to car and time updates.
-        timeSubscribe();
-        gateSubscribe();
-        sendDone();
+	}
+	
+	
+	@Override
+	public void onCarArrived(CarArrivalMessage arrival) {
+		Car carToQueue = new Car(arrival.getCarSentTime(), arrival.getCarReturnTime());
+		
+		//Add Car to queue
+		long timeArrived = arrival.getCarSentTime().getTime();
+		long leavingTime = timeArrived + amountOfTimeToWait;
 
-        //Create thread for listening to time and gate subscriptions
-        Thread listeningThread = new Thread(this);
-        listeningThread.start();
-    }
+		Date timeToLeave = new Date();
+		timeToLeave.setTime(leavingTime);
+		CarWrapper carWrapper = new CarWrapper(carToQueue, timeToLeave);
+		waitingCars.add(carWrapper);
+		
+	}
 
+	@Override
+	public void onCarLeave() {
+		numberOfTokens++;
+		//do any additional logic re: broadcasting
+	}
 
-    @Override
-        public void onCarArrived(CarArrivalMessage arrival) {
-            System.out.println(port +": Received a car Got "+numberOfTokens+" tokens");
-            Car carToQueue = new Car(arrival.getCarSentTime(), arrival.getCarReturnTime());
+	@Override
+	public void onTimeUpdate(TimeMessage messageFromChronos){
+		
+		Date newTime = messageFromChronos.getNewTime();
+		Calendar timeToCheckAgainst = Calendar.getInstance();
+		timeToCheckAgainst.setTime(newTime);
 
-            //Add Car to queue
-            long timeArrived = arrival.getCarSentTime().getTime();
-            long leavingTime = timeArrived + amountOfTimeToWait;
+        ArrayList<CarWrapper> toRemove = new ArrayList<CarWrapper>();
+        
 
-            Date timeToLeave = new Date();
-            timeToLeave.setTime(leavingTime);
-            CarWrapper carWrapper = new CarWrapper(carToQueue, timeToLeave);
-            waitingCars.add(carWrapper);
-
-        }
-
-    @Override
-        public void onCarLeave() {
-            numberOfTokens++;
-            //do any additional logic re: broadcasting
-        }
-
-    @Override
-        public void onTimeUpdate(TimeMessage messageFromChronos){
-
-            Date newTime = messageFromChronos.getNewTime();
-            System.out.println(port+" Received a time update for "+newTime);
-
-            Calendar timeToCheckAgainst = Calendar.getInstance();
-            timeToCheckAgainst.setTime(newTime);
-
-            ArrayList<CarWrapper> toRemove = new ArrayList<CarWrapper>();
-
-
-            for(CarWrapper currentCar: waitingCars)
-            {
-                Calendar carLeaveQueueTime = Calendar.getInstance();
-                carLeaveQueueTime.setTime(currentCar.timeLeaving);
-
-                //Car waited too long and left
-                if(timeToCheckAgainst.after(carLeaveQueueTime)) {
+		for(CarWrapper currentCar: waitingCars)
+		{
+			Calendar carLeaveQueueTime = Calendar.getInstance();
+			carLeaveQueueTime.setTime(currentCar.timeLeaving);
+			
+			//Car waited too long and left
+			if(timeToCheckAgainst.after(carLeaveQueueTime)) {
+                toRemove.add(currentCar);
+			} else {
+                //we have enough tokens.
+                if(this.numberOfTokens > 0) {
+                    this.numberOfTokens--;
+                    this.sendCarToParkingLot(currentCar);
+					this.amountOfMoney += moneyPerCarPassed;
                     toRemove.add(currentCar);
                 } else {
                     //we have enough tokens.
@@ -124,14 +130,15 @@ public class GateImpl extends MessageReceiver implements Gate {
                     }
                 }
             }
-
-            for(CarWrapper car: toRemove)
-            {
-                waitingCars.remove(car);
-            }
-
-            sendDone();
         }
+
+        for(CarWrapper car: toRemove)
+        {
+            waitingCars.remove(car);
+        }
+
+        sendDone();
+    }
 
     public void onTokenAmountQuery(){
         Config c = new Config();
@@ -277,70 +284,41 @@ public class GateImpl extends MessageReceiver implements Gate {
      */
     public void timeSubscribe()
     {
-        Config c = new Config();
-        TimeSubscribeMessage message = new TimeSubscribeMessage(this.ipAddress, this.port);
-        try 
-        {
-            Socket s = new Socket();
-            s.setReuseAddress(true);
-            s.connect(new InetSocketAddress(c.trafficGenerator.iaddr, c.trafficGenerator.port));
-
-            OutputStream o = s.getOutputStream();
-            AbstractMessage.encodeMessage(o, message);
-            o.close();
-            s.close();
-        } 
-        catch(Exception e) {
-            e.printStackTrace();
-        }	
-    }
-
+		TimeSubscribeMessage message = new TimeSubscribeMessage(this.ipAddress, this.port);
+		try {
+			this.messageListener.writeMessage(message);
+		} catch (IOException e) {
+			//do stuff
+		}
+	}
+    
     /**
      * Subscribes to another Gate so that it can trade tokens with that Gate.
      */
     public void gateSubscribe()
     {
-        Config c = new Config();
-        GateSubscribeMessage message = new GateSubscribeMessage(this.ipAddress, this.port);
-        try 
-        {
-            Socket s = new Socket();
-            s.setReuseAddress(true);
-            s.connect(new InetSocketAddress(c.trafficGenerator.iaddr, c.trafficGenerator.port));
-
-            OutputStream o = s.getOutputStream();
-            AbstractMessage.encodeMessage(o, message);
-            o.close();
-            s.close();
-        } 
-        catch(Exception e) {
-            e.printStackTrace();
-        }	
-    }
-
-    /**
-     * Sends a message to the TrafficSimulator that this gate has completed its responsibilities.
-     */
+		GateSubscribeMessage message = new GateSubscribeMessage(this.ipAddress, this.port);
+		try {
+			this.messageListener.writeMessage(message);
+		} catch (IOException e) {
+			//do stuff
+		}
+	}
+	
+	/**
+	 * Sends a message to the TrafficSimulator that this gate has completed its responsibilities.
+	 */
     public void sendDone()
     {
         Config c = new Config();
-        GateDoneMessage message = new GateDoneMessage(this.ipAddress, this.port);
-        try 
-        {
-            Socket s = new Socket();
-            s.setReuseAddress(true);
-            s.connect(new InetSocketAddress(c.trafficGenerator.iaddr, c.trafficGenerator.port));
-
-
-            OutputStream o = s.getOutputStream();
-            AbstractMessage.encodeMessage(o, message);
-            o.close();
-            s.close();
-        } 
-        catch(Exception e) {
-            e.printStackTrace();
-        }	
-    }
+		GateDoneMessage message = new GateDoneMessage(this.ipAddress, this.port);
+		try {
+			this.messageListener.writeMessage(message);
+		} catch (IOException e) {
+			//do stuff
+		}
+		
+	}
 
     /**
      * Sends a Car to the ParkingLot
@@ -353,23 +331,14 @@ public class GateImpl extends MessageReceiver implements Gate {
         Config c = new Config();
 
         CarArrivalMessage message = new CarArrivalMessage(new Date(), carWrapper.timeLeaving);
-        try 
-        {
-            Socket s = new Socket();
-            s.setReuseAddress(true);
-            s.connect(new InetSocketAddress(c.trafficGenerator.iaddr, c.trafficGenerator.port));
-
-            OutputStream o = s.getOutputStream();
-            AbstractMessage.encodeMessage(o, message);
-            o.close();
-            s.close();
-        } 
-        catch(Exception e) {
-            e.printStackTrace();
-        }	    
+		try {
+			this.messageListener.writeMessage(message);
+		} catch (IOException e) {
+			//Do stuff
+		}
+		
     }
 
-    /** TODO: WTF DOES THIS DO? */
     private static class CarWrapper {
         Car carRepresenting;
         Date timeLeaving;
