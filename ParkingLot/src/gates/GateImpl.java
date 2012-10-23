@@ -55,7 +55,7 @@ public class GateImpl extends MessageReceiver implements Gate {
 	 */
 	public GateImpl(long timeToWait, int tokensToStartWith, int moneyToStartWith,InetAddress addr, int port, int moneyPerCarPassed) throws Exception
 	{
-        super(addr, port);
+        super(addr, port, null);
 
         this.amountOfTimeToWait = timeToWait*1000; //dates deal with milliseconds, we want to expose all APIs as seconds
         this.amountOfMoney = moneyToStartWith;
@@ -64,7 +64,8 @@ public class GateImpl extends MessageReceiver implements Gate {
 		this.moneyPerCarPassed = moneyPerCarPassed;
 		
 		Config c = new Config();
-		messageListener = new SimulationMessageListener(this, new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port));
+		Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
+		messageListener = new SimulationMessageListener(this, s);
 		listenerThread = new Thread(messageListener);
 		listenerThread.start();
 		messageListener.writeMessage(new TimeSubscribeMessage(this.ipAddress, this.port));
@@ -141,9 +142,7 @@ public class GateImpl extends MessageReceiver implements Gate {
 	}
 	
 	public void onTokenAmountQuery(){
-		 Config c = new Config();
 			TokenAmountMessage message = new TokenAmountMessage(this.numberOfTokens, this.ipAddress, this.port);
-
 			try {
 				this.messageListener.writeMessage(message);
 				this.numberOfTokens = 0;
@@ -166,8 +165,7 @@ public class GateImpl extends MessageReceiver implements Gate {
 		
 	}
 
-    @Override
-        public void onMessageArrived(AbstractMessage message) {
+       public void onMessageArrived(AbstractMessage message) {
             switch(message.getMessageType())
             {
                 case AbstractMessage.TYPE_CAR_ARRIVAL:

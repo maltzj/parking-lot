@@ -44,7 +44,7 @@ public abstract class AbstractMessage {
 	 * @param inputStream The input stream which is being listened on
 	 * @return An AbstractMessage which represents the decoded message
 	 * @throws IOException If an exception occurs
-	 */
+	 */					
 	public static AbstractMessage decodeMessage(InputStream inputStream) throws IOException
 	{
 		synchronized(inputStream)
@@ -294,8 +294,11 @@ public abstract class AbstractMessage {
 					break;
 				}
 				default:
+				{
+					dataOutput.flush();
 					return;
-			}
+				}
+								}
 		}
 	}
 	

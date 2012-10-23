@@ -1,13 +1,13 @@
 package simulation;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetAddress;
 import java.net.*;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -18,11 +18,8 @@ import car.Car;
 
 
 
-public class TrafficGenerator extends MessageReceiver implements Chronos
+public class TrafficGenerator implements Chronos
 {
-	
-	public ArrayList<HostPort> timeSubscribers;
-	public ArrayList<HostPort> gates;
 
     public ArrayList<Car> parkingLot;
 
@@ -36,30 +33,37 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
     private int numGatesDone;
 	public static int numGates = 6;
     private int distributeType = 1;
+    
+    Thread serverThread;
 
     //Putting this here because we generate a car before advancing time.
     private int stayTime = 0;
 	
 	public static boolean tokenTradingStepComplete = false;
 	
-	Map<HostPort, Integer> hostPortToTokensMap = new HashMap<HostPort, Integer>();
-	Map<HostPort, Integer> hostPortToMoneyMap = new HashMap<HostPort, Integer>();
+	Map<GateMessageListener, Integer> hostPortToTokensMap = new HashMap<GateMessageListener, Integer>();
+	Map<GateMessageListener, Integer> hostPortToMoneyMap = new HashMap<GateMessageListener, Integer>();
+	public static boolean die = false;
+	
+	List<GateMessageListener> gateListeners = new ArrayList<GateMessageListener>();
+	
+	MessageReceiver receiver;
 	
 	public TrafficGenerator(int simLen, String nextTimePoly, InetAddress address, int port) throws Exception
 	{
-        super(address, port);
+        MessageReceiver receiver = new MessageReceiver(address, port, this);
+        this.receiver = receiver;
         numGatesDone = 0;
 		currentTime = 0;
 		simulationLength = simLen;
 		nextTimePolynomial = new Polynomial(nextTimePoly);
 		rdm = new Random();
-		timeSubscribers = new ArrayList<HostPort>();
-		gates = new ArrayList<HostPort>();
         parkingLot = new ArrayList<Car>();
 
         //Create thread for listening on socket.
-        Thread listeningThread = new Thread(this);
-        listeningThread.start();
+        Thread serverThread = new Thread(receiver);
+        serverThread.start();
+        
 	}
 
 
@@ -102,7 +106,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
         int nextGate, leavingGate;
 
         //TODO: CHANGE ME TO THE TA'S RETARDED CODE.
-        nextGate = (int)(rdm.nextDouble() * gates.size());
+        nextGate = (int)(rdm.nextDouble() * this.gateListeners.size());
         leavingGate = (int)(rdm.nextDouble() * (numGates - 1) );
 
         int leavingTime = stayTime + currentTime;
@@ -125,20 +129,8 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 
             Socket sock = null;
             try {
-                HostPort gateHP = gates.get(nextGate);
-                InetAddress gateIP = gateHP.iaddr;
-                int gatePort = gateHP.port;
-                System.out.println("Trying to send a car to port "+gatePort);
-                sock = new Socket();
-                sock.setReuseAddress(true);
-                
-                sock.connect(new InetSocketAddress(gateIP, gatePort));
-
-                OutputStream outStream = sock.getOutputStream();
-                AbstractMessage.encodeMessage(outStream, carToGateMessage);
-                outStream.close();
-                sock.close();
-
+                GateMessageListener listener = this.gateListeners.get(nextGate);
+                listener.writeMessage(carToGateMessage);
             } catch (UnknownHostException e) {
                 // TODO Auto-generated catch block
                 System.err.println("Unknown Host");
@@ -184,11 +176,9 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
             if (currentTime.compareTo(c.getTimeDeparts())  >= 0)
             {
                 //generate random gate
-                int gate = (int) (this.rdm.nextDouble()*numGates);
+                int gate = (int) (this.rdm.nextDouble()*this.gateListeners.size());
 
-                HostPort h = gates.get(gate);
-
-                sendTokenMessage(h.iaddr, h.port);
+                sendTokenMessage(this.gateListeners.get(gate));
                 
                 toRemove.add(c);
             }
@@ -205,94 +195,75 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 	/**Iterate over the timeSubscribers and send each of them the current time*/
     }
 
-    private void sendTokenMessage(InetAddress ip, int port)
+    private void sendTokenMessage(GateMessageListener listener)
     {
-        //TODO: Perhaps, we need to send money here.
-        TokenMessage message = new TokenMessage(1);
-        try 
-        {
-            Socket s = new Socket();
-            s.setReuseAddress(true);
-            s.connect(new InetSocketAddress(ip, port));
-
-            OutputStream o = s.getOutputStream();
-            AbstractMessage.encodeMessage(o, message);
-            o.close();
-            s.close();
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
+    	try {
+			listener.writeMessage(new TokenMessage(1));
+		} catch (IOException e) {
+			//cry
+		}
     }
 
     
-	@Override
-	public void onMessageArrived(AbstractMessage message) throws IOException {
-		switch(message.getMessageType())
-		{
-			case AbstractMessage.TYPE_TIME_SUBSCRIBE:
+	public void onMessageArrived(AbstractMessage message, GateMessageListener stream) throws IOException {
+		synchronized(this){
+			switch(message.getMessageType())
 			{
-				this.onTimeSubscribeReceived((TimeSubscribeMessage) message);
-				break;
+				case AbstractMessage.TYPE_TIME_SUBSCRIBE:
+				{
+					this.onTimeSubscribeReceived((TimeSubscribeMessage) message);
+					break;
+				}
+				case AbstractMessage.TYPE_GATE_SUBSCRIBE:
+				{
+					this.onGateSubscribe((GateSubscribeMessage) message);
+					break;
+				}
+	            case AbstractMessage.TYPE_GATE_DONE:
+				{
+					this.onGateDone((GateDoneMessage) message);
+					break;
+				}
+	            case AbstractMessage.TYPE_CAR_ARRIVAL:
+				{
+					this.onCarArrived((CarArrivalMessage) message);
+					break;
+				}
+	            case AbstractMessage.TYPE_TOKEN_AMOUNT_MESSAGE:
+	            {
+	            	this.onTokenAmountArrived((TokenAmountMessage) message, stream);
+	            	break;
+	            }
+	            
+	            case AbstractMessage.TYPE_MONEY_AMOUNT_MESSAGE:
+	            {
+	            	this.onMoneyAmountArrived((MoneyAmountMessage) message, stream);
+	            }
 			}
-			case AbstractMessage.TYPE_GATE_SUBSCRIBE:
-			{
-				this.onGateSubscribe((GateSubscribeMessage) message);
-				break;
-			}
-            case AbstractMessage.TYPE_GATE_DONE:
-			{
-				this.onGateDone((GateDoneMessage) message);
-				break;
-			}
-            case AbstractMessage.TYPE_CAR_ARRIVAL:
-			{
-				this.onCarArrived((CarArrivalMessage) message);
-				break;
-			}
-            case AbstractMessage.TYPE_TOKEN_AMOUNT_MESSAGE:
-            {
-            	this.onTokenAmountArrived((TokenAmountMessage) message);
-            	break;
-            }
-            
-            case AbstractMessage.TYPE_MONEY_AMOUNT_MESSAGE:
-            {
-            	this.onMoneyAmountArrived((MoneyAmountMessage) message);
-            }
-
 		}
-		
 	}
 
 	private void askForMoney(){
+		System.out.println("ask for money");
 		SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_MONEY_QUERY_MESSAGE);
-		for(HostPort hp : timeSubscribers)
+		for(GateMessageListener gateListener: gateListeners)
 		{
-			try 
-			{
-				Socket s = new Socket();
-                s.setReuseAddress(true);
-                s.connect(new InetSocketAddress(hp.iaddr, hp.port));
-
-				OutputStream o = s.getOutputStream();
-				AbstractMessage.encodeMessage(o, message);
-                o.close();
-                s.close();
-       		}
-			catch(Exception e) {
-                e.printStackTrace();
-        	}
+			try {
+				gateListener.writeMessage(message);
+			} catch (IOException e) {
+				//cry
+			}
 		}
         //once you've received all the tokens and money.
 	}
 	
-    private void onMoneyAmountArrived(MoneyAmountMessage message) {
-		HostPort hostPort = new HostPort(message.getIpAddress(), message.getPort());
-		this.hostPortToMoneyMap.put(hostPort, new Integer(message.getAmountOfMoney()));
+    private void onMoneyAmountArrived(MoneyAmountMessage message, GateMessageListener stream) {
+    	System.out.println("do we make it to moneyAmountArrived");
+		this.hostPortToMoneyMap.put(stream, new Integer(message.getAmountOfMoney()));
 		
 		if(this.hostPortToMoneyMap.keySet().size() == this.numGates)
 		{
+			System.out.println("We need to distribute now");
 			//create the redistribution method
             switch(distributeType)
             {
@@ -317,12 +288,13 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
    {
         int tokens = 0;
         int money = 0;
-        for(HostPort hp : gates)
+        for(GateMessageListener listener : this.gateListeners)
         {
-            tokens = hostPortToTokensMap.get(hp);            
-            money = hostPortToMoneyMap.get(hp);            
-            sendMoney(hp, money);
-            sendTokens(hp, tokens);
+            tokens = hostPortToTokensMap.get(listener);            
+            money = hostPortToMoneyMap.get(listener);
+            
+            sendMoney(listener, money);
+            sendTokens(listener, tokens);
         }
    }
 
@@ -332,21 +304,24 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
        int numLeft = numGates;
        int money = 0;
 
-       for(HostPort hp: gates)
+       for(GateMessageListener listener: this.gateListeners)
        {
-            totalTokens += hostPortToTokensMap.get(hp);            
+    	   totalTokens += hostPortToTokensMap.get(listener);
+			  
        }
 
 
-       for(HostPort hp: gates)
-       {
-           money = hostPortToMoneyMap.get(hp);            
+       for(GateMessageListener listener: this.gateListeners)
+       {	   
+           money = hostPortToMoneyMap.get(listener);            
            //send the money as is.
-           sendMoney(hp, money);
+           sendMoney(listener, money);
 
            //send the tokens equally distributed.
            int sendingTokens = totalTokens/numLeft--;
-           sendTokens(hp, sendingTokens);
+           
+           
+           sendTokens(listener, sendingTokens);
            totalTokens -= sendingTokens;
        }
    }
@@ -356,37 +331,23 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
          
    }
 
-   public void sendMoney(HostPort hp, int money)
+   public void sendMoney(GateMessageListener gateListener, int money)
    {
         MoneyMessage message = new MoneyMessage(money);
     	try 
 		{
-            Socket s = new Socket();
-            s.setReuseAddress(true);
-            s.connect(new InetSocketAddress(hp.iaddr, hp.port));
-
-			OutputStream o = s.getOutputStream();
-			AbstractMessage.encodeMessage(o, message);
-            o.close();
-            s.close();
+            gateListener.writeMessage(message);
        	}
 		catch(Exception e) {
             e.printStackTrace();
         }
    }
-   public void sendTokens(HostPort hp, int tokens)
+   public void sendTokens(GateMessageListener listener, int tokens)
    {
         TokenMessage message = new TokenMessage(tokens);
     	try 
 		{
-            Socket s = new Socket();
-            s.setReuseAddress(true);
-            s.connect(new InetSocketAddress(hp.iaddr, hp.port));
-
-			OutputStream o = s.getOutputStream();
-			AbstractMessage.encodeMessage(o, message);
-            o.close();
-            s.close();
+            listener.writeMessage(message);
        	}
 		catch(Exception e) {
             e.printStackTrace();
@@ -394,19 +355,13 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
    }
     
 	private void askForTokens() {
+
 		SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_TOKEN_QUERY_MESSAGE);
-		for(HostPort hp : timeSubscribers)
+		for(GateMessageListener listener : this.gateListeners)
 		{
 			try 
 			{
-                Socket s = new Socket();
-                s.setReuseAddress(true);
-                s.connect(new InetSocketAddress(hp.iaddr, hp.port));
-
-				OutputStream o = s.getOutputStream();
-				AbstractMessage.encodeMessage(o, message);
-                o.close();
-                s.close();
+                listener.writeMessage(message);
        		}
 			catch(Exception e) {
                 e.printStackTrace();
@@ -414,14 +369,13 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 		}
 	}
 	
-	private void onTokenAmountArrived(TokenAmountMessage message) {
-    	HostPort hostPort = new HostPort(message.getIpAddress(), message.getPort());
-		this.hostPortToTokensMap.put(hostPort, new Integer(message.getNumberOfTokens()));
-		
-		if(this.hostPortToTokensMap.keySet().size() == this.numGates)
+	private void onTokenAmountArrived(TokenAmountMessage message, GateMessageListener stream) {
+		this.hostPortToTokensMap.put(stream, new Integer(message.getNumberOfTokens()));
+		if(this.hostPortToTokensMap.keySet().size() == numGates)
 		{
 			askForMoney();
 		}
+
 	}
     
     
@@ -446,12 +400,11 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
         }
     }
 	public void onGateSubscribe(GateSubscribeMessage gateSubscribing) {
-		gates.add(new HostPort(gateSubscribing.getAddressOfGate(),gateSubscribing.getPort()));
+		//gates.add(new HostPort(gateSubscribing.getAddressOfGate(),gateSubscribing.getPort()));
 	}
 	
 	public void onTimeSubscribeReceived(TimeSubscribeMessage messageReceived) {
         System.out.println("Received a subscribe from "+messageReceived.getPortSubscribingOn());
-		timeSubscribers.add(new HostPort(messageReceived.getAddressSubscribing(), messageReceived.getPortSubscribingOn()));
 	}
 
 	public void publishTime()
@@ -459,18 +412,11 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 		Date d = getCurrentTime();
         System.out.println("TrafficGenerator: Publishing Time "+d);
 		TimeMessage message = new TimeMessage(d);
-		for(HostPort hp : timeSubscribers)
+		for(GateMessageListener listener : this.gateListeners)
 		{
 			try 
 			{
-                Socket s = new Socket();
-                s.setReuseAddress(true);
-                s.connect(new InetSocketAddress(hp.iaddr, hp.port));
-
-				OutputStream o = s.getOutputStream();
-				AbstractMessage.encodeMessage(o, message);
-                o.close();
-                s.close();
+                listener.writeMessage(message);
        		}
 			catch(Exception e) {
                 e.printStackTrace();
@@ -482,27 +428,25 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
     {
 		Date d = getCurrentTime();
         SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_CLOSE_CONNECTION);
-		for(HostPort hp : timeSubscribers)
+		for(GateMessageListener listener: this.gateListeners)
 		{
 			try 
 			{
-                System.out.println("Killing "+hp.iaddr+":"+hp.port);
-                Socket s = new Socket();
-                s.setReuseAddress(true);
-                s.connect(new InetSocketAddress(hp.iaddr, hp.port));
-
-				OutputStream o = s.getOutputStream();
-				AbstractMessage.encodeMessage(o, message);
-                o.close();
-                s.close();
+                listener.writeMessage(message);
        		}
 			catch(Exception e) {
                 e.printStackTrace();
         	}
 		}
         System.out.println("ParkingLot has "+parkingLot.size()+" cars.");
-        this.die = true;
+        die  = true;
 	}
+    
+    public void onConnectionReceived(Socket socketReceived){
+    	GateMessageListener listener = new GateMessageListener(this, socketReceived);
+    	listener.start(); 	
+    	this.gateListeners.add(listener);
+    }
 
 
 	/**You don't need to change the rest of code*/
@@ -571,6 +515,16 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 			}
 			return sum;
 		}
+	}
+	
+	private GateMessageListener getArrayLocationOfHostPort(HostPort hostPort)
+	{
+		for(int i = 0; i < this.gateListeners.size(); i++)
+		{
+			if(this.gateListeners.get(i).getIpAddress().equals(hostPort.iaddr) && this.gateListeners.get(i).getPort() == hostPort.port)
+				return this.gateListeners.get(i);
+		}
+		return null;
 	}
 
 }

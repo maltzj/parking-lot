@@ -18,7 +18,7 @@ public class SimulationMessageListener implements Runnable {
 	
 	@Override
 	public void run() {
-		while(GateImpl.stillRunning == true)
+		while(!gateListeningFor.die)
 		{
 			AbstractMessage messageReceived;
 			try {
@@ -31,8 +31,7 @@ public class SimulationMessageListener implements Runnable {
 		try {
 			socketListeningOn.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//cry
 		}
 	}
 	
