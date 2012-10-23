@@ -41,7 +41,10 @@ public class GateImpl extends MessageReceiver implements Gate {
     int numberOfTokens;
 
     private int numberOfCarsLetThrough = 0;
+    private int numberOfSadnessCars = 0;
     private int realPort = 0;
+
+    private long totalCarWait = 0;
 
     int amountOfMoney;
     int moneyPerCarPassed;
@@ -117,7 +120,9 @@ public class GateImpl extends MessageReceiver implements Gate {
 			
 			//Car waited too long and left
 			if(timeToCheckAgainst.after(carLeaveQueueTime)) {
+                numberOfSadnessCars++;
                 toRemove.add(currentCar);
+                this.totalCarWait += currentCar.timeLeaving.getTime() - currentCar.getCarRepresenting().getTimeSent().getTime();
 			} else {
                 //we have enough tokens.
                 if(this.numberOfTokens > 0) {
@@ -125,8 +130,10 @@ public class GateImpl extends MessageReceiver implements Gate {
                     this.sendCarToParkingLot(currentCar);
 					this.amountOfMoney += moneyPerCarPassed;
 
+                     
                     this.numberOfCarsLetThrough++;
 
+                    this.totalCarWait += newTime.getTime() - currentCar.getCarRepresenting().getTimeSent().getTime();
 
                     toRemove.add(currentCar);
                 } 
@@ -167,7 +174,12 @@ public class GateImpl extends MessageReceiver implements Gate {
 
     public void killMyself()
     {
-        System.out.println(realPort+": I have "+numberOfTokens+" tokens and $"+amountOfMoney+" left. I let "+numberOfCarsLetThrough+" cars through.");
+        if(!this.die)
+        {
+            this.die = true;
+            double averageWaitingTime = (double)this.totalCarWait/(numberOfSadnessCars + numberOfCarsLetThrough);
+            System.out.println(realPort+": I have "+numberOfTokens+" tokens and $"+amountOfMoney+" left. I let "+numberOfCarsLetThrough+" cars through and made "+numberOfSadnessCars+" leave because they waited too long. Average waiting time: "+averageWaitingTime);
+        }
     }
 
        public void onMessageArrived(AbstractMessage message) {

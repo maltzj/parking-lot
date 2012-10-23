@@ -12,15 +12,15 @@ import util.*;
 
 public class SetupTest
 {
-    private static final int SIMULATION_LENGTH = 200;
-    //private static final String MAGIC_POLY = "0,.5";
-    private static final String MAGIC_POLY = "2,.000000000275,1,-.0000099,0,.1";
+    private static final int SIMULATION_LENGTH = 4000;
+    private static final String MAGIC_POLY = "0,.5";
+    //private static final String MAGIC_POLY = "2,.000000000275,1,-.0000099,0,.1";
     /** This is the time that a car waits in the gate's queue before it leaves. */
-    private static final long TIME_TO_WAIT = 4000;
+    private static final long TIME_TO_WAIT = 40;
     private static final int CASH_MONEY_TO_START = 100;
     public static final int CASH_MONEY_PER_CAR = 5;
     public static final int CASH_MONEY_PER_TOKEN = 3;
-    private static final int TOKENS_TO_START = 50;
+    private static final int TOKENS_TO_START = 10;
 
 
     protected TrafficGenerator trafficGenerator;
