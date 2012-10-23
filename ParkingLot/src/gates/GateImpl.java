@@ -17,6 +17,7 @@ import messaging.TimeMessage;
 import messaging.TimeSubscribeMessage;
 import messaging.TokenAmountMessage;
 import messaging.TokenMessage;
+import messaging.*;
 import util.Config;
 import util.MessageReceiver;
 import car.Car;
@@ -37,6 +38,8 @@ public class GateImpl extends MessageReceiver implements Gate {
     Thread messageListenerThread;
 
     int numberOfTokens;
+
+    private int numberOfCarsLetThrough = 0;
 
     int amountOfMoney;
     int moneyPerCarPassed;
@@ -119,7 +122,10 @@ public class GateImpl extends MessageReceiver implements Gate {
                     if(this.numberOfTokens > 0) {
                         this.numberOfTokens--;
                         this.sendCarToParkingLot(currentCar);
+                        
                         this.amountOfMoney += moneyPerCarPassed;
+                        this.numberOfCarsLetThrough++;
+
                         toRemove.add(currentCar);
                     }
                 }
@@ -192,8 +198,8 @@ public class GateImpl extends MessageReceiver implements Gate {
                     }
                 case AbstractMessage.TYPE_CLOSE_CONNECTION:
                     {
-                        System.out.println(port+": I have "+numberOfTokens+" tokens");
                         this.die = true;
+                        System.out.println(port+": I have "+numberOfTokens+" tokens and $"+amountOfMoney+" left. I let "+numberOfCarsLetThrough+" cars through.");
                         break;
                     }
                 case AbstractMessage.TYPE_TOKEN_MESSAGE:
@@ -214,8 +220,16 @@ public class GateImpl extends MessageReceiver implements Gate {
                         this.onTokenAmountQuery();
                         break;
                     }
+                case AbstractMessage.TYPE_MONEY_MESSAGE:
+                    {
+                        MoneyMessage money = (MoneyMessage) message;
+                        this.amountOfMoney += money.getAmountOfMoney();
+                        break;
+                    }
                 default:
                     {
+                        System.out.println("What the fuck are you doing Message Type = "+message.getMessageType());
+                        System.exit(1);
                         //Do something
                     }
             }
