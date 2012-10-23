@@ -35,7 +35,7 @@ public class TrafficGenerator implements Chronos
     private int numGatesDone;
 
 	public static int numGates = 6;
-    private int distributeType = 0;
+    private int distributeType = 2;
 
     Thread serverThread;
 

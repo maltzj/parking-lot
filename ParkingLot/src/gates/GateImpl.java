@@ -218,7 +218,6 @@ public class GateImpl extends MessageReceiver implements Gate {
                         TokenMessage tokenMessage = (TokenMessage) message;
                         this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
 
-                        System.out.println(realPort+": Now I got a total of "+numberOfTokens);
                         break;
                     }
                 case AbstractMessage.TYPE_MONEY_QUERY_MESSAGE:
