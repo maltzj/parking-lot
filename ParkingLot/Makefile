@@ -8,19 +8,21 @@ CLASSPATH = $(CURRPATH)/src
 	CLASSPATH=$(CLASSPATH) $(JC) $(JFLAGS) $*.java
 
 CLASSES = \
-        src/test/SetupTest.java
+        src/test/RunSimulation.java
 
-fuck: you
+go:
+	CLASSPATH=$(CLASSPATH) java -ea test.RunSimulation
 
 default: classes
 
 classes: $(CLASSES:.java=.class)
 
-# This runs all the tests.
-go: classes
+magic: clean classes
 	#This magical code goes through each source file in CLASSES and runs it as a test.
 	$(foreach var, $(CLASSES), CLASSPATH=$(CLASSPATH) echo -e "\n>>>>>> Running $(var) \n"; echo $(var) | cut -c 5- | rev | cut -c 6- | rev | tr '/' '.' | xargs java -ea ;)
 	
+
+# This runs all the tests.
 you: clean default go
 
 clean:

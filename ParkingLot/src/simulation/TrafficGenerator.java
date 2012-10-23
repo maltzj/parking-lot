@@ -121,7 +121,7 @@ public class TrafficGenerator implements Chronos
 
         if(currentTime < simulationLength)
         {
-            System.out.println("Generated a car: Time: " + currentTime + "\tGate: " + nextGate + "\t\tstayTime: " + stayTime + "\t\tleavingGate: " + leavingGate + "\t\tleavingTime: " + leavingTime);
+            System.out.println("TrafficGenerator: Generated a car: Time: " + currentTime + "\tGate: " + nextGate + "\t\tstayTime: " + stayTime + "\t\tleavingGate: " + leavingGate + "\t\tleavingTime: " + leavingTime);
             /**
               Here you should send a {massage} (MASSAGES FOR ALL) to the gate and insert the car to parking lot array (you need to implement the array).
               Remember to handle the situation that car may get reject by the gate so that it won't be in the parking lot.
@@ -484,7 +484,7 @@ public class TrafficGenerator implements Chronos
      */
     public void onCarArrived(CarArrivalMessage message)
     {
-        System.out.println("TrafficGenerator got a car leaving at "+message.getCarReturnTime());
+        System.out.println("TrafficGenerator: Got a car leaving at "+message.getCarReturnTime());
 
         parkingLot.add(new Car(message.getCarSentTime(), message.getCarReturnTime()));
     }
@@ -512,7 +512,7 @@ public class TrafficGenerator implements Chronos
      * Specifies what to do once a time subscribe message is received from an external entity.
      */
     public void onTimeSubscribeReceived(TimeSubscribeMessage messageReceived) {
-        System.out.println("Received a subscribe from "+messageReceived.getPortSubscribingOn());
+        System.out.println("TrafficGenerator: Received a subscribe from "+messageReceived.getPortSubscribingOn());
     }
 
     /**
