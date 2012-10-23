@@ -130,6 +130,7 @@ public class GateImpl extends MessageReceiver implements Gate {
 	}
 	
 	public void onTokenAmountQuery(){
+        System.out.println("onTokenAmountQuery");
 		 Config c = new Config();
 			TokenAmountMessage message = new TokenAmountMessage(this.numberOfTokens, this.ipAddress, this.port);
 			this.numberOfTokens = 0;

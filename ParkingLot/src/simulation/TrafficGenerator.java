@@ -35,6 +35,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 	private Random rdm;
     private int numGatesDone;
 	public static int numGates = 6;
+    private int distributeType = 0;
 	
 	public static boolean tokenTradingStepComplete = false;
 	
@@ -90,6 +91,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 
         //Make cars leave parking lot
         checkCarLeaving();
+        tokenTradingStepComplete = false;
         askForTokens();
         
         while(!tokenTradingStepComplete)
@@ -254,6 +256,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 	}
 
 	private void askForMoney(){
+        System.out.println("askForMoney");
 		SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_MONEY_QUERY_MESSAGE);
 		for(HostPort hp : timeSubscribers)
 		{
@@ -272,19 +275,71 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 	}
 	
     private void onMoneyAmountArrived(MoneyAmountMessage message) {
+        System.out.println("onMoneyAmountArrived");
 		HostPort hostPort = new HostPort(message.getIpAddress(), message.getPort());
 		this.hostPortToMoneyMap.put(hostPort, new Integer(message.getAmountOfMoney()));
 		
 		if(this.hostPortToMoneyMap.keySet().size() == this.numGates)
 		{
 			//create the redistribution method
+            switch(distributeType)
+            {
+                case 0:
+                {
+                    doNotDistribute();
+                    break;
+                }
+            }
 		}	
 	}
     
-    
-    
+   public void doNotDistribute()
+   {
+        System.out.println("doNotDistribute");
+        int tokens = 0;
+        int money = 0;
+        for(HostPort hp : gates)
+        {
+            tokens = hostPortToTokensMap.get(hp);            
+            money = hostPortToMoneyMap.get(hp);            
+            sendMoney(hp, money);
+            sendTokens(hp, tokens);
+        }
+        tokenTradingStepComplete = true;
+   }
+   public void sendMoney(HostPort hp, int money)
+   {
+        MoneyMessage message = new MoneyMessage(money);
+    	try 
+		{
+			Socket s = new Socket(hp.iaddr, hp.port);
+			OutputStream o = s.getOutputStream();
+			AbstractMessage.encodeMessage(o, message);
+            o.close();
+            s.close();
+       	}
+		catch(Exception e) {
+            e.printStackTrace();
+        }
+   }
+   public void sendTokens(HostPort hp, int tokens)
+   {
+        TokenMessage message = new TokenMessage(tokens);
+    	try 
+		{
+			Socket s = new Socket(hp.iaddr, hp.port);
+			OutputStream o = s.getOutputStream();
+			AbstractMessage.encodeMessage(o, message);
+            o.close();
+            s.close();
+       	}
+		catch(Exception e) {
+            e.printStackTrace();
+        }
+   }
     
 	private void askForTokens() {
+        System.out.println("askForTokens");
 		SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_TOKEN_QUERY_MESSAGE);
 		for(HostPort hp : timeSubscribers)
 		{
@@ -303,6 +358,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 	}
 	
 	private void onTokenAmountArrived(TokenAmountMessage message) {
+    System.out.println("onTokenAmountArrived");
     	HostPort hostPort = new HostPort(message.getIpAddress(), message.getPort());
 		this.hostPortToTokensMap.put(hostPort, new Integer(message.getNumberOfTokens()));
 		
