@@ -387,7 +387,7 @@ public class TrafficGenerator implements Chronos
             int buyerCashMoney = hostPortToMoneyMap.get(buyer);
 
             //if the buyer has enough money to buy a token, buy one token.
-            if(buyerCashMoney > SetupTest.CASH_MONEY_PER_TOKEN)
+            if(buyerCashMoney > RunSimulation.CASH_MONEY_PER_TOKEN)
             {
                 for(GateMessageListener seller: this.gateListeners)
                 {
@@ -397,10 +397,10 @@ public class TrafficGenerator implements Chronos
                     if(sellerTokens > 1)
                     {
                         hostPortToTokensMap.put(seller, sellerTokens - 1);
-                        hostPortToMoneyMap.put(seller, sellerCashMoney + SetupTest.CASH_MONEY_PER_TOKEN);
+                        hostPortToMoneyMap.put(seller, sellerCashMoney + RunSimulation.CASH_MONEY_PER_TOKEN);
 
                         hostPortToTokensMap.put(buyer, 1);
-                        hostPortToMoneyMap.put(buyer, buyerCashMoney - SetupTest.CASH_MONEY_PER_TOKEN);
+                        hostPortToMoneyMap.put(buyer, buyerCashMoney - RunSimulation.CASH_MONEY_PER_TOKEN);
 
                         break;
                     }
