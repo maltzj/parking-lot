@@ -193,7 +193,7 @@ public class GateImpl extends MessageReceiver implements Gate {
             {
                 averageWaitingTime = 0;
             }
-            System.out.println(realPort+": I have "+numberOfTokens+" tokens and $"+amountOfMoney+" left. I let "+numberOfCarsLetThrough+" cars through and made "+numberOfSadnessCars+" leave because they waited too long. Average waiting time: "+averageWaitingTime);
+            System.out.println("Gate #"+realPort+": I have "+numberOfTokens+" tokens and $"+amountOfMoney+" left. I let "+numberOfCarsLetThrough+" cars through and made "+numberOfSadnessCars+" leave because they waited too long. Average waiting time: "+averageWaitingTime);
         }
     }
 
@@ -354,7 +354,7 @@ public class GateImpl extends MessageReceiver implements Gate {
      */
     public void sendCarToParkingLot(CarWrapper carWrapper)
     {
-        System.out.println(realPort +": Sending a car to the parking lot. It will leave at "+carWrapper.timeLeaving+" Tokens: "+this.numberOfTokens + " amount of money is: " + this.amountOfMoney + " length of queue is " + this.getCarsWaiting());
+        System.out.println("Gate #"+realPort +": Sending a car to the parking lot. It will leave at "+carWrapper.timeLeaving+" Tokens: "+this.numberOfTokens + " amount of money is: " + this.amountOfMoney + " length of queue is " + this.getCarsWaiting());
 
         Config c = new Config();
 
