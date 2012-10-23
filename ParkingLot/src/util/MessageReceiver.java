@@ -67,13 +67,17 @@ public class MessageReceiver implements Runnable {
 		return server;
 	}
 
-    /** Implement these abstract methods. 
+    /** Specifies what to do when a connection is received
      * @throws IOException */
 	public void onConnectionReceived(Socket socket) throws IOException{
 		this.generator.onConnectionReceived(socket);
 		
 	}
 
+	/**
+	 * This thread runs by just sitting in an event loop and waiting for other sockets to connect.
+	 * Once a socket connects, controll is passed to the onConnectionReceived method 
+	 */
 	@Override
 	public void run() {
 		

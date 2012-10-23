@@ -19,7 +19,10 @@ import util.MessageReceiver;
 import car.Car;
 
 
-
+/**
+ * This class encompases all of the TrafficGeneration capabilities within the program.  It is also somewhat responsible for the redistribution of tokens.
+ * 
+ */
 public class TrafficGenerator implements Chronos
 {
 
@@ -71,7 +74,10 @@ public class TrafficGenerator implements Chronos
 
     }
 
-
+/**
+ * Steps through the next iteration of the simulation
+ * @throws IOException
+ */
 	public void step() throws IOException
 	{
 		/**
@@ -97,6 +103,9 @@ public class TrafficGenerator implements Chronos
     }
 
 
+	/**
+	 * Generates a car and sends it to one of the gates
+	 */
     public void generateCar()
     {
 
@@ -150,12 +159,19 @@ public class TrafficGenerator implements Chronos
 
     }
 
-
+/**
+ * Gets the next time of the polynomial
+ * @param expectedValue The expected value of the polynomial
+ * @return The next time a car will be sent
+ */
     public double nextTime(double expectedValue)
     {
         return -Math.log(1 - rdm.nextDouble()) / expectedValue;
     }
 
+    /**
+     * returns the current time of the system
+     */
     public Date getCurrentTime()
     {
         Date d = new Date();
@@ -194,6 +210,10 @@ public class TrafficGenerator implements Chronos
         /**Iterate over the timeSubscribers and send each of them the current time*/
     }
 
+    /**
+     * Sends a token to the given gate
+     * @param listener The gate which is receiving the token
+     */
     private void sendTokenMessage(GateMessageListener listener)
     {
         try {
@@ -203,7 +223,12 @@ public class TrafficGenerator implements Chronos
         }
     }
 
-
+    /**
+     * Specifies what to do when a message arrives to the simulation
+     * @param message, The message which was just received
+     * @param stream The Gate which this message was received from
+     * @throws IOException
+     */
     public void onMessageArrived(AbstractMessage message, GateMessageListener stream) throws IOException {
         synchronized(this){
             switch(message.getMessageType())
@@ -242,6 +267,9 @@ public class TrafficGenerator implements Chronos
         }
     }
 
+    /**
+     * Asks for the money from all the different gates which this is connected to.
+     */
     private void askForMoney(){
         SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_MONEY_QUERY_MESSAGE);
         for(GateMessageListener gateListener: gateListeners)
@@ -255,6 +283,11 @@ public class TrafficGenerator implements Chronos
         //once you've received all the tokens and money.
     }
 
+    /**
+     * Specifies what to do once the Simulation receives an amount of money
+     * @param message The message which specifies the amount of money being sent
+     * @param stream The gate which is sending the money.
+     */
     private void onMoneyAmountArrived(MoneyAmountMessage message, GateMessageListener stream) {
         this.hostPortToMoneyMap.put(stream, new Integer(message.getAmountOfMoney()));
 
@@ -285,6 +318,9 @@ public class TrafficGenerator implements Chronos
 		}	
 	}
 
+    /**
+     * Does not redistribute any of the tokens, just gives any tokens back to their original owner
+     */
    public void doNotDistribute()
    {
         int tokens = 0;
@@ -299,6 +335,9 @@ public class TrafficGenerator implements Chronos
         }
    }
 
+   /**
+    * Distributes tokens evenly between the different gates.
+    */
     public void distributeEqually()
     { 
         int totalTokens = 0;
@@ -373,6 +412,11 @@ public class TrafficGenerator implements Chronos
         doNotDistribute();
     }
 
+    /**
+     * Sends money to a given gate
+     * @param gateListener The gate which is being sent to
+     * @param money The amount of money which is being sent
+     */
     public void sendMoney(GateMessageListener gateListener, int money)
     {
         MoneyMessage message = new MoneyMessage(money);
@@ -384,6 +428,12 @@ public class TrafficGenerator implements Chronos
             e.printStackTrace();
         }
     }
+    
+    /**
+     * Sends tokens to a given gate
+     * @param listener The listener for the gate which is being given tokens
+     * @param tokens The number of tokens being sent
+     */
     public void sendTokens(GateMessageListener listener, int tokens)
     {
         TokenMessage message = new TokenMessage(tokens);
@@ -396,6 +446,9 @@ public class TrafficGenerator implements Chronos
         }
     }
 
+    /**
+     * Requests tokens from all of the gates
+     */
     private void askForTokens() {
 
         SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_TOKEN_QUERY_MESSAGE);
@@ -411,6 +464,11 @@ public class TrafficGenerator implements Chronos
         }
     }
 
+    /**
+     * Specifies what to do when a gate reports how many tokens it has
+     * @param message The message which specifies the number of token a Gate has
+     * @param stream The listener which the message was received from
+     */
     private void onTokenAmountArrived(TokenAmountMessage message, GateMessageListener stream) {
         this.hostPortToTokensMap.put(stream, new Integer(message.getNumberOfTokens()));
         if(this.hostPortToTokensMap.keySet().size() == numGates)
@@ -432,6 +490,11 @@ public class TrafficGenerator implements Chronos
     }
 
 
+    /**
+     * Specifies what to do upon receiving a GateDoneMessage
+     * @param message, The message from the gates which is done with its most recent step
+     * @throws IOException
+     */
     public void onGateDone(GateDoneMessage message) throws IOException
     {
         numGatesDone++;
@@ -445,10 +508,16 @@ public class TrafficGenerator implements Chronos
         //gates.add(new HostPort(gateSubscribing.getAddressOfGate(),gateSubscribing.getPort()));
     }
 
+    /**
+     * Specifies what to do once a time subscribe message is received from an external entity.
+     */
     public void onTimeSubscribeReceived(TimeSubscribeMessage messageReceived) {
         System.out.println("Received a subscribe from "+messageReceived.getPortSubscribingOn());
     }
 
+    /**
+     * Publishes the time to all of the subscribers
+     */
     public void publishTime()
     {
         Date d = getCurrentTime();
@@ -466,6 +535,9 @@ public class TrafficGenerator implements Chronos
         }
     }
 
+    /**
+     * Kills the entire system
+     */
     public void killAllDashNine()
     {
         Date d = getCurrentTime();

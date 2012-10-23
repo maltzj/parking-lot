@@ -6,6 +6,9 @@ import java.net.Socket;
 
 import messaging.AbstractMessage;
 
+/**
+ * This class specifies the message listener for the Simulation.  Much like the one for the gates this class basically just sits in an event loop
+ */
 public class GateMessageListener extends Thread{
 	
 	TrafficGenerator generator;
@@ -13,6 +16,12 @@ public class GateMessageListener extends Thread{
 	int port;
 	Socket socketListeningOn;
 	
+	
+	/**
+	 * Creates a gate listener which reports to a given traffic generator and listens on a particular socket
+	 * @param generator The generator which this listener reports to
+	 * @param socketConnectingTo The socket which the listener listens on
+	 */
 	public GateMessageListener(TrafficGenerator generator, Socket socketConnectingTo)
 	{
 		this.socketListeningOn = socketConnectingTo;
@@ -34,6 +43,9 @@ public class GateMessageListener extends Thread{
         }	
 	}
 
+	/**
+	 * Kills the socket that is being listened on
+	 */
     public void killMyself()
     {
         try {
