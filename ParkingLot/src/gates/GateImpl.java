@@ -145,17 +145,25 @@ public class GateImpl extends MessageReceiver implements Gate {
         sendDone();
 	}
 	
+	/**
+	 * Specifies what action a Gate should take when it is queried for the token amount
+	 * Currently this just writes a message with its total amount of tokens to the simulator
+	 */
 	public void onTokenAmountQuery(){
 			TokenAmountMessage message = new TokenAmountMessage(this.numberOfTokens, this.ipAddress, this.port);
 			try {
 				this.messageListener.writeMessage(message);
 				this.numberOfTokens = 0;
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				this.stillRunning = false;
 			}
 	}
 	
+	
+	/**
+	 * Specifies what the Gate should do when it receives a query for the amount of money it currently has
+	 * Currently it just responds to the simulation with the amount of money the gate has
+	 */
 	public void onMoneyAmountQuery(){
 		MoneyAmountMessage message = new MoneyAmountMessage(this.amountOfMoney, this.ipAddress, this.port);
 		try{
@@ -169,6 +177,10 @@ public class GateImpl extends MessageReceiver implements Gate {
 		
 	}
 
+	/**
+	 * Specifies the different actions to take with given messages
+	 * @param message The message which is being acted upon
+	 */
        public void onMessageArrived(AbstractMessage message) {
             switch(message.getMessageType())
             {
@@ -214,13 +226,17 @@ public class GateImpl extends MessageReceiver implements Gate {
                     }
                 default:
                     {
-                        System.out.println("What the fuck are you doing Message Type = "+message.getMessageType());
+                        System.out.println("What are you doing Message Type = "+message.getMessageType());
                         System.exit(1);
                         //Do something
                     }
             }
         }
 
+       /**
+        * Returns the number of cars currently waiting to enter
+        * @return The number of cars in the queue
+        */
     public int getCarsWaiting() {
         return waitingCars.size();
     }
@@ -332,6 +348,9 @@ public class GateImpl extends MessageReceiver implements Gate {
 		
     }
 
+    /**
+     * This is just a utility class which easily wraps the car and the time that it should leave the queue.
+     */
     private static class CarWrapper {
         Car carRepresenting;
         Date timeLeaving;
