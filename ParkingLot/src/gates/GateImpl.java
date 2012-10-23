@@ -138,7 +138,34 @@ public class GateImpl extends MessageReceiver implements Gate {
         }
 
         sendDone();
-    }
+	}
+	
+	public void onTokenAmountQuery(){
+		 Config c = new Config();
+			TokenAmountMessage message = new TokenAmountMessage(this.numberOfTokens, this.ipAddress, this.port);
+
+			try {
+				this.messageListener.writeMessage(message);
+				this.numberOfTokens = 0;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				this.stillRunning = false;
+			}
+	}
+	
+	public void onMoneyAmountQuery(){
+		MoneyAmountMessage message = new MoneyAmountMessage(this.amountOfMoney, this.ipAddress, this.port);
+		try{
+			this.messageListener.writeMessage(message);
+			this.numberOfTokens = 0;
+		}
+		catch(IOException e)
+		{
+			this.stillRunning = false;
+		}
+		
+	}
+>>>>>>> 788fadfe2a4dd9609c9048058e76ee9cbeddb124
 
     public void onTokenAmountQuery(){
         Config c = new Config();
