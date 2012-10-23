@@ -86,7 +86,6 @@ public class MessageReceiver implements Runnable {
 			Socket clientSocket = null;
 			try {
 				clientSocket = server.accept();
-				System.out.println("got a socket");
                 this.onConnectionReceived(clientSocket);
 			} catch (IOException e) {
                 e.printStackTrace();

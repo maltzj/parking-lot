@@ -189,6 +189,10 @@ public class GateImpl extends MessageReceiver implements Gate {
         {
             this.die = true;
             double averageWaitingTime = (double)this.totalCarWait/(numberOfSadnessCars + numberOfCarsLetThrough);
+            if(Double.isNaN(averageWaitingTime))
+            {
+                averageWaitingTime = 0;
+            }
             System.out.println(realPort+": I have "+numberOfTokens+" tokens and $"+amountOfMoney+" left. I let "+numberOfCarsLetThrough+" cars through and made "+numberOfSadnessCars+" leave because they waited too long. Average waiting time: "+averageWaitingTime);
         }
     }
