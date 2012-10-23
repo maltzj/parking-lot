@@ -195,6 +195,16 @@ public class GateImpl extends MessageReceiver implements Gate {
 	 */
 
 
+    public void killMyself()
+    {
+        if(!this.die)
+        {
+            this.die = true;
+            double averageWaitingTime = (double)this.totalCarWait/(numberOfSadnessCars + numberOfCarsLetThrough);
+            System.out.println(realPort+": I have "+numberOfTokens+" tokens and $"+amountOfMoney+" left. I let "+numberOfCarsLetThrough+" cars through and made "+numberOfSadnessCars+" leave because they waited too long. Average waiting time: "+averageWaitingTime);
+        }
+    }
+
        public void onMessageArrived(AbstractMessage message) {
             switch(message.getMessageType())
             {
