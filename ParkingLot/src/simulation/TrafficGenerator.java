@@ -3,7 +3,7 @@ package simulation;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
-import java.net.Socket;
+import java.net.*;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,7 +35,7 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 	private Random rdm;
     private int numGatesDone;
 	public static int numGates = 6;
-    private int distributeType = 0;
+    private int distributeType = 1;
 
     //Putting this here because we generate a car before advancing time.
     private int stayTime = 0;
@@ -129,7 +129,10 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
                 InetAddress gateIP = gateHP.iaddr;
                 int gatePort = gateHP.port;
                 System.out.println("Trying to send a car to port "+gatePort);
-                sock = new Socket(gateIP, gatePort);
+                sock = new Socket();
+                sock.setReuseAddress(true);
+                
+                sock.connect(new InetSocketAddress(gateIP, gatePort));
 
                 OutputStream outStream = sock.getOutputStream();
                 AbstractMessage.encodeMessage(outStream, carToGateMessage);
@@ -208,7 +211,10 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
         TokenMessage message = new TokenMessage(1);
         try 
         {
-            Socket s = new Socket(ip, port);
+            Socket s = new Socket();
+            s.setReuseAddress(true);
+            s.connect(new InetSocketAddress(ip, port));
+
             OutputStream o = s.getOutputStream();
             AbstractMessage.encodeMessage(o, message);
             o.close();
@@ -265,7 +271,10 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 		{
 			try 
 			{
-				Socket s = new Socket(hp.iaddr, hp.port);
+				Socket s = new Socket();
+                s.setReuseAddress(true);
+                s.connect(new InetSocketAddress(hp.iaddr, hp.port));
+
 				OutputStream o = s.getOutputStream();
 				AbstractMessage.encodeMessage(o, message);
                 o.close();
@@ -292,6 +301,11 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
                     doNotDistribute();
                     break;
                 }
+                case 1:
+                {
+                    distributeEqually();
+                    break;
+                }
             }
             hostPortToMoneyMap.clear();
             hostPortToTokensMap.clear(); 
@@ -311,12 +325,46 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
             sendTokens(hp, tokens);
         }
    }
+
+   public void distributeEqually()
+   { 
+       int totalTokens = 0;
+       int numLeft = numGates;
+       int money = 0;
+
+       for(HostPort hp: gates)
+       {
+            totalTokens += hostPortToTokensMap.get(hp);            
+       }
+
+
+       for(HostPort hp: gates)
+       {
+           money = hostPortToMoneyMap.get(hp);            
+           //send the money as is.
+           sendMoney(hp, money);
+
+           //send the tokens equally distributed.
+           int sendingTokens = totalTokens/numLeft--;
+           sendTokens(hp, sendingTokens);
+           totalTokens -= sendingTokens;
+       }
+   }
+
+   public void scaleProfit()
+   {
+         
+   }
+
    public void sendMoney(HostPort hp, int money)
    {
         MoneyMessage message = new MoneyMessage(money);
     	try 
 		{
-			Socket s = new Socket(hp.iaddr, hp.port);
+            Socket s = new Socket();
+            s.setReuseAddress(true);
+            s.connect(new InetSocketAddress(hp.iaddr, hp.port));
+
 			OutputStream o = s.getOutputStream();
 			AbstractMessage.encodeMessage(o, message);
             o.close();
@@ -331,7 +379,10 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
         TokenMessage message = new TokenMessage(tokens);
     	try 
 		{
-			Socket s = new Socket(hp.iaddr, hp.port);
+            Socket s = new Socket();
+            s.setReuseAddress(true);
+            s.connect(new InetSocketAddress(hp.iaddr, hp.port));
+
 			OutputStream o = s.getOutputStream();
 			AbstractMessage.encodeMessage(o, message);
             o.close();
@@ -348,7 +399,10 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 		{
 			try 
 			{
-				Socket s = new Socket(hp.iaddr, hp.port);
+                Socket s = new Socket();
+                s.setReuseAddress(true);
+                s.connect(new InetSocketAddress(hp.iaddr, hp.port));
+
 				OutputStream o = s.getOutputStream();
 				AbstractMessage.encodeMessage(o, message);
                 o.close();
@@ -409,7 +463,10 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 		{
 			try 
 			{
-				Socket s = new Socket(hp.iaddr, hp.port);
+                Socket s = new Socket();
+                s.setReuseAddress(true);
+                s.connect(new InetSocketAddress(hp.iaddr, hp.port));
+
 				OutputStream o = s.getOutputStream();
 				AbstractMessage.encodeMessage(o, message);
                 o.close();
@@ -430,7 +487,10 @@ public class TrafficGenerator extends MessageReceiver implements Chronos
 			try 
 			{
                 System.out.println("Killing "+hp.iaddr+":"+hp.port);
-				Socket s = new Socket(hp.iaddr, hp.port);
+                Socket s = new Socket();
+                s.setReuseAddress(true);
+                s.connect(new InetSocketAddress(hp.iaddr, hp.port));
+
 				OutputStream o = s.getOutputStream();
 				AbstractMessage.encodeMessage(o, message);
                 o.close();

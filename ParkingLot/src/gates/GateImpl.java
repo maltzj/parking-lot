@@ -2,6 +2,7 @@ package gates;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -135,10 +136,14 @@ public class GateImpl extends MessageReceiver implements Gate {
     public void onTokenAmountQuery(){
         Config c = new Config();
         TokenAmountMessage message = new TokenAmountMessage(this.numberOfTokens, this.ipAddress, this.port);
+        System.out.println(port+": Gave up "+numberOfTokens);
         this.numberOfTokens = 0;
         try 
         {
-            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
+            Socket s = new Socket();
+            s.setReuseAddress(true);
+            s.connect(new InetSocketAddress(c.trafficGenerator.iaddr, c.trafficGenerator.port));
+
 
             OutputStream o = s.getOutputStream();
             AbstractMessage.encodeMessage(o, message);
@@ -156,7 +161,9 @@ public class GateImpl extends MessageReceiver implements Gate {
         Config c = new Config();
         try 
         {
-            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
+            Socket s = new Socket();
+            s.setReuseAddress(true);
+            s.connect(new InetSocketAddress(c.trafficGenerator.iaddr, c.trafficGenerator.port));
 
             OutputStream o = s.getOutputStream();
             AbstractMessage.encodeMessage(o, message);
@@ -193,6 +200,8 @@ public class GateImpl extends MessageReceiver implements Gate {
                     {
                         TokenMessage tokenMessage = (TokenMessage) message;
                         this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
+
+                        System.out.println(port+": Now I got a total of "+numberOfTokens);
                         break;
                     }
                 case AbstractMessage.TYPE_MONEY_QUERY_MESSAGE:
@@ -272,7 +281,10 @@ public class GateImpl extends MessageReceiver implements Gate {
         TimeSubscribeMessage message = new TimeSubscribeMessage(this.ipAddress, this.port);
         try 
         {
-            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
+            Socket s = new Socket();
+            s.setReuseAddress(true);
+            s.connect(new InetSocketAddress(c.trafficGenerator.iaddr, c.trafficGenerator.port));
+
             OutputStream o = s.getOutputStream();
             AbstractMessage.encodeMessage(o, message);
             o.close();
@@ -292,7 +304,10 @@ public class GateImpl extends MessageReceiver implements Gate {
         GateSubscribeMessage message = new GateSubscribeMessage(this.ipAddress, this.port);
         try 
         {
-            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
+            Socket s = new Socket();
+            s.setReuseAddress(true);
+            s.connect(new InetSocketAddress(c.trafficGenerator.iaddr, c.trafficGenerator.port));
+
             OutputStream o = s.getOutputStream();
             AbstractMessage.encodeMessage(o, message);
             o.close();
@@ -312,7 +327,10 @@ public class GateImpl extends MessageReceiver implements Gate {
         GateDoneMessage message = new GateDoneMessage(this.ipAddress, this.port);
         try 
         {
-            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
+            Socket s = new Socket();
+            s.setReuseAddress(true);
+            s.connect(new InetSocketAddress(c.trafficGenerator.iaddr, c.trafficGenerator.port));
+
 
             OutputStream o = s.getOutputStream();
             AbstractMessage.encodeMessage(o, message);
@@ -337,7 +355,10 @@ public class GateImpl extends MessageReceiver implements Gate {
         CarArrivalMessage message = new CarArrivalMessage(new Date(), carWrapper.timeLeaving);
         try 
         {
-            Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
+            Socket s = new Socket();
+            s.setReuseAddress(true);
+            s.connect(new InetSocketAddress(c.trafficGenerator.iaddr, c.trafficGenerator.port));
+
             OutputStream o = s.getOutputStream();
             AbstractMessage.encodeMessage(o, message);
             o.close();
