@@ -24,6 +24,8 @@ public class SimulationMessageListener implements Runnable {
 			try {
 				messageReceived = AbstractMessage.decodeMessage(socketListeningOn.getInputStream());
 			} catch (IOException e) {
+                //e.printStackTrace();
+                gateListeningFor.killMyself();
 				break;
 			}
 			gateListeningFor.onMessageArrived(messageReceived);

@@ -22,16 +22,28 @@ public class GateMessageListener extends Thread{
 	}
 	
 	public void run(){
-		while(!generator.die){
-			AbstractMessage messageReceived;
-			try {
-				messageReceived = AbstractMessage.decodeMessage(socketListeningOn.getInputStream());
-				generator.onMessageArrived(messageReceived, this);
-			} catch (IOException e) {
-				//do stuff
-			}		
-		}	
+        while(!generator.die){
+            AbstractMessage messageReceived;
+            try {
+                messageReceived = AbstractMessage.decodeMessage(socketListeningOn.getInputStream());
+                generator.onMessageArrived(messageReceived, this);
+            } catch (IOException e) {
+                //do stuff
+                break;
+            }		
+        }	
 	}
+
+    public void killMyself()
+    {
+        try {
+            this.socketListeningOn.close();
+        } 
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
 	
 	public void writeMessage(AbstractMessage messageToSend) throws IOException
 	{

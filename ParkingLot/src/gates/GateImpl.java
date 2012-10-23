@@ -41,6 +41,7 @@ public class GateImpl extends MessageReceiver implements Gate {
     int numberOfTokens;
 
     private int numberOfCarsLetThrough = 0;
+    private int realPort = 0;
 
     int amountOfMoney;
     int moneyPerCarPassed;
@@ -72,6 +73,8 @@ public class GateImpl extends MessageReceiver implements Gate {
 		messageListener.writeMessage(new TimeSubscribeMessage(this.ipAddress, this.port));
 		messageListener.writeMessage(new GateSubscribeMessage(this.ipAddress, this.port));
 		messageListener.writeMessage( new GateDoneMessage(this.ipAddress, this.port));
+
+        realPort = s.getLocalPort();
 
 	}
 	
@@ -121,19 +124,12 @@ public class GateImpl extends MessageReceiver implements Gate {
                     this.numberOfTokens--;
                     this.sendCarToParkingLot(currentCar);
 					this.amountOfMoney += moneyPerCarPassed;
-                    toRemove.add(currentCar);
-                } else {
-                    //we have enough tokens.
-                    if(this.numberOfTokens > 0) {
-                        this.numberOfTokens--;
-                        this.sendCarToParkingLot(currentCar);
-                        
-                        this.amountOfMoney += moneyPerCarPassed;
-                        this.numberOfCarsLetThrough++;
 
-                        toRemove.add(currentCar);
-                    }
-                }
+                    this.numberOfCarsLetThrough++;
+
+
+                    toRemove.add(currentCar);
+                } 
             }
         }
 
@@ -168,7 +164,7 @@ public class GateImpl extends MessageReceiver implements Gate {
 		MoneyAmountMessage message = new MoneyAmountMessage(this.amountOfMoney, this.ipAddress, this.port);
 		try{
 			this.messageListener.writeMessage(message);
-			this.numberOfTokens = 0;
+			this.amountOfMoney = 0;
 		}
 		catch(IOException e)
 		{
@@ -176,11 +172,17 @@ public class GateImpl extends MessageReceiver implements Gate {
 		}
 		
 	}
+    public void killMyself()
+    {
+        System.out.println(realPort+": I have "+numberOfTokens+" tokens and $"+amountOfMoney+" left. I let "+numberOfCarsLetThrough+" cars through.");
+    }
 
 	/**
 	 * Specifies the different actions to take with given messages
 	 * @param message The message which is being acted upon
 	 */
+
+
        public void onMessageArrived(AbstractMessage message) {
             switch(message.getMessageType())
             {
@@ -196,8 +198,7 @@ public class GateImpl extends MessageReceiver implements Gate {
                     }
                 case AbstractMessage.TYPE_CLOSE_CONNECTION:
                     {
-                        this.die = true;
-                        System.out.println(port+": I have "+numberOfTokens+" tokens and $"+amountOfMoney+" left. I let "+numberOfCarsLetThrough+" cars through.");
+                        killMyself();
                         break;
                     }
                 case AbstractMessage.TYPE_TOKEN_MESSAGE:
@@ -205,7 +206,7 @@ public class GateImpl extends MessageReceiver implements Gate {
                         TokenMessage tokenMessage = (TokenMessage) message;
                         this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
 
-                        System.out.println(port+": Now I got a total of "+numberOfTokens);
+                        System.out.println(realPort+": Now I got a total of "+numberOfTokens);
                         break;
                     }
                 case AbstractMessage.TYPE_MONEY_QUERY_MESSAGE:
@@ -335,7 +336,7 @@ public class GateImpl extends MessageReceiver implements Gate {
      */
     public void sendCarToParkingLot(CarWrapper carWrapper)
     {
-        System.out.println(port +": Sending a car to the parking lot. It will leave at "+carWrapper.timeLeaving+" Tokens: "+this.numberOfTokens + " amount of money is: " + this.amountOfMoney + " length of queue is " + this.getCarsWaiting());
+        System.out.println(realPort +": Sending a car to the parking lot. It will leave at "+carWrapper.timeLeaving+" Tokens: "+this.numberOfTokens + " amount of money is: " + this.amountOfMoney + " length of queue is " + this.getCarsWaiting());
 
         Config c = new Config();
 

@@ -66,6 +66,7 @@ public class TrafficGenerator implements Chronos
 
         //Create thread for listening on socket.
         Thread serverThread = new Thread(receiver);
+        serverThread.setDaemon(true);
         serverThread.start();
 
     }
@@ -249,7 +250,6 @@ public class TrafficGenerator implements Chronos
     }
 
     private void askForMoney(){
-        System.out.println("ask for money");
         SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_MONEY_QUERY_MESSAGE);
         for(GateMessageListener gateListener: gateListeners)
         {
@@ -263,12 +263,10 @@ public class TrafficGenerator implements Chronos
     }
 
     private void onMoneyAmountArrived(MoneyAmountMessage message, GateMessageListener stream) {
-        System.out.println("do we make it to moneyAmountArrived");
         this.hostPortToMoneyMap.put(stream, new Integer(message.getAmountOfMoney()));
 
         if(this.hostPortToMoneyMap.keySet().size() == this.numGates)
         {
-            System.out.println("We need to distribute now");
             //create the redistribution method
             switch(distributeType)
             {
@@ -288,6 +286,8 @@ public class TrafficGenerator implements Chronos
                     break;
                 }
             }
+            hostPortToMoneyMap.clear();
+            hostPortToTokensMap.clear();
             generateCar();
 		}	
 	}
@@ -303,7 +303,6 @@ public class TrafficGenerator implements Chronos
 
             sendMoney(listener, money);
             sendTokens(listener, tokens);
-            System.out.println(listener.getPort()+" has $"+money);
         }
    }
 
@@ -487,6 +486,7 @@ public class TrafficGenerator implements Chronos
             catch(Exception e) {
                 e.printStackTrace();
             }
+            listener.killMyself();
         }
         System.out.println("ParkingLot has "+parkingLot.size()+" cars.");
         die  = true;
