@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 
+import util.HostPort;
+
 import messaging.AbstractMessage;
 
 /**
@@ -15,6 +17,7 @@ public class GateMessageListener extends Thread{
 	InetAddress ipAddress;
 	int port;
 	Socket socketListeningOn;
+	
 	
 	
 	/**
@@ -99,10 +102,14 @@ public class GateMessageListener extends Thread{
 	}
 	
 	public boolean equals(Object other){
-		if(other instanceof GateMessageListener)
-		{
+		if(other instanceof GateMessageListener){
 			return ((GateMessageListener) other).getSocketListeningOn().getPort() == this.socketListeningOn.getPort() 
 					&& ((GateMessageListener) other).getSocketListeningOn().getInetAddress().equals(this.socketListeningOn.getInetAddress());
+		}
+		else if(other instanceof HostPort){
+			HostPort port = (HostPort) other;
+			System.out.println("port has " + port.port + " and socket is " + this.socketListeningOn.getPort());
+			return port.port == this.socketListeningOn.getPort() && this.socketListeningOn.getInetAddress().equals(port.iaddr);
 		}
 		return false;
 	}

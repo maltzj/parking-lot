@@ -13,6 +13,7 @@ import java.util.Random;
 
 import messaging.AbstractMessage;
 import messaging.CarArrivalMessage;
+import messaging.GateMessage;
 import messaging.GateSubscribeMessage;
 import messaging.MoneyAmountMessage;
 import messaging.MoneyMessage;
@@ -41,7 +42,6 @@ public class TrafficGenerator extends Thread implements Chronos
 	private int simulationLength;
 	private Polynomial nextTimePolynomial;
 	private Random rdm;
-	private int numGatesDone;
 
 	public static int numGates = 6;
 	private int distributeType = 2;
@@ -60,13 +60,14 @@ public class TrafficGenerator extends Thread implements Chronos
 	List<GateMessageListener> gateListeners = new ArrayList<GateMessageListener>();
 
 	MessageReceiver receiver;
+	
+	Map<HostPort, Date> validHostPorts = new HashMap<HostPort, Date>();
 
 	public TrafficGenerator(int simLen, String nextTimePoly, InetAddress address, int port) throws Exception
 	{
 		MessageReceiver receiver = new MessageReceiver(address, port, this);
 		this.receiver = receiver;
 
-		numGatesDone = 0;
 		currentTime = 0;
 		simulationLength = simLen;
 		nextTimePolynomial = new Polynomial(nextTimePoly);
@@ -150,7 +151,6 @@ public class TrafficGenerator extends Thread implements Chronos
 		}
 	}
 
-
 	/**Base on current time, check your parking lot array whether there is car should be leaving*/
 	private void checkCarLeaving()
 	{
@@ -232,7 +232,6 @@ public class TrafficGenerator extends Thread implements Chronos
 			/* Make a car arrival message and send it to the gate */
 			CarArrivalMessage carToGateMessage = new CarArrivalMessage(carSendDate, carLeaveDate);
 
-			Socket sock = null;
 			try {
 				GateMessageListener listener = this.gateListeners.get(nextGate);
 				listener.writeMessage(carToGateMessage);
@@ -308,10 +307,11 @@ public class TrafficGenerator extends Thread implements Chronos
 			}
 			case AbstractMessage.TYPE_GATE_SUBSCRIBE:
 			{
-				if(this.gateListeners.size() == 2){
+				System.out.println("did we get this mofo??");
+				if(this.gateListeners.size() == 2 && !this.isAlive()){
 					this.start();
 				}
-				this.onGateSubscribe((GateSubscribeMessage) message);
+				this.onGateSubscribe((GateSubscribeMessage) message, stream);
 				break;
 			}
 			case AbstractMessage.TYPE_CAR_ARRIVAL:
@@ -515,7 +515,7 @@ public class TrafficGenerator extends Thread implements Chronos
 	/**
 	 * Requests tokens from all of the gates
 	 */
-	private void askForTokens() {
+	/*private void askForTokens() {
 
 		SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_TOKEN_QUERY_MESSAGE);
 		for(GateMessageListener listener : this.gateListeners)
@@ -528,7 +528,7 @@ public class TrafficGenerator extends Thread implements Chronos
 				e.printStackTrace();
 			}
 		}
-	}
+	}*/
 
 	/**
 	 * Specifies what to do when a gate reports how many tokens it has
@@ -557,13 +557,53 @@ public class TrafficGenerator extends Thread implements Chronos
 
 
 	/**
-	 * Specifies what to do upon receiving a GateDoneMessage
+	 * Specifies what to do upon receiving a GateSubscriptionMessage
+	 * @param stream 
 	 * @param message, The message from the gates which is done with its most recent step
 	 * @throws IOException
 	 */
-	public void onGateSubscribe(GateSubscribeMessage gateSubscribing) {
-		
-		//gates.add(new HostPort(gateSubscribing.getAddressOfGate(),gateSubscribing.getPort()));
+	public void onGateSubscribe(GateSubscribeMessage gateSubscribing, GateMessageListener stream) {
+		HostPort host = new HostPort(gateSubscribing.getAddressOfGate(), gateSubscribing.getPort());
+		List<HostPort> portsToSend = new ArrayList<HostPort>();
+		synchronized(this.validHostPorts){
+			this.validHostPorts.put(host, new Date());
+
+			HostPort[] portSet = this.validHostPorts.keySet().toArray(new HostPort[0]);
+
+
+			if(portSet.length <= 3){ //if we have less than four ports just send them all
+				for(int i = 0; i < portSet.length; i++){
+					portsToSend.add(portSet[i]);
+				}
+			}
+			else{ //otherwise generate three unique random numbers
+				Random rdm = new Random(System.currentTimeMillis());
+
+				List<Integer> indices = new ArrayList<Integer>();
+				
+				while(indices.size() <= 3 || indices.size() == this.validHostPorts.size()){ //ensure that we get all three numbers
+					Integer nextInt = new Integer(rdm.nextInt(this.validHostPorts.size()));
+					indices.add(nextInt);
+				}
+				
+				for(int i = 0; i < indices.size(); i++){ //fill the list of ports to send
+					portsToSend.add(portSet[indices.get(i).intValue()]);
+				}
+			}
+			
+			for(HostPort hostPort: portsToSend){ //send all those messages out
+				try {
+					stream.writeMessage(new GateMessage(hostPort));
+				} catch (IOException e) {
+					try {
+						stream.getSocketListeningOn().close();
+					} catch (IOException e1) {
+					}
+					this.gateListeners.remove(stream);
+					break;
+				}
+			}
+		}
 	}
 
 	/**
@@ -598,7 +638,6 @@ public class TrafficGenerator extends Thread implements Chronos
 	 */
 	public void killAllDashNine()
 	{
-		Date d = getCurrentTime();
 		SimpleMessage message = new SimpleMessage(AbstractMessage.TYPE_CLOSE_CONNECTION);
 		for(GateMessageListener listener: this.gateListeners)
 		{
@@ -613,7 +652,6 @@ public class TrafficGenerator extends Thread implements Chronos
 		}
 		System.out.println("ParkingLot has "+parkingLot.size()+" cars.");
 		die  = true;
-		System.out.println("Did we get here???");
 	}
 
 	
@@ -691,15 +729,4 @@ public class TrafficGenerator extends Thread implements Chronos
 			return sum;
 		}
 	}
-
-	private GateMessageListener getArrayLocationOfHostPort(HostPort hostPort)
-	{
-		for(int i = 0; i < this.gateListeners.size(); i++)
-		{
-			if(this.gateListeners.get(i).getIpAddress().equals(hostPort.iaddr) && this.gateListeners.get(i).getPort() == hostPort.port)
-				return this.gateListeners.get(i);
-		}
-		return null;
-	}
-
 }

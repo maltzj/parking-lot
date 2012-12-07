@@ -190,52 +190,59 @@ public class GateImpl implements Gate, MessageHandler{
 	 */
 
        public void onMessageReceived(AbstractMessage message, Socket receivedFrom) {
-            switch(message.getMessageType())
-            {
-                case AbstractMessage.TYPE_CAR_ARRIVAL:
-                    {
-                        this.onCarArrived((CarArrivalMessage) message);
-                        break;
-                    }
-                case AbstractMessage.TYPE_TIME_MESSAGE:
-                    {
-                        this.onTimeUpdate((TimeMessage) message);
-                        break;
-                    }
-                case AbstractMessage.TYPE_CLOSE_CONNECTION:
-                    {
-                        killMyself();
-                        break;
-                    }
-                case AbstractMessage.TYPE_TOKEN_MESSAGE:
-                    {
-                        TokenMessage tokenMessage = (TokenMessage) message;
-                        this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
+            synchronized(this){
+            	switch(message.getMessageType())
+            	{
+            	case AbstractMessage.TYPE_CAR_ARRIVAL:
+            	{
+            		this.onCarArrived((CarArrivalMessage) message);
+            		break;
+            	}
+            	case AbstractMessage.TYPE_TIME_MESSAGE:
+            	{
+            		this.onTimeUpdate((TimeMessage) message);
+            		break;
+            	}
+            	case AbstractMessage.TYPE_CLOSE_CONNECTION:
+            	{
+            		killMyself();
+            		break;
+            	}
+            	case AbstractMessage.TYPE_TOKEN_MESSAGE:
+            	{
+            		TokenMessage tokenMessage = (TokenMessage) message;
+            		this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
 
-                        break;
-                    }
-                case AbstractMessage.TYPE_MONEY_QUERY_MESSAGE:
-                    {
-                        this.onMoneyAmountQuery();
-                        break;
-                    }
-                case AbstractMessage.TYPE_TOKEN_QUERY_MESSAGE:
-                    {
-                        this.onTokenAmountQuery();
-                        break;
-                    }
-                case AbstractMessage.TYPE_MONEY_MESSAGE:
-                    {
-                        MoneyMessage money = (MoneyMessage) message;
-                        this.amountOfMoney += money.getAmountOfMoney();
-                        break;
-                    }
-                default:
-                    {
-                        System.out.println("What are you doing Message Type = "+message.getMessageType());
-                        System.exit(1);
-                        //Do something
-                    }
+            		break;
+            	}
+            	case AbstractMessage.TYPE_MONEY_QUERY_MESSAGE:
+            	{
+            		this.onMoneyAmountQuery();
+            		break;
+            	}
+            	case AbstractMessage.TYPE_TOKEN_QUERY_MESSAGE:
+            	{
+            		this.onTokenAmountQuery();
+            		break;
+            	}
+            	case AbstractMessage.TYPE_MONEY_MESSAGE:
+            	{
+            		MoneyMessage money = (MoneyMessage) message;
+            		this.amountOfMoney += money.getAmountOfMoney();
+            		break;
+            	}
+            	case AbstractMessage.TYPE_GATE:
+            	{
+            		//do stuff!
+            		break;
+            	}
+            	default:
+            	{
+            		System.out.println("What are you doing Message Type = "+message.getMessageType());
+            		System.exit(1);
+            		//Do something
+            	}
+            	}
             }
         }
        

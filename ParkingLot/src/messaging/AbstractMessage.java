@@ -30,6 +30,8 @@ public abstract class AbstractMessage {
 	public static final byte TYPE_MONEY_AMOUNT_MESSAGE = 23;
 	public static final byte TYPE_TOKEN_AMOUNT_MESSAGE = 24;
 	
+	public static final byte TYPE_GATE = 25;
+	
 	
 	protected int length;
 	protected byte messageType;
@@ -149,6 +151,13 @@ public abstract class AbstractMessage {
 					int port = dataInput.readInt();
 					String inetAddString = getIpAddress(dataInput, length -8);
 					return new TokenAmountMessage(numberOfTokens, InetAddress.getByName(inetAddString), port);
+				}
+				case TYPE_GATE:
+				{
+					int length = dataInput.readInt();
+					int port = dataInput.readInt();
+					String inetAddress = getIpAddress(dataInput, length - 4);
+					return new GateMessage(InetAddress.getByName(inetAddress), port);
 				}
 				default:
 					return null;
@@ -294,12 +303,23 @@ public abstract class AbstractMessage {
 					dataOutput.flush();
 					break;
 				}
+				case TYPE_GATE:
+				{
+					GateMessage gateMessage = (GateMessage) messageWriting;
+					InetAddress addr = gateMessage.addr;
+					byte[] addressAsBytes = addr.getHostAddress().getBytes("UTF-8");
+					dataOutput.writeInt(addressAsBytes.length + 4);
+					dataOutput.writeInt(gateMessage.getPort());
+					dataOutput.write(addressAsBytes);
+					dataOutput.flush();
+					break;
+				}
 				default:
 				{
 					dataOutput.flush();
 					return;
 				}
-								}
+			}
 		}
 	}
 	
