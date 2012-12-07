@@ -3,7 +3,6 @@ package simulation;
 import java.util.Date;
 
 import messaging.TimeSubscribeMessage;
-import java.util.Date;
 
 public interface Chronos 
 {	

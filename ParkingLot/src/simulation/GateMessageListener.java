@@ -34,7 +34,7 @@ public class GateMessageListener extends Thread{
 	}
 	
 	public void run(){
-        while(!generator.die  && !socketListeningOn.isClosed()){
+        while(!TrafficGenerator.die  && !socketListeningOn.isClosed()){
             AbstractMessage messageReceived;
             try {
                 messageReceived = AbstractMessage.decodeMessage(socketListeningOn.getInputStream());
