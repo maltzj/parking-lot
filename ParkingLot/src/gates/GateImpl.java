@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import messaging.AbstractMessage;
 import messaging.CarArrivalMessage;
 import messaging.GateDoneMessage;
+import messaging.GateMessage;
 import messaging.GateSubscribeMessage;
 import messaging.MoneyMessage;
 import messaging.TimeMessage;
@@ -244,7 +245,17 @@ public class GateImpl implements Gate, MessageHandler, ConnectionHandler{
             	}
             	case AbstractMessage.TYPE_GATE:
             	{
-            		//do stuff!
+            		System.out.println("Got a gate message, a la a boss " + this.portListeningOn);
+            		GateMessage gateMessage = (GateMessage) message;
+            		try {
+						Socket sock = new Socket(gateMessage.getAddr(), gateMessage.getPort());
+						MessageListener listener = new MessageListener(this, sock);
+						this.connectedGates.add(listener);
+					} catch (IOException e) {
+						System.out.println("ERROR WHEN CONNECTING TO A NEW GATE");
+						return;
+					}
+            		
             		break;
             	}
             	default:
@@ -272,6 +283,7 @@ public class GateImpl implements Gate, MessageHandler, ConnectionHandler{
    	
 	@Override
 	public void onConnectionReceived(Socket newConnection) {
+		System.out.println("Connection received at gate " + this.portListeningOn);
 		synchronized(this){
 			MessageListener newGate = new MessageListener(this, newConnection); //create a new message listener and start it
 			this.connectedGates.add(newGate);

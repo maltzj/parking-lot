@@ -1,12 +1,9 @@
 package gates;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import simulation.TrafficGenerator;
-import util.Config;
 import util.ConnectionHandler;
 
 public class ConnectionListener extends Thread {

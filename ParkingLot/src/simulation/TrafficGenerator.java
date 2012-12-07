@@ -566,7 +566,6 @@ public class TrafficGenerator extends Thread implements Chronos
 		HostPort host = new HostPort(gateSubscribing.getAddressOfGate(), gateSubscribing.getPort());
 		List<HostPort> portsToSend = new ArrayList<HostPort>();
 		synchronized(this.validHostPorts){
-			this.validHostPorts.put(host, new Date());
 
 			HostPort[] portSet = this.validHostPorts.keySet().toArray(new HostPort[0]);
 
@@ -603,6 +602,8 @@ public class TrafficGenerator extends Thread implements Chronos
 					break;
 				}
 			}
+
+			this.validHostPorts.put(host, new Date());
 		}
 	}
 
