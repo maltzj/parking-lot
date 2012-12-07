@@ -10,6 +10,7 @@ public class SimulationTest {
 	
 	
 
+	@SuppressWarnings("unused")
 	public static void main(String[] args) throws Exception{
 		Config c = new Config();
 		TrafficGenerator generator = new TrafficGenerator(1000,"2,.000000000275,1,-.0000099,0,.1", c.trafficGenerator.iaddr, c.trafficGenerator.port);

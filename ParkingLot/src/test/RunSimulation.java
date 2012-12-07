@@ -1,14 +1,13 @@
 package test;
-import simulation.TrafficGenerator;
 import gates.GateImpl;
-import messaging.*;
-import java.util.*;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+
+import simulation.TrafficGenerator;
 import util.Config;
 import util.HostPort;
-import java.net.*;
-import java.io.*;
-
-import util.*;
 /** Tests the set up of our traffic generator. */
 
 public class RunSimulation
