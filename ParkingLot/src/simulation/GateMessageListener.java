@@ -31,13 +31,13 @@ public class GateMessageListener extends Thread{
 	}
 	
 	public void run(){
-        while(!generator.die){
+        while(!generator.die  && !socketListeningOn.isClosed()){
             AbstractMessage messageReceived;
             try {
                 messageReceived = AbstractMessage.decodeMessage(socketListeningOn.getInputStream());
                 generator.onMessageArrived(messageReceived, this);
             } catch (IOException e) {
-                //do stuff
+                this.killMyself();
                 break;
             }		
         }	
@@ -53,7 +53,7 @@ public class GateMessageListener extends Thread{
         } 
         catch(Exception e)
         {
-            e.printStackTrace();
+           //do whatever the fuck we want
         }
     }
 	
@@ -101,7 +101,8 @@ public class GateMessageListener extends Thread{
 	public boolean equals(Object other){
 		if(other instanceof GateMessageListener)
 		{
-			return ((GateMessageListener) other).getSocketListeningOn().getPort() == this.socketListeningOn.getPort() && ((GateMessageListener) other).getSocketListeningOn().getInetAddress().equals(this.socketListeningOn.getInetAddress());
+			return ((GateMessageListener) other).getSocketListeningOn().getPort() == this.socketListeningOn.getPort() 
+					&& ((GateMessageListener) other).getSocketListeningOn().getInetAddress().equals(this.socketListeningOn.getInetAddress());
 		}
 		return false;
 	}

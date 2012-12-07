@@ -3,6 +3,8 @@ package gates;
 import java.io.IOException;
 import java.net.Socket;
 
+import util.MessageHandler;
+
 import messaging.AbstractMessage;
 
 /**
@@ -12,7 +14,7 @@ import messaging.AbstractMessage;
  */
 public class SimulationMessageListener implements Runnable {
 
-	private GateImpl gateListeningFor;
+	private MessageHandler handler;
 	Socket socketListeningOn;
 	
 	/**
@@ -20,25 +22,30 @@ public class SimulationMessageListener implements Runnable {
 	 * @param gateListening The gate which will act upon the received messages
 	 * @param listeningFor The socket upon which this is listening.
 	 */
-	public SimulationMessageListener(GateImpl gateListening, Socket listeningFor)
+	public SimulationMessageListener(MessageHandler gateListening, Socket listeningFor)
 	{
 		this.socketListeningOn = listeningFor;
-		this.gateListeningFor = gateListening;
+		this.handler = gateListening;
 	}
 	
 	@Override
 	public void run() {
-		while(!gateListeningFor.die) //Keep running until we give it permission to die
+		while(GateImpl.stillRunning) //Keep running until we give it permission to die
 		{
 			AbstractMessage messageReceived;
 			try {
 				messageReceived = AbstractMessage.decodeMessage(socketListeningOn.getInputStream());
 			} catch (IOException e) {
                 //e.printStackTrace();
-                gateListeningFor.killMyself();
+                try {
+					this.socketListeningOn.close();
+				} catch (IOException e1) {
+					//it's already closed so we don't need to worry about that
+				}
+                handler.onSocketClosed(this.socketListeningOn);
 				break;
 			}
-			gateListeningFor.onMessageArrived(messageReceived);
+			handler.onMessageReceived(messageReceived, socketListeningOn);
 		}
 		try {
 			socketListeningOn.close();

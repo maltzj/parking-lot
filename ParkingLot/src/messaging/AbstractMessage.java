@@ -30,6 +30,7 @@ public abstract class AbstractMessage {
 	public static final byte TYPE_MONEY_AMOUNT_MESSAGE = 23;
 	public static final byte TYPE_TOKEN_AMOUNT_MESSAGE = 24;
 	
+	
 	protected int length;
 	protected byte messageType;
 	
