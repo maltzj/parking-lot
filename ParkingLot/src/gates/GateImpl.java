@@ -174,7 +174,14 @@ public class GateImpl implements Gate, MessageHandler{
 	 */
     public void killMyself()
     {
-        System.out.println("Kill myself needs to be implemented god damnit");
+    	try {
+    		this.messageListener.socketListeningOn.close();
+    	} catch (IOException e) {
+    		//do nothing
+    	}
+    	System.out.println("Gate #" + this.realPort + " ended with $" + this.amountOfMoney + " from " + this.numberOfCarsLetThrough +
+    			" let through and " + this.numberOfSadnessCars + " cars which had to be kicked out and " + this.numberOfTokens +
+    			" leftover");
     }
 
 	/**
@@ -364,17 +371,6 @@ public class GateImpl implements Gate, MessageHandler{
             return carRepresenting;
         }
 
-        public void setCarRepresenting(Car carRepresenting) {
-            this.carRepresenting = carRepresenting;
-        }
-
-        public Date getTimeLeavingQueue() {
-            return timeToLeaveQueue;
-        }
-
-        public void setTimeLeavingQueue(Date timeLeaving) {
-            this.timeToLeaveQueue = timeLeaving;
-        }
     }
 
 }

@@ -13,7 +13,6 @@ import java.util.Random;
 
 import messaging.AbstractMessage;
 import messaging.CarArrivalMessage;
-import messaging.GateDoneMessage;
 import messaging.GateSubscribeMessage;
 import messaging.MoneyAmountMessage;
 import messaging.MoneyMessage;
@@ -129,6 +128,7 @@ public class TrafficGenerator extends Thread implements Chronos
 				System.out.println(ie.getMessage());
 			}
 		}
+		endGeneration();
 	}
 
 	private void notifySubscribers()
@@ -158,12 +158,10 @@ public class TrafficGenerator extends Thread implements Chronos
 		ArrayList<Car> toRemove = new ArrayList<Car>();
 
 		Date currentTime = getCurrentTime();
-		System.out.println("Current time is " + currentTime);
 		for(Car c: parkingLot)
 		{
 			if (currentTime.compareTo(c.getTimeDeparts())  >= 0)
 			{
-				System.out.println("DO WE REALLY HAVE THIS HAPPENING??? " + c.getTimeDeparts());
 				//generate random gate
 				int gate = (int) (this.rdm.nextDouble()*this.gateListeners.size());
 
@@ -193,10 +191,13 @@ public class TrafficGenerator extends Thread implements Chronos
 				nextGate = (int)(rdm.nextDouble() * (this.gateListeners.size()));
 			}
 		}
-
-		
 	}
-
+	
+	private void endGeneration(){
+		System.out.println("The parking lot has " + this.parkingLot.size() + " cars left, getting rid of them");
+		killAllDashNine();
+	
+	}
 
 
 	/**
@@ -307,7 +308,9 @@ public class TrafficGenerator extends Thread implements Chronos
 			}
 			case AbstractMessage.TYPE_GATE_SUBSCRIBE:
 			{
-				this.start();
+				if(this.gateListeners.size() == 2){
+					this.start();
+				}
 				this.onGateSubscribe((GateSubscribeMessage) message);
 				break;
 			}
@@ -354,7 +357,7 @@ public class TrafficGenerator extends Thread implements Chronos
 	private void onMoneyAmountArrived(MoneyAmountMessage message, GateMessageListener stream) {
 		this.hostPortToMoneyMap.put(stream, new Integer(message.getAmountOfMoney()));
 
-		if(this.hostPortToMoneyMap.keySet().size() == this.numGates)
+		if(this.hostPortToMoneyMap.keySet().size() == this.gateListeners.size())
 		{
 			//create the redistribution method
 			switch(distributeType)
@@ -559,6 +562,7 @@ public class TrafficGenerator extends Thread implements Chronos
 	 * @throws IOException
 	 */
 	public void onGateSubscribe(GateSubscribeMessage gateSubscribing) {
+		
 		//gates.add(new HostPort(gateSubscribing.getAddressOfGate(),gateSubscribing.getPort()));
 	}
 
@@ -609,11 +613,13 @@ public class TrafficGenerator extends Thread implements Chronos
 		}
 		System.out.println("ParkingLot has "+parkingLot.size()+" cars.");
 		die  = true;
+		System.out.println("Did we get here???");
 	}
 
+	
 	public void onConnectionReceived(Socket socketReceived){
 		GateMessageListener listener = new GateMessageListener(this, socketReceived);
-		listener.start(); 	
+		listener.start();
 		this.gateListeners.add(listener);
 	}
 

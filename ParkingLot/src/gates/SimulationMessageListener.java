@@ -30,7 +30,7 @@ public class SimulationMessageListener implements Runnable {
 	
 	@Override
 	public void run() {
-		while(GateImpl.stillRunning) //Keep running until we give it permission to die
+		while(GateImpl.stillRunning && !this.socketListeningOn.isClosed()) //Keep running until we give it permission to die
 		{
 			AbstractMessage messageReceived;
 			try {
