@@ -12,7 +12,7 @@ import messaging.AbstractMessage;
  * It is just a runnable that sits and continually decodes messages and passes them onto the gate for action
  *
  */
-public class SimulationMessageListener implements Runnable {
+public class MessageListener extends Thread {
 
 	private MessageHandler handler;
 	Socket socketListeningOn;
@@ -22,7 +22,7 @@ public class SimulationMessageListener implements Runnable {
 	 * @param gateListening The gate which will act upon the received messages
 	 * @param listeningFor The socket upon which this is listening.
 	 */
-	public SimulationMessageListener(MessageHandler gateListening, Socket listeningFor)
+	public MessageListener(MessageHandler gateListening, Socket listeningFor)
 	{
 		this.socketListeningOn = listeningFor;
 		this.handler = gateListening;

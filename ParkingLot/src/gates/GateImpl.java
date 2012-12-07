@@ -1,10 +1,12 @@
 package gates;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import messaging.AbstractMessage;
@@ -16,6 +18,7 @@ import messaging.TimeMessage;
 import messaging.TimeSubscribeMessage;
 import messaging.TokenMessage;
 import util.Config;
+import util.ConnectionHandler;
 import util.MessageHandler;
 import car.Car;
 
@@ -25,30 +28,30 @@ import car.Car;
  * @author Jonathan
  *
  */
-public class GateImpl implements Gate, MessageHandler{
+public class GateImpl implements Gate, MessageHandler, ConnectionHandler{
 	
     public static boolean stillRunning = true;
 
     ConcurrentLinkedQueue<CarWrapper> waitingCars = new ConcurrentLinkedQueue<CarWrapper>();
     long amountOfTimeToWait; //Seconds
 
-    SimulationMessageListener messageListener;
-    Thread listenerThread;
-
+    ConnectionListener incomingConnectionListener;
+    MessageListener simulationMessageListener;
+    List<MessageListener> connectedGates;
+    
     int numberOfTokens;
 
-    private int realPort = 0;
-
-    int numberOfSadnessCars = 0;
-    int totalCarWait = 0;
-    int numberOfCarsLetThrough = 0;
-    
     int amountOfMoney;
     int moneyPerCarPassed;
     
     InetAddress addrListeningOn;
     int portListeningOn;
-
+    private int realPort = 0;
+    
+    int numberOfSadnessCars = 0;
+    int totalCarWait = 0;
+    int numberOfCarsLetThrough = 0;
+    
     /**
      * Initializes a gate with all the information necessary to get running
      * @param timeToWait, The amount of time a gate should allow cars to wait in the queue before kicking them out
@@ -61,6 +64,7 @@ public class GateImpl implements Gate, MessageHandler{
      */
     public GateImpl(long timeToWait, int tokensToStartWith, int moneyToStartWith, InetAddress addr, int port, int moneyPerCarPassed) throws Exception
     {
+    	
     	this.addrListeningOn = addr;
     	this.portListeningOn = port;
     	
@@ -73,16 +77,23 @@ public class GateImpl implements Gate, MessageHandler{
 		/*Connect to the simulation*/
 		Config c = new Config();
 		Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
-		messageListener = new SimulationMessageListener(this, s);
-		listenerThread = new Thread(messageListener);
-		listenerThread.start();
+		simulationMessageListener = new MessageListener(this, s);
+		simulationMessageListener.setDaemon(true);
+		simulationMessageListener.start();
 		
-		messageListener.writeMessage(new TimeSubscribeMessage(this.addrListeningOn, this.portListeningOn));
-		messageListener.writeMessage(new GateSubscribeMessage(this.addrListeningOn, this.portListeningOn));
+		simulationMessageListener.writeMessage(new TimeSubscribeMessage(this.addrListeningOn, this.portListeningOn));
+		simulationMessageListener.writeMessage(new GateSubscribeMessage(this.addrListeningOn, this.portListeningOn));
+	
+		this.incomingConnectionListener = new ConnectionListener(this, this.portListeningOn);
+		this.incomingConnectionListener.setDaemon(true);
+		this.incomingConnectionListener.start();
+	
+		connectedGates = new ArrayList<>(); 
 		
-        realPort = s.getLocalPort();
-
-	}
+		realPort = s.getLocalPort();
+	
+    
+    }
 	
 	
 	@Override
@@ -175,7 +186,7 @@ public class GateImpl implements Gate, MessageHandler{
     public void killMyself()
     {
     	try {
-    		this.messageListener.socketListeningOn.close();
+    		this.simulationMessageListener.socketListeningOn.close();
     	} catch (IOException e) {
     		//do nothing
     	}
@@ -249,9 +260,32 @@ public class GateImpl implements Gate, MessageHandler{
 
    	@Override
    	public void onSocketClosed(Socket socket) {
+   		//TODO implement this!
    		
-   		
+   		System.out.println("ON SOCKET CLOSED GOT CALLED, THAT SHIT NEEDS TO BE IMPLEMENTED!!!");
+   		//check if it is the simulation
+   			//if yes, do something
+   		//if it is not, then find out which gate we're connected to
+   			//disconnect the socket
+   			//remove the gate from the list
    	}
+   	
+	@Override
+	public void onConnectionReceived(Socket newConnection) {
+		synchronized(this){
+			MessageListener newGate = new MessageListener(this, newConnection); //create a new message listener and start it
+			this.connectedGates.add(newGate);
+			newGate.start();
+		}
+	}
+
+
+	@Override
+	public void onServerError(ServerSocket failedServer) {
+		// TODO Auto-generated method stub
+		
+	}
+
 
        /**
         * Returns the number of cars currently waiting to enter
@@ -311,7 +345,7 @@ public class GateImpl implements Gate, MessageHandler{
     {
 		TimeSubscribeMessage message = new TimeSubscribeMessage(this.addrListeningOn, this.portListeningOn);
 		try {
-			this.messageListener.writeMessage(message);
+			this.simulationMessageListener.writeMessage(message);
 		} catch (IOException e) {
 			//do stuff
 		}
@@ -324,7 +358,7 @@ public class GateImpl implements Gate, MessageHandler{
     {
 		GateSubscribeMessage message = new GateSubscribeMessage(this.addrListeningOn, this.portListeningOn);
 		try {
-			this.messageListener.writeMessage(message);
+			this.simulationMessageListener.writeMessage(message);
 		} catch (IOException e) {
 			//do stuff
 		}
@@ -337,7 +371,7 @@ public class GateImpl implements Gate, MessageHandler{
     {
 		GateDoneMessage message = new GateDoneMessage(this.addrListeningOn, this.portListeningOn);
 		try {
-			this.messageListener.writeMessage(message);
+			this.simulationMessageListener.writeMessage(message);
 		} catch (IOException e) {
 			//do stuff
 		}
@@ -354,7 +388,7 @@ public class GateImpl implements Gate, MessageHandler{
 
         CarArrivalMessage message = new CarArrivalMessage(new Date(), carWrapper.getCarRepresenting().getTimeDeparts());
 		try {
-			this.messageListener.writeMessage(message);
+			this.simulationMessageListener.writeMessage(message);
 		} catch (IOException e) {
 			//Do stuff
 		}
@@ -379,5 +413,4 @@ public class GateImpl implements Gate, MessageHandler{
         }
 
     }
-
 }
