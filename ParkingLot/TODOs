@@ -1,31 +1,6 @@
-TODOS:
+Jerry
+    - Create a MessageHandler when a connection is received in trafficGenerator.
+    - Make gates start up somehow. Make them send shit to TrafficGenerator - Use 
 
-Implement a parking lot that the gates send their car to. 
-	 In the "check if car leaves" method in the traffic generator message the parking lot
-Hook up the gates to the simulator
-	We can do this one of two ways.  
-	One: we can let the gates listen on two ports (one for other gates and one for the simulator) and have the simulator connect to the gates
-	Two: We can assume that the simulation will only be connected to and the gates will always be doing the connecting.  If that's the case then we will need to figure out what to do with the manager (probably have gates connect to the manager and the manager to the simulation)
-Create a start-up logic in general (what order stuff gets started)
-	Add main methods to start stuff up
-
-Create a manager class
-
-
-TEST!!!!
-
-There is a design flaw currently in the code that I just realized.
-Basically the TokenTrader object for each gate is responsible for accepting connections.
-This is a flaw because it assumes that only gates will want to connect to other gates.
-We should probably change this so that the accepting of connections is handled within
-the Gate itself and then delegated as is necessary.  I don't think it will be a huge issue
-for now, but it is worth noting.
-
-
-V's stuff
-
-Right now we have cars being generated, and they're being sent to gates randomly. The gate receives a car, and if it has a token, it sends the car to the parking lot.
-The parking lot checks to see if cars are leaving, and removes them when it's time for them to leave.
-
-need some hardcode testing to ensure that things are working. We noticed that there were like 11k tokens on a gate, when we ran a test last night.
-
+Brozas/V 
+    - Figure out how our Messages are sent between things. Do we want to serialize? Do we want to make classes explode or what?
