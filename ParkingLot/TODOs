@@ -3,4 +3,5 @@ Jerry
     - Make gates start up somehow. Make them send shit to TrafficGenerator - Use 
 
 Brozas/V 
-    - Figure out how our Messages are sent between things. Do we want to serialize? Do we want to make classes explode or what?
+    - Figure out how our Messages are sent between things. Do we want to serialize? Do we want to make classes explode or what? - Serializable doesn't do anything for us that we don't already do.
+    - Consider if we want to make AbstractMessage work with ObjectInput/Output Streams.
