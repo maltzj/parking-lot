@@ -23,7 +23,7 @@ public class ConnectionListener extends Thread {
 
 	@Override
 	public void run() {
-		while(GateImpl.stillRunning && !server.isClosed()){ //keep running for as long as the application is
+		while(server.isClosed()){ //keep running for as long as the application is
 			try {
 				Socket connection = server.accept();
 				this.connectionHandler.onConnectionReceived(connection);
