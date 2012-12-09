@@ -30,7 +30,7 @@ public class MessageListener extends Thread {
 	
 	@Override
 	public void run() {
-		while(GateImpl.stillRunning && !this.socketListeningOn.isClosed()) //Keep running until we give it permission to die
+		while(!this.socketListeningOn.isClosed()) //Keep running until we give it permission to die
 		{
 			AbstractMessage messageReceived;
 			try {
