@@ -1,5 +1,5 @@
 package test;
-import gates.GateImpl;
+import gates.Gate;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -23,22 +23,22 @@ public class RunSimulation
 
 
     protected TrafficGenerator trafficGenerator;
-    protected ArrayList<GateImpl> gates;
+    protected ArrayList<Gate> gates;
 
     public void setup() throws Exception
     {
         try {
-            Config config = new Config();
+            Config config = Config.getSharedInstance();
 
             this.trafficGenerator = new TrafficGenerator(SIMULATION_LENGTH, MAGIC_POLY, config.trafficGenerator.iaddr, config.trafficGenerator.port);
 
             System.out.println("Created a traffic generator successfully");
 
-            this.gates = new ArrayList<GateImpl>();
+            this.gates = new ArrayList<Gate>();
 
             for(HostPort h: config.gates)
             {
-                GateImpl g = new GateImpl(TIME_TO_WAIT, TOKENS_TO_START, CASH_MONEY_TO_START,  h.iaddr, h.port, CASH_MONEY_PER_CAR);
+                Gate g = new Gate(TIME_TO_WAIT, TOKENS_TO_START, CASH_MONEY_TO_START,  h.iaddr, h.port, CASH_MONEY_PER_CAR);
                 this.gates.add(g);
             }
 
@@ -231,11 +231,11 @@ public class RunSimulation
 		this.trafficGenerator = trafficGenerator;
 	}
 
-	public ArrayList<GateImpl> getGates() {
+	public ArrayList<Gate> getGates() {
 		return gates;
 	}
 
-	public void setGates(ArrayList<GateImpl> gates) {
+	public void setGates(ArrayList<Gate> gates) {
 		this.gates = gates;
 	}
     

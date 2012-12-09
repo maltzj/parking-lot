@@ -1,33 +1,28 @@
 package simulation;
 
-import java.io.IOException;
-import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
 
-import java.io.*;
-import java.net.*;
-
-import util.ConnectionListener;
+import messaging.AbstractMessage;
+import util.Config;
 import util.ConnectionHandler;
+import util.ConnectionListener;
+import util.MessageHandler;
+import util.MessageListener;
 
 /**
  * This class encompases all of the TrafficGeneration capabilities within the program.  It is also somewhat responsible for the redistribution of tokens.
  * 
  */
-public class TrafficGenerator implements ConnectionHandler
+public class TrafficGenerator implements ConnectionHandler, MessageHandler
 {
 	public TrafficGenerator() throws Exception
 	{
         System.out.println("I am a traffic generator");
+        
+        Config config = Config.getSharedInstance();
 
-        ConnectionListener listener = new ConnectionListener(this, 10000);
+        ConnectionListener listener = new ConnectionListener(this, config.trafficGenerator.port);
         listener.setDaemon(false);
         listener.start();
     }
@@ -35,19 +30,10 @@ public class TrafficGenerator implements ConnectionHandler
     public void onConnectionReceived(Socket connection)
     {
         System.out.println("I got me a connection from "+connection.getPort());
-        try {
-            BufferedReader bf = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            while(true)
-            {
-                String line = bf.readLine();
-                if(line == null)
-                    break;
-                System.out.println(line);
-            }
-        } catch(IOException e) {
-            System.out.println("fuck");
-            return;
-        }
+        
+        MessageListener msgListener = new MessageListener(this, connection);
+        msgListener.setDaemon(false);
+        msgListener.start();
     
     }
 
@@ -55,4 +41,17 @@ public class TrafficGenerator implements ConnectionHandler
     {
         System.out.println("There is sadness in the world");
     }
+
+	@Override
+	public void onMessageReceived(AbstractMessage message, Socket socket) {
+		System.out.println("Received Message");
+		
+		
+	}
+
+	@Override
+	public void onSocketClosed(Socket socket) {
+		// TODO Auto-generated method stub
+		
+	}
 }

@@ -1,7 +1,10 @@
 package test;
 
 import gates.Gate;
-import gates.GateImpl;
+
+import java.util.ArrayList;
+
+import manager.Manager;
 import simulation.TrafficGenerator;
 import util.Config;
 
@@ -9,13 +12,22 @@ public class SimulationTest {
 
 	@SuppressWarnings("unused")
 	public static void main(String[] args) throws Exception{
-		Config c = new Config();
-		TrafficGenerator generator = new TrafficGenerator(1000,"2,.000000000275,1,-.0000099,0,.1", c.trafficGenerator.iaddr, c.trafficGenerator.port);
-		Gate gate = new GateImpl(10, 10, 100, c.gates[0].iaddr, c.gates[0].port, 10);
-		Gate gateTwo = new GateImpl(10, 10, 100, c.gates[1].iaddr, c.gates[1].port, 10);
+		Config c = Config.getSharedInstance();
+		TrafficGenerator generator = new TrafficGenerator();
 		
-		//start up managers
+		ArrayList<Gate> gates = new ArrayList<Gate>();
+		ArrayList<Manager> managers = new ArrayList<Manager>();
+		
+		//Startup Gates
+		for(int i = 0; i < c.gates.length; i++) {
+			gates.add(new Gate(10, c.gates[i].tokens, c.gates[i].money, c.gates[i].hostport.iaddr, c.gates[i].hostport.port, 10));
+		}
+		
+		for(int i = 0; i < c.managers.length; i++) {
+			managers.add(new Manager(c.managers[i].tokens, c.managers[i].money, c.managers[i].hostport.port));
+		}
+		
+		
 	}
-	
 	
 }

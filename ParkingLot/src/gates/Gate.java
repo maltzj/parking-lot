@@ -1,67 +1,410 @@
 package gates;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
+import messaging.AbstractMessage;
 import messaging.CarArrivalMessage;
+import messaging.GateDoneMessage;
+import messaging.GateMessage;
+import messaging.GateSubscribeMessage;
+import messaging.MoneyMessage;
 import messaging.TimeMessage;
+import messaging.TimeSubscribeMessage;
+import messaging.TokenMessage;
+import util.Config;
+import util.ConnectionHandler;
+import util.MessageHandler;
+import util.MessageListener;
+import car.Car;
 
-public interface Gate {
+/**
+ * A concrete implementation of the Gate interface.  This is responsible for handling all the responsibilities of a Gate
+ * This includes trading tokens, listening for messages, and allowing cars into the parking lot.
+ * @author Jonathan
+ *
+ */
+public class Gate implements MessageHandler, ConnectionHandler{
+	
+    public static boolean stillRunning = true;
+
+    ConcurrentLinkedQueue<CarWrapper> waitingCars = new ConcurrentLinkedQueue<CarWrapper>();
+    long amountOfTimeToWait; //Seconds
+
+    MessageListener simulationMessageListener;
+    List<MessageListener> connectedGates;
+    
+    int numberOfTokens;
+
+    int amountOfMoney;
+    int moneyPerCarPassed;
+    
+    InetAddress addrListeningOn;
+    int portListeningOn;
+    private int realPort = 0;
+    
+    int numberOfSadnessCars = 0;
+    int totalCarWait = 0;
+    int numberOfCarsLetThrough = 0;
+    
+    /**
+     * Initializes a gate with all the information necessary to get running
+     * @param timeToWait, The amount of time a gate should allow cars to wait in the queue before kicking them out
+     * @param tokensToStartWith, The number of tokens to start with.
+     * @param moneyToStartWith, The amount of money to start with.
+     * @param tokenPolicy, The token trading policy to use for this gate.
+     * @param addr, The IPAddress to initialize this Gate at
+     * @param port, The port this gate will be listening on.
+     * @throws Exception
+     */
+    public Gate(long timeToWait, int tokensToStartWith, int moneyToStartWith, InetAddress addr, int port, int moneyPerCarPassed) throws Exception
+    {
+    	
+    	Config c = Config.getSharedInstance();
+    	
+    	this.addrListeningOn = addr;
+    	this.portListeningOn = port;
+    	
+        this.amountOfTimeToWait = timeToWait*1000; //dates deal with milliseconds, we want to expose all APIs as seconds
+        this.amountOfMoney = moneyToStartWith;
+        this.numberOfTokens = tokensToStartWith;
+
+		this.moneyPerCarPassed = moneyPerCarPassed;
+		
+		/*Connect to the simulation*/
+		Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
+		simulationMessageListener = new MessageListener(this, s);
+		simulationMessageListener.setDaemon(true);
+		simulationMessageListener.start();
+		
+		simulationMessageListener.writeMessage(new GateSubscribeMessage(this.addrListeningOn, this.portListeningOn));
+	
+		realPort = s.getLocalPort();
+    }
+	
+	
+	public void onCarArrived(CarArrivalMessage arrival) {
+		Car carToQueue = new Car(arrival.getCarSentTime(), arrival.getCarReturnTime());
+
+		//Add Car to queue
+		long timeArrived = arrival.getCarSentTime().getTime();
+		long leavingTime = timeArrived + amountOfTimeToWait;
+
+		Date timeToLeave = new Date();
+		timeToLeave.setTime(leavingTime);
+		CarWrapper carWrapper = new CarWrapper(carToQueue, timeToLeave);
+		waitingCars.add(carWrapper);
+		
+	}
+
+	public void onCarLeave() {
+		numberOfTokens++;
+		//do any additional logic re: broadcasting
+	}
+
+	public void onTimeUpdate(TimeMessage messageFromChronos){
+		
+		Date newTime = messageFromChronos.getNewTime();
+		Calendar timeToCheckAgainst = Calendar.getInstance();
+		timeToCheckAgainst.setTime(newTime);
+
+        ArrayList<CarWrapper> toRemove = new ArrayList<CarWrapper>();
+        
+
+		for(CarWrapper currentCar: waitingCars)
+		{
+			Calendar carLeaveQueueTime = Calendar.getInstance();
+			carLeaveQueueTime.setTime(currentCar.timeToLeaveQueue);
+			
+			//Car waited too long and left
+			if(timeToCheckAgainst.after(carLeaveQueueTime)) {
+                numberOfSadnessCars++;
+                toRemove.add(currentCar);
+                this.totalCarWait += currentCar.timeToLeaveQueue.getTime() - currentCar.getCarRepresenting().getTimeSent().getTime();
+			} else {
+                //we have enough tokens.
+                if(this.numberOfTokens > 0) {
+                    this.numberOfTokens--;
+                    this.sendCarToParkingLot(currentCar);
+					this.amountOfMoney += moneyPerCarPassed;
+
+                     
+                    this.numberOfCarsLetThrough++;
+
+                    this.totalCarWait += newTime.getTime() - currentCar.getCarRepresenting().getTimeSent().getTime();
+
+                    toRemove.add(currentCar);
+                } 
+            }
+        }
+
+        for(CarWrapper car: toRemove)
+        {
+            waitingCars.remove(car);
+        }
+
+        sendDone();
+	}
+	
+	/**
+	 * Specifies what action a Gate should take when it is queried for the token amount
+	 * Currently this just writes a message with its total amount of tokens to the simulator
+	 */
+	public void onTokenAmountQuery(){
+			System.out.println("Token amount query! Implement this shit!");
+	}
+	
+	
+	/**
+	 * Specifies what the Gate should do when it receives a query for the amount of money it currently has
+	 * Currently it just responds to the simulation with the amount of money the gate has
+	 */
+	public void onMoneyAmountQuery(){
+		
+		System.out.println("Money amount query, implement this shit too");
+	}
+	
+	/**
+	 * Kills the gate
+	 */
+    public void killMyself()
+    {
+    	try {
+			this.simulationMessageListener.close();
+		} catch (IOException e) {
+			//Already closed
+		}
+    	
+    	System.out.println("Gate #" + this.realPort + " ended with $" + this.amountOfMoney + " from " + this.numberOfCarsLetThrough +
+    			" let through and " + this.numberOfSadnessCars + " cars which had to be kicked out and " + this.numberOfTokens +
+    			" leftover");
+    }
 
 	/**
-	 * Specifies what the Gate should do when a car arrives to it.
-	 * @param arrival, The ArrivalMessage which represents information about the car
+	 * Specifies the different actions to take with given messages
+	 * @param message The message which is being acted upon
 	 */
-	public void onCarArrived(CarArrivalMessage arrival);
+
+       public void onMessageReceived(AbstractMessage message, Socket receivedFrom) {
+            synchronized(this){
+            	switch(message.getMessageType())
+            	{
+            	case AbstractMessage.TYPE_CAR_ARRIVAL:
+            	{
+            		this.onCarArrived((CarArrivalMessage) message);
+            		break;
+            	}
+            	case AbstractMessage.TYPE_TIME_MESSAGE:
+            	{
+            		this.onTimeUpdate((TimeMessage) message);
+            		break;
+            	}
+            	case AbstractMessage.TYPE_CLOSE_CONNECTION:
+            	{
+            		killMyself();
+            		break;
+            	}
+            	case AbstractMessage.TYPE_TOKEN_MESSAGE:
+            	{
+            		TokenMessage tokenMessage = (TokenMessage) message;
+            		this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
+
+            		break;
+            	}
+            	case AbstractMessage.TYPE_MONEY_QUERY_MESSAGE:
+            	{
+            		this.onMoneyAmountQuery();
+            		break;
+            	}
+            	case AbstractMessage.TYPE_TOKEN_QUERY_MESSAGE:
+            	{
+            		this.onTokenAmountQuery();
+            		break;
+            	}
+            	case AbstractMessage.TYPE_MONEY_MESSAGE:
+            	{
+            		MoneyMessage money = (MoneyMessage) message;
+            		this.amountOfMoney += money.getAmountOfMoney();
+            		break;
+            	}
+            	case AbstractMessage.TYPE_GATE:
+            	{
+            		System.out.println("Got a gate message, a la a boss " + this.portListeningOn);
+            		GateMessage gateMessage = (GateMessage) message;
+            		try {
+						Socket sock = new Socket(gateMessage.getAddr(), gateMessage.getPort());
+						MessageListener listener = new MessageListener(this, sock);
+						this.connectedGates.add(listener);
+					} catch (IOException e) {
+						System.out.println("ERROR WHEN CONNECTING TO A NEW GATE");
+						return;
+					}
+            		
+            		break;
+            	}
+            	default:
+            	{
+            		System.out.println("What are you doing Message Type = "+message.getMessageType());
+            		System.exit(1);
+            		//Do something
+            	}
+            	}
+            }
+        }
+       
+
+   	@Override
+   	public void onSocketClosed(Socket socket) {
+   		//TODO implement this!
+   		
+   		System.out.println("ON SOCKET CLOSED GOT CALLED, THAT SHIT NEEDS TO BE IMPLEMENTED!!!");
+   		//check if it is the simulation
+   			//if yes, do something
+   		//if it is not, then find out which gate we're connected to
+   			//disconnect the socket
+   			//remove the gate from the list
+   	}
+   	
+	@Override
+	public void onConnectionReceived(Socket newConnection) {
+		synchronized(this){
+			MessageListener newGate = new MessageListener(this, newConnection); //create a new message listener and start it
+			this.connectedGates.add(newGate);
+			newGate.start();
+		}
+	}
+
+
+	@Override
+	public void onServerError(ServerSocket failedServer) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+       /**
+        * Returns the number of cars currently waiting to enter
+        * @return The number of cars in the queue
+        */
+    public int getCarsWaiting() {
+        return waitingCars.size();
+    }
+
+    public void onTokensLow() {
+    	//
+    }
+
+    public void onTokensAdded(int tokens) {
+    	this.numberOfTokens += tokens;
+    }
+
+    public int getNumberTokens() {
+    	return this.numberOfTokens;
+    }
+
+    public boolean removeTokens(int numberOfTokensToReceive) {
+    	if(this.numberOfTokens - numberOfTokensToReceive > 0)
+    	{
+    		this.numberOfTokens -= numberOfTokensToReceive;
+    		return true;
+    	}
+    	return false;
+    }
+
+    public int getAmountOfMoneyLeft() {
+    	return this.amountOfMoney;
+    }
+
+    public boolean removeMoney(int amountOfMoneyToTake) {
+    	if(this.amountOfMoney < amountOfMoneyToTake)
+    		return false;
+    	else
+    	{
+    		this.amountOfMoney -= amountOfMoneyToTake;
+    		return true;
+    	}
+    }
+
+    public void addMoney(int amountOfMoneyToAdd) {
+    	this.amountOfMoney += amountOfMoneyToAdd;
+    }
+
+    public void timeSubscribe()
+    {
+		TimeSubscribeMessage message = new TimeSubscribeMessage(this.addrListeningOn, this.portListeningOn);
+		try {
+			this.simulationMessageListener.writeMessage(message);
+		} catch (IOException e) {
+			//do stuff
+		}
+	}
+    
+    /**
+     * Subscribes to another Gate so that it can trade tokens with that Gate.
+     */
+    public void gateSubscribe()
+    {
+		GateSubscribeMessage message = new GateSubscribeMessage(this.addrListeningOn, this.portListeningOn);
+		try {
+			this.simulationMessageListener.writeMessage(message);
+		} catch (IOException e) {
+			//do stuff
+		}
+	}
 	
 	/**
-	 * Specifies what to do when a car leaves the gate
+	 * Sends a message to the TrafficSimulator that this gate has completed its responsibilities.
 	 */
-	public void onCarLeave();
-	
-	/**
-	 * Specifies what the Gate should do when it receives a new message about the time.
-	 * @param newTime, The new canonical time for the system
-	 */
-	public void onTimeUpdate(TimeMessage newTime);
-	
-	/**
-	 * Specifies what the gate should do when its tokens run low
-	 */
-	public void onTokensLow();
-	
-	/**
-	 * Returns the number of token that the gate currently has
-	 * @return The number of tokens that the Gate currently posesses
-	 */
-	public int getNumberTokens();
-	
-	/**
-	 * Removes the given number of tokens from the gate.
-	 * @param numberOfTokensToReceive, The number of tokens which will be removed from the Gate
-	 * @return True if that many tokens could be removed.  False otherwise.
-	 */
-	public boolean removeTokens(int numberOfTokensToReceive);
-	
-	/**
-	 * Specifies what a gate should do when it has extra tokens added.
-	 * @param tokens, The number of additional tokens which are being added.
-	 */
-	public void onTokensAdded(int tokens);
-	
-	/**
-	 * Gets the amount of money left that this Gate has.
-	 * @return The amount of money still left for the Gate.
-	 */
-	public int getAmountOfMoneyLeft();
-	
-	/**
-	 * Removes a given amount of money from the Gate's coffers
-	 * @param amountOfMoneyToTake, The amount of money to take from the gate.
-	 * @return True if the gate can have that much money removed, false otherwise.
-	 */
-	public boolean removeMoney(int amountOfMoneyToTake);
-	
-	/**
-	 * Adds money to the Gate's coffers
-	 * @param amountOfMoneyToAdd, The amount of money which is being added to the Gate.
-	 */
-	public void addMoney(int amountOfMoneyToAdd);
+    public void sendDone()
+    {
+		GateDoneMessage message = new GateDoneMessage(this.addrListeningOn, this.portListeningOn);
+		try {
+			this.simulationMessageListener.writeMessage(message);
+		} catch (IOException e) {
+			//do stuff
+		}
+		
+	}
+
+    /**
+     * Sends a Car to the ParkingLot
+     * @param carWrapper, The car which is being sent to the Parking Lot
+     */
+    public void sendCarToParkingLot(CarWrapper carWrapper)
+    {
+        System.out.println("Gate #"+realPort +": Sending a car to the parking lot. It will leave at "+carWrapper.timeToLeaveQueue+" Tokens: "+this.numberOfTokens + " amount of money is: " + this.amountOfMoney + " length of queue is " + this.getCarsWaiting());
+
+        CarArrivalMessage message = new CarArrivalMessage(new Date(), carWrapper.getCarRepresenting().getTimeDeparts());
+		try {
+			this.simulationMessageListener.writeMessage(message);
+		} catch (IOException e) {
+			//Do stuff
+		}
+		
+    }
+
+    /**
+     * This is just a utility class which easily wraps the car and the time that it should leave the queue.
+     */
+    private static class CarWrapper {
+        Car carRepresenting;
+        Date timeToLeaveQueue;
+
+        public CarWrapper(Car carRepresenting, Date leavingTime)
+        {
+            this.carRepresenting = carRepresenting;
+            this.timeToLeaveQueue = leavingTime;
+        }
+
+        public Car getCarRepresenting() {
+            return carRepresenting;
+        }
+
+    }
 }

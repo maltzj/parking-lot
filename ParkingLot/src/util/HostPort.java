@@ -37,4 +37,10 @@ public class HostPort
         }
         return false;
     }
+    
+    public String toString() {
+    	String ret = "";
+    	ret += "Host: " + iaddr.toString() + " Port: " + port;
+    	return ret;
+    }
 }

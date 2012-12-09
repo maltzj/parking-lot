@@ -1,19 +1,17 @@
 package manager;
 
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 import messaging.AbstractMessage;
-import messaging.GateMessage;
 import messaging.GateSubscribeMessage;
-
 import util.Config;
 import util.ConnectionHandler;
-import util.HostPort;
+import util.ConnectionListener;
 import util.MessageHandler;
-import gates.ConnectionListener;
-import gates.MessageListener;
+import util.MessageListener;
 
 public class Manager implements ConnectionHandler, MessageHandler {
 
@@ -25,11 +23,14 @@ public class Manager implements ConnectionHandler, MessageHandler {
 	int port;
 	
 	int numberOfTokens;
+	int money;
+	
 	int numberOfCars;
 	
-	public Manager(int numTokens, int numCars, int port) throws IOException{
+	public Manager(int numTokens, int money, int port) throws IOException{
 		this.numberOfTokens = numTokens;
-		this.numberOfCars = numCars;
+		this.money = money;
+		
 		this.port = port;
 		
 		connectionListener = new ConnectionListener(this, this.port);
@@ -43,7 +44,7 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		gateListener.setDaemon(true);
 		gateListener.start();
 		
-		Config c = new Config();
+		Config c = Config.getSharedInstance();
 		Socket trafficSock = null;
 		try {
 			trafficSock = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
