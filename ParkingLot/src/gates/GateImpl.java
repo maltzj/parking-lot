@@ -84,8 +84,6 @@ public class GateImpl implements Gate, MessageHandler, ConnectionHandler{
 		simulationMessageListener.writeMessage(new TimeSubscribeMessage(this.addrListeningOn, this.portListeningOn));
 		simulationMessageListener.writeMessage(new GateSubscribeMessage(this.addrListeningOn, this.portListeningOn));
 	
-	
-		connectedGates = new ArrayList<>(); 
 		
 		realPort = s.getLocalPort();
     }
