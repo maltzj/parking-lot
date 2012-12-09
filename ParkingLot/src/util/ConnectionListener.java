@@ -1,4 +1,4 @@
-package gates;
+package util;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -6,6 +6,7 @@ import java.net.Socket;
 
 import util.ConnectionHandler;
 
+/** You need to create an instance of this, to get a ServerSocket listening for messages */
 public class ConnectionListener extends Thread {
 	
 	private ConnectionHandler connectionHandler;

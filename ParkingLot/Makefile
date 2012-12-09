@@ -8,7 +8,9 @@ CLASSPATH = $(CURRPATH)/src
 	CLASSPATH=$(CLASSPATH) $(JC) $(JFLAGS) $*.java
 
 CLASSES = \
-        src/test/RunSimulation.java
+        src/test/Bootstrap.java
+
+fuck: you
 
 go:
 	CLASSPATH=$(CLASSPATH) java -ea test.RunSimulation

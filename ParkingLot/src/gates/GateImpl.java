@@ -62,7 +62,7 @@ public class GateImpl implements Gate, MessageHandler, ConnectionHandler{
      * @param port, The port this gate will be listening on.
      * @throws Exception
      */
-    public GateImpl(long timeToWait, int tokensToStartWith, int moneyToStartWith, InetAddress addr, int port, int moneyPerCarPassed) throws Exception
+    public GateImpl(Config c, long timeToWait, int tokensToStartWith, int moneyToStartWith, InetAddress addr, int port, int moneyPerCarPassed) throws Exception
     {
     	
     	this.addrListeningOn = addr;
@@ -75,7 +75,6 @@ public class GateImpl implements Gate, MessageHandler, ConnectionHandler{
 		this.moneyPerCarPassed = moneyPerCarPassed;
 		
 		/*Connect to the simulation*/
-		Config c = new Config();
 		Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
 		simulationMessageListener = new MessageListener(this, s);
 		simulationMessageListener.setDaemon(true);
