@@ -9,18 +9,21 @@ import java.io.*;
 
 public class Everything
 {
-    public static void sendMessage(AbstractMessage message, InetAddress ip, int port)
+    public static void sendMessage(AbstractMessage message, InetAddress ip, int port) throws IOException
     {
+    	Socket s = null;
         try {
-            Socket s = new Socket(ip, port);
+            s = new Socket(ip, port);
             
             OutputStream o = s.getOutputStream();
 
             AbstractMessage.encodeMessage(o, message);
             o.flush();
-            s.close();
         } catch(Exception e) {
 					e.printStackTrace();
+        }
+        finally{
+        	s.close();
         }
     }
 }
