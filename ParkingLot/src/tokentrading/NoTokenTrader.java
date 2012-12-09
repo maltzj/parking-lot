@@ -1,17 +1,22 @@
 package tokentrading;
 
+import gates.Gate;
+
 public class NoTokenTrader extends TokenTrader {
+
+	NoTokenTrader(Gate tokenTrader) {
+		super(tokenTrader);
+		// TODO Auto-generated constructor stub
+	}
 
 	@Override
 	public void onTokenRequestReceived() {
-		// TODO Auto-generated method stub
-		
+		//do nothing
 	}
 
 	@Override
 	public void requestTokens() {
-		// TODO Auto-generated method stub
-		
+		//do nothing
 	}
 
 }

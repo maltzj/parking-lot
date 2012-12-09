@@ -1,16 +1,21 @@
 package tokentrading;
 
+import gates.Gate;
+
 public class ProfitTokenTrader extends TokenTrader {
+
+	ProfitTokenTrader(Gate tokenTrader) {
+		super(tokenTrader);
+	}
 
 	@Override
 	public void onTokenRequestReceived() {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void requestTokens() {
-		// TODO Auto-generated method stub
+
 		
 	}
 

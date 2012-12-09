@@ -36,7 +36,6 @@ public class GateImpl implements Gate, MessageHandler, ConnectionHandler{
     ConcurrentLinkedQueue<CarWrapper> waitingCars = new ConcurrentLinkedQueue<CarWrapper>();
     long amountOfTimeToWait; //Seconds
 
-    ConnectionListener incomingConnectionListener;
     MessageListener simulationMessageListener;
     List<MessageListener> connectedGates;
     
@@ -85,15 +84,10 @@ public class GateImpl implements Gate, MessageHandler, ConnectionHandler{
 		simulationMessageListener.writeMessage(new TimeSubscribeMessage(this.addrListeningOn, this.portListeningOn));
 		simulationMessageListener.writeMessage(new GateSubscribeMessage(this.addrListeningOn, this.portListeningOn));
 	
-		this.incomingConnectionListener = new ConnectionListener(this, this.portListeningOn);
-		this.incomingConnectionListener.setDaemon(true);
-		this.incomingConnectionListener.start();
 	
 		connectedGates = new ArrayList<>(); 
 		
 		realPort = s.getLocalPort();
-	
-    
     }
 	
 	
@@ -283,7 +277,6 @@ public class GateImpl implements Gate, MessageHandler, ConnectionHandler{
    	
 	@Override
 	public void onConnectionReceived(Socket newConnection) {
-		System.out.println("Connection received at gate " + this.portListeningOn);
 		synchronized(this){
 			MessageListener newGate = new MessageListener(this, newConnection); //create a new message listener and start it
 			this.connectedGates.add(newGate);

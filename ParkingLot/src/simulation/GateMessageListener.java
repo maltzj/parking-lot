@@ -18,8 +18,6 @@ public class GateMessageListener extends Thread{
 	int port;
 	Socket socketListeningOn;
 	
-	
-	
 	/**
 	 * Creates a gate listener which reports to a given traffic generator and listens on a particular socket
 	 * @param generator The generator which this listener reports to
