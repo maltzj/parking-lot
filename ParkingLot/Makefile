@@ -13,7 +13,7 @@ CLASSES = \
 fuck: you
 
 go:
-	CLASSPATH=$(CLASSPATH) java -ea test.RunSimulation
+	CLASSPATH=$(CLASSPATH) java -ea test.Bootstrap
 
 default: classes
 

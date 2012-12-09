@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import java.io.*;
 import java.net.*;
 
 import util.ConnectionListener;
@@ -26,14 +27,28 @@ public class TrafficGenerator implements ConnectionHandler
 	{
         System.out.println("I am a traffic generator");
 
-        ConnectionListener listener = new ConnectionListener(this, 1000);
+        ConnectionListener listener = new ConnectionListener(this, 10000);
+        listener.setDaemon(false);
         listener.start();
     }
 
     public void onConnectionReceived(Socket connection)
     {
         System.out.println("I got me a connection from "+connection.getPort());
-        System.out.println("Something Something connection from "+connection.getLocalPort());
+        try {
+            BufferedReader bf = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            while(true)
+            {
+                String line = bf.readLine();
+                if(line == null)
+                    break;
+                System.out.println(line);
+            }
+        } catch(IOException e) {
+            System.out.println("fuck");
+            return;
+        }
+    
     }
 
     public void onServerError(ServerSocket failedSocket)

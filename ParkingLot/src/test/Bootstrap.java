@@ -1,3 +1,4 @@
+package test;
 import simulation.TrafficGenerator;
 
 public class Bootstrap
