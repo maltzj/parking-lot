@@ -64,7 +64,6 @@ public class Config
 		}
 	}
 	
-	
 	public void printConfig()
 	{
 		System.out.println(trafficGenerator.iaddr + " " + trafficGenerator.port);

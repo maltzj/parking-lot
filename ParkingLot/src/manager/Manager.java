@@ -1,15 +1,19 @@
 package manager;
 
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 import messaging.AbstractMessage;
+import messaging.GateMessage;
 import messaging.GateSubscribeMessage;
+
 import util.Config;
 import util.ConnectionHandler;
 import util.ConnectionListener;
+import util.HostPort;
 import util.MessageHandler;
 import util.MessageListener;
 
@@ -18,19 +22,18 @@ public class Manager implements ConnectionHandler, MessageHandler {
 	MessageListener gateListener;
 	MessageListener trafficGenListener;
 	
+	List<MessageListener> managers = new ArrayList<MessageListener>();
+	
 	ConnectionListener connectionListener;
 	
 	int port;
 	
 	int numberOfTokens;
-	int money;
-	
 	int numberOfCars;
 	
-	public Manager(int numTokens, int money, int port) throws IOException{
+	public Manager(int numTokens, int numCars, int port) throws IOException{
 		this.numberOfTokens = numTokens;
-		this.money = money;
-		
+		this.numberOfCars = numCars;
 		this.port = port;
 		
 		connectionListener = new ConnectionListener(this, this.port);
@@ -70,7 +73,6 @@ public class Manager implements ConnectionHandler, MessageHandler {
 	@Override
 	public void onServerError(ServerSocket failedServer) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
