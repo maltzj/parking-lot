@@ -19,6 +19,7 @@ import util.MessageListener;
 
 public class Manager implements ConnectionHandler, MessageHandler {
 
+	
 	MessageListener gateListener;
 	MessageListener trafficGenListener;
 	

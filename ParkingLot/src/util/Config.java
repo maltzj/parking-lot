@@ -10,6 +10,7 @@ import java.net.InetAddress;
 public class Config
 {
 	
+	
 	private static Config instance = null;
 	
 	public HostPort trafficGenerator;
