@@ -4,7 +4,7 @@ import gates.Gate;
 
 public class ProfitTokenTrader extends TokenTrader {
 
-	ProfitTokenTrader(Gate tokenTrader) {
+	public ProfitTokenTrader(Gate tokenTrader) {
 		super(tokenTrader);
 	}
 

@@ -4,7 +4,7 @@ import gates.Gate;
 
 public class NoTokenTrader extends TokenTrader {
 
-	NoTokenTrader(Gate tokenTrader) {
+	public NoTokenTrader(Gate tokenTrader) {
 		super(tokenTrader);
 		// TODO Auto-generated constructor stub
 	}

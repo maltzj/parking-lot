@@ -6,7 +6,7 @@ public abstract class TokenTrader {
 
 	Gate tokenTrader;
 	
-	TokenTrader(Gate tokenTrader){
+	public TokenTrader(Gate tokenTrader){
 		this.tokenTrader = tokenTrader;
 	}
 	

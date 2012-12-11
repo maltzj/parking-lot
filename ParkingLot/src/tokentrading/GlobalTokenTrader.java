@@ -4,7 +4,7 @@ import gates.Gate;
 
 public class GlobalTokenTrader extends TokenTrader {
 
-	GlobalTokenTrader(Gate tokenTrader) {
+	public GlobalTokenTrader(Gate tokenTrader) {
 		super(tokenTrader);
 	}
 
