@@ -66,6 +66,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
         
         this.managers = new ConcurrentLinkedQueue<ManagerInfo>(); //setup a list of managers
         for(ManagerInfo m: managers){
+        	System.out.println("m is " + m);
         	this.managers.add(m);
         }
         

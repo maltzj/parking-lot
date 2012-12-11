@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import manager.Manager;
 import simulation.TrafficGenerator;
+import tokentrading.NoTokenTrader;
 import util.Config;
 
 public class SimulationTest {
@@ -20,11 +21,12 @@ public class SimulationTest {
 		
 		//Startup Gates
 		for(int i = 0; i < c.gates.length; i++) {
-			gates.add(new Gate(10, c.gates[i].tokens, c.gates[i].money, c.gates[i].hostport.iaddr, c.gates[i].hostport.port, 10));
+			gates.add(new Gate(10, c.gates[i].tokens, c.gates[i].money, c.gates[i].hostport.iaddr,
+					c.gates[i].hostport.port, 10, Gate.NO_TRADING_POLICY));
 		}
 		
 		for(int i = 0; i < c.managers.length; i++) {
-			managers.add(new Manager(-1, c.managers[i].money, c.managers[i].hostport.port));
+			managers.add(new Manager(-1, c.managers[i].money, c.managers[i].hostport.port, c.managers[i].managerPort.port));
 		}
 		
 		

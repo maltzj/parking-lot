@@ -17,6 +17,10 @@ import messaging.SimpleMessage;
 import messaging.TimeMessage;
 import messaging.TimeSubscribeMessage;
 import messaging.TokenMessage;
+import tokentrading.GlobalTokenTrader;
+import tokentrading.NoTokenTrader;
+import tokentrading.ProfitTokenTrader;
+import tokentrading.TokenTrader;
 import util.Config;
 import util.MessageHandler;
 import util.MessageListener;
@@ -30,8 +34,13 @@ import car.Car;
  */
 public class Gate implements MessageHandler{
 	
+	public static final int NO_TRADING_POLICY = 1;
+	public static final int GLOBAL_TRADING_POLICY = 2;
+	public static final int PROFIT_TRADING_POLICY = 3;
+	
     public static boolean stillRunning = true;
 
+    
     ConcurrentLinkedQueue<CarWrapper> waitingCars = new ConcurrentLinkedQueue<CarWrapper>();
     long amountOfTimeToWait; //Seconds
 
@@ -39,9 +48,9 @@ public class Gate implements MessageHandler{
     MessageListener manager;
     
     int numberOfTokens;
-
     int amountOfMoney;
     int moneyPerCarPassed;
+
     
     InetAddress addrListeningOn;
     int portListeningOn;
@@ -50,6 +59,8 @@ public class Gate implements MessageHandler{
     int numberOfSadnessCars = 0;
     int totalCarWait = 0;
     int numberOfCarsLetThrough = 0;
+
+    TokenTrader trader;
     
     /**
      * Initializes a gate with all the information necessary to get running
@@ -61,7 +72,8 @@ public class Gate implements MessageHandler{
      * @param port, The port this gate will be listening on.
      * @throws Exception
      */
-    public Gate(long timeToWait, int tokensToStartWith, int moneyToStartWith, InetAddress addr, int port, int moneyPerCarPassed) throws Exception
+    public Gate(long timeToWait, int tokensToStartWith, int moneyToStartWith, 
+    		InetAddress addr, int port, int moneyPerCarPassed, int tradingPolicy) throws Exception
     {
     	
     	Config c = Config.getSharedInstance();
@@ -81,6 +93,22 @@ public class Gate implements MessageHandler{
 		simulationMessageListener.setDaemon(true);
 		simulationMessageListener.start();
 		simulationMessageListener.writeMessage(new SimpleMessage(AbstractMessage.TYPE_CONNECT));
+		
+		switch(tradingPolicy){
+		case Gate.NO_TRADING_POLICY:
+		{
+			this.trader = new NoTokenTrader(this);
+		}
+		case Gate.GLOBAL_TRADING_POLICY:
+		{
+			this.trader = new GlobalTokenTrader(this);
+		}
+		case Gate.PROFIT_TRADING_POLICY:
+		{
+			this.trader = new ProfitTokenTrader(this);
+		}
+		
+		}
 		
 		realPort = s.getLocalPort();
     }
@@ -112,10 +140,6 @@ public class Gate implements MessageHandler{
 		
 	}
 
-	public void onCarLeave() {
-		numberOfTokens++;
-		//do any additional logic re: broadcasting
-	}
 
 	public void onTimeUpdate(TimeMessage messageFromChronos){
 		

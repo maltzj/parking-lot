@@ -52,12 +52,13 @@ public class Config
 			
 			//Set up Managers
 			managers = new ManagerInfo[6];
-			for(int i = 0; i < managers.length; i++) {
+			for(int i = 0; i < managers.length ; i++) {
 				ManagerInfo m = new ManagerInfo();
 				m.hostport = new HostPort(InetAddress.getByName("localhost"), 8050 + i);
+				m.managerPort = new HostPort(InetAddress.getByName("localhost"), 8050 + i + managers.length); //give it a separate manager and gate port
 				m.money = 100;
 				m.tokens = 10;
-				managers[i] = m;
+				managers[i] = m; //make sure we initialize all of the spots in the array
 			}
 			
 		}
@@ -82,6 +83,7 @@ public class Config
 	
 	public class ManagerInfo {
 		public HostPort hostport;
+		public HostPort managerPort;
 		public int tokens;
 		public int money;
 		

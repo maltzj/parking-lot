@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import messaging.AbstractMessage;
+import messaging.GateMessage;
 import messaging.GateSubscribeMessage;
 import messaging.TokenMessage;
 import util.Config;
@@ -23,9 +24,9 @@ public class Manager implements ConnectionHandler, MessageHandler {
 	
 	List<MessageListener> managers = new ArrayList<MessageListener>();
 	
-	ConnectionListener connectionListener;
+	ConnectionListener gateConnectionListener;
 	
-	int port;
+	int gatePort;
 	
 	int numberOfTokens;
 	int numberOfCars;
@@ -37,48 +38,62 @@ public class Manager implements ConnectionHandler, MessageHandler {
 	 * @param port
 	 * @throws IOException
 	 */
-	public Manager(int numTokens, int numCars, int port) throws IOException{
+	public Manager(int numTokens, int numCars, int gatePort, int managerPort) throws IOException{
 		this.numberOfTokens = numTokens;
 		this.numberOfCars = numCars;
-		this.port = port;
+		this.gatePort = gatePort;
 		
-		connectionListener = new ConnectionListener(this, this.port);
-		connectionListener.start();
+		gateConnectionListener = new ConnectionListener(this, this.gatePort);
+		gateConnectionListener.start();
 	}
 	
 	/**
 	 * In this system, why should a manager be started with a given number of tokens?  Shouldn't that be specified by its gate?
 	 * @param port
+	 * @throws IOException 
 	 */
-	public Manager(int port){
+	public Manager(int gatePort, int managerPort) throws IOException{
 		this.numberOfCars = 0;
 		this.numberOfTokens = -1;
-		this.port = port;
+		this.gatePort = gatePort;
+	
+		gateConnectionListener = new ConnectionListener(this, this.gatePort);
+		gateConnectionListener.start();
 	}
+	
 
 	@Override
 	public void onConnectionReceived(Socket newConnection, int receivedOn) {
-		System.out.println("Got a connection");
-		gateListener = new MessageListener(this, newConnection);
-		gateListener.setDaemon(true);
-		gateListener.start();
 		
-		Config c = Config.getSharedInstance();
-		Socket trafficSock = null;
-		try { //connect this manager to the traffic generator
-			trafficSock = new Socket(c.trafficGenerator.manager.iaddr, c.trafficGenerator.manager.port);
-		} catch (IOException e) {
-			return;
+		if(receivedOn == gatePort){  //if a gate connected
+			if(this.gateListener == null){
+				gateListener = new MessageListener(this, newConnection);
+				gateListener.setDaemon(true);
+				gateListener.start();
+
+				Config c = Config.getSharedInstance();
+				Socket trafficSock = null;
+				try { //connect this manager to the traffic generator
+					trafficSock = new Socket(c.trafficGenerator.manager.iaddr, c.trafficGenerator.manager.port);
+				} catch (IOException e) {
+					return;
+				}
+
+				trafficGenListener = new MessageListener(this, trafficSock);
+				trafficGenListener.setDaemon(true);
+				trafficGenListener = new MessageListener(this, trafficSock);
+				trafficGenListener.start();
+				try { //become subscribed and write a gate subscribe message
+					trafficGenListener.writeMessage(new GateSubscribeMessage(this.gateConnectionListener.getServer().getInetAddress(), this.gatePort));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+				}
+			}
 		}
-		
-		trafficGenListener = new MessageListener(this, trafficSock);
-		trafficGenListener.setDaemon(true);
-		trafficGenListener = new MessageListener(this, trafficSock);
-		trafficGenListener.start();
-		try { //become subscribed and write a gate subscribe message
-			trafficGenListener.writeMessage(new GateSubscribeMessage(this.connectionListener.getServer().getInetAddress(), this.port));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
+		else{  //otherwise we received this from another manager
+			MessageListener listener = new MessageListener(this, newConnection);
+			listener.setDaemon(false);
+			listener.start();
 		}
 		
 	}
@@ -98,7 +113,7 @@ public class Manager implements ConnectionHandler, MessageHandler {
 					//TODO figure this out
 				}
 			}
-			else{
+			else if(socket.equals(this.trafficGenListener.getSocketListeningOn())){ //if we got a message from traffic
 				try{
 					onMessageFromTraffic(message);		
 				}
@@ -106,6 +121,29 @@ public class Manager implements ConnectionHandler, MessageHandler {
 					//TODO figure this out
 				}
 			}
+			else{ //otherwise it is message from a manager
+				try {
+					onMessageFromManager(message, socket);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	private void onMessageFromManager(AbstractMessage message, Socket socket) throws IOException{
+		switch(message.getMessageType()){
+		case AbstractMessage.TYPE_TOKEN_MESSAGE:
+		{
+			TokenMessage tokenMessage = (TokenMessage) message;
+			this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
+			this.gateListener.writeMessage(tokenMessage);
+		}
+		case AbstractMessage.TYPE_TOKEN_REQUEST_MESSAGE:
+		{
+			//TODO figure out what to do here
+		}
 		}
 	}
 
@@ -113,9 +151,11 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		switch(message.getMessageType()){
 		case AbstractMessage.TYPE_CAR_ARRIVAL: //pass on any cars to our gate
 		{
-			System.out.println("Manager got a car arrival message from the gate");
-			this.trafficGenListener.writeMessage(message);
-			this.numberOfCars -= 1;
+			if(this.numberOfTokens > 0){
+				this.trafficGenListener.writeMessage(message);
+				this.numberOfCars--;
+				this.numberOfTokens--;
+			}
 			break;
 		}
 		case AbstractMessage.TYPE_TOKEN_MESSAGE: //pass on any token messages
@@ -152,6 +192,11 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		{
 			this.gateListener.writeMessage(message);
 			break;
+		}
+		case AbstractMessage.TYPE_GATE: //use this to note other managers
+		{
+			GateMessage gateMess = (GateMessage) message;
+			
 		}
 		default:
 		{
