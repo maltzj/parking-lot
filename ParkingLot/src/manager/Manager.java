@@ -70,6 +70,7 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		} catch (IOException e) {
 			return;
 		}
+		trafficGenListener = new MessageListener(this, trafficSock);
 		trafficGenListener.setDaemon(true);
 		trafficGenListener = new MessageListener(this, trafficSock);
 		trafficGenListener.start();
@@ -87,19 +88,21 @@ public class Manager implements ConnectionHandler, MessageHandler {
 
 	@Override
 	public void onMessageReceived(AbstractMessage message, Socket socket) {
-		if(socket.equals(this.gateListener.getSocketListeningOn())){
-			try {
-				this.onMessageFromGate(message);
-			} catch (IOException e) {
-				//TODO figure this out
+		synchronized(this){
+			if(socket.equals(this.gateListener.getSocketListeningOn())){
+				try {
+					this.onMessageFromGate(message);
+				} catch (IOException e) {
+					//TODO figure this out
+				}
 			}
-		}
-		else{
-			try{
-				onMessageFromTraffic(message);		
-			}
-			catch(IOException e){
-				//TODO figure this out
+			else{
+				try{
+					onMessageFromTraffic(message);		
+				}
+				catch(IOException e){
+					//TODO figure this out
+				}
 			}
 		}
 	}

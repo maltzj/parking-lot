@@ -232,13 +232,14 @@ public class Gate implements MessageHandler{
             	}
             	case AbstractMessage.TYPE_GATE:
             	{
-            		System.out.println("Got a gate message!!!");
             		GateMessage gateMessage = (GateMessage) message;
             		try {
 						Socket sock = new Socket(gateMessage.getAddr(), gateMessage.getPort());
 						MessageListener listener = new MessageListener(this, sock);
 						this.manager = listener;
 						this.manager.start();
+						this.manager.writeMessage(new TokenMessage(this.numberOfTokens));
+						this.manager.writeMessage(new TokenMessage(this.numberOfTokens));
 						this.simulationMessageListener.getSocketListeningOn().close();
 					} catch (IOException e) {
 						System.out.println("ERROR WHEN CONNECTING TO THE MANAGER");
