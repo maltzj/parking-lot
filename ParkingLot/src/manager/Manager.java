@@ -70,6 +70,7 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		} catch (IOException e) {
 			return;
 		}
+		
 		trafficGenListener = new MessageListener(this, trafficSock);
 		trafficGenListener.setDaemon(true);
 		trafficGenListener = new MessageListener(this, trafficSock);
@@ -78,7 +79,8 @@ public class Manager implements ConnectionHandler, MessageHandler {
 			trafficGenListener.writeMessage(new GateSubscribeMessage(this.connectionListener.getServer().getInetAddress(), this.port));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-		}		
+		}
+		
 	}
 
 	@Override
