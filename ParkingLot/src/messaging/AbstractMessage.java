@@ -14,11 +14,9 @@ public abstract class AbstractMessage {
 	public static final byte TYPE_GATE_SUBSCRIBE = 2;
 	public static final byte TYPE_TIME_SUBSCRIBE = 3;
 	public static final byte TYPE_TIME_MESSAGE = 4;
-	public static final byte TYPE_TOKEN_SUBSCRIBE_MESSAGE = 5;
 	public static final byte TYPE_TOKEN_REQUEST_MESSAGE = 6;
 	public static final byte TYPE_TOKEN_MESSAGE = 7;
 	public static final byte TYPE_MONEY_MESSAGE = 8;
-	public static final byte TYPE_CAR_LEAVING = 9;
 	
 	public static final byte TYPE_GATE_DONE = 10;
 	public static final byte TYPE_LOT_DONE = 11;
@@ -82,13 +80,6 @@ public abstract class AbstractMessage {
 					long time = dataInput.readLong();
 					return new TimeMessage(new Date(time));
 				}
-				case TYPE_TOKEN_SUBSCRIBE_MESSAGE:
-				{
-					int length = dataInput.readInt();
-					int port = dataInput.readInt();
-					String inetAddress = getIpAddress(dataInput, length - 4);
-					return new TokenSubscribeMessage(InetAddress.getByName(inetAddress), port);
-				}
 				case TYPE_TOKEN_REQUEST_MESSAGE:
 				{
 					int numberOfTokens = dataInput.readInt();
@@ -103,11 +94,7 @@ public abstract class AbstractMessage {
 				{
 					int amountOfMoney = dataInput.readInt();
 					return new MoneyMessage(amountOfMoney);
-				}
-				case TYPE_CAR_LEAVING:
-				{
-					return new CarLeavingMessage();
-				}				
+				}			
                 case TYPE_GATE_DONE:
 				{
 
@@ -220,17 +207,6 @@ public abstract class AbstractMessage {
 					dataOutput.flush();
 					break;
 				}
-				case TYPE_TOKEN_SUBSCRIBE_MESSAGE:
-				{
-					TokenSubscribeMessage subsribeMessage = (TokenSubscribeMessage) messageWriting;
-					String addressAsString = subsribeMessage.getAddressSubscribing().getHostAddress();
-					byte[] addressAsBytes = addressAsString.getBytes("UTF-8");
-					dataOutput.writeInt(addressAsBytes.length + 4);
-					dataOutput.writeInt(subsribeMessage.getPortSubscribingOn());
-					dataOutput.write(addressAsBytes);
-					dataOutput.flush();
-					break;
-				}
 				case TYPE_TOKEN_REQUEST_MESSAGE:
 				{
 					TokenRequestMessage requestMessage = (TokenRequestMessage) messageWriting;
@@ -249,11 +225,6 @@ public abstract class AbstractMessage {
 				{
 					MoneyMessage moneyMessage = (MoneyMessage) messageWriting;
 					dataOutput.writeInt(moneyMessage.amountOfMoney);
-					dataOutput.flush();
-					break;
-				}
-				case TYPE_CAR_LEAVING:
-				{
 					dataOutput.flush();
 					break;
 				}
