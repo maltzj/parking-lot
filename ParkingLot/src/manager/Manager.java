@@ -113,18 +113,21 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		switch(message.getMessageType()){
 		case AbstractMessage.TYPE_CAR_ARRIVAL: //pass on any cars to our gate
 		{
+			System.out.println("Manager got a car arrival message from the gate");
 			this.trafficGenListener.writeMessage(message);
-			this.numberOfCars += 1;
+			this.numberOfCars -= 1;
+			break;
 		}
 		case AbstractMessage.TYPE_TOKEN_MESSAGE: //pass on any token messages
 		{
 			if(this.numberOfTokens == -1){
 				this.numberOfTokens = ((TokenMessage) message).getNumberOfTokensSent();
 			}
+			break;
 		}
-		case AbstractMessage.TYPE_TIME_MESSAGE: //just pass on time messages
+		default:
 		{
-			this.gateListener.writeMessage(message);
+			System.out.println("GOT A BAD MESSAGE FROM A GATE");
 		}
 		}
 	}
@@ -133,8 +136,10 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		switch(message.getMessageType()){
 		case AbstractMessage.TYPE_CAR_ARRIVAL: //this means a car is being sent to the parking lot
 		{
+			System.out.println("A manager received a car from traffic ");
 			this.gateListener.writeMessage(message);
-			this.numberOfCars -= 1;
+			this.numberOfCars += 1;
+			break;
 		}
 		case AbstractMessage.TYPE_TOKEN_MESSAGE:
 		{
@@ -142,6 +147,15 @@ public class Manager implements ConnectionHandler, MessageHandler {
 				this.numberOfTokens+= ((TokenMessage) message).getNumberOfTokensSent();
 				this.gateListener.writeMessage(message);
 			}
+		}
+		case AbstractMessage.TYPE_TIME_MESSAGE: //just pass on time messages
+		{
+			this.gateListener.writeMessage(message);
+			break;
+		}
+		default:
+		{
+			System.out.println("GOT A BAD MESSAGE FROM THE TRAFFIC GEN!");
 		}
 		}
 	}

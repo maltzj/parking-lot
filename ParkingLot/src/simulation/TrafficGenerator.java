@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.Random;
@@ -75,7 +76,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 
 	public void run()
 	{
-		System.out.println("WE'RE RUNNING THIS SHIT YO!!");
+		System.out.println("Running the run method of traffic generator");
 		/**
 			You may want to wait for a signal here, instead of start sending a car right away.
 			And maybe you want to hard code all your six gates' IP and port number here. That depends your implementation.
@@ -147,8 +148,8 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     {
     	Date curr = this.getCurrentDate();
     	synchronized(this.parkingLot){
-    		
-    		for(Car c: this.parkingLot){ //iterate over parking lot
+    		for(Iterator<Car> iter = this.parkingLot.iterator(); iter.hasNext();){ //iterate over parking lot
+    			Car c = iter.next();
     			if(c.getTimeDeparts().compareTo(curr) <= 0){ //if a car is past its leaving time send it
     				int gate = rdm.nextInt(this.carReceivers.size());
     				try {
@@ -156,10 +157,9 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 					} catch (IOException e) {
 						// TODO DEAL WITH THAT
 					}
-    				this.parkingLot.remove(c);
+    				iter.remove();
     			}
-    		}
-    		
+    		}	
     	}
     }
     
@@ -169,7 +169,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     		try {
 				listener.writeMessage(new TimeMessage(this.getCurrentDate()));
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
+				//TODO Auto-generated catch block
 			}
     	}
     }
@@ -177,7 +177,6 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 	
     public void onConnectionReceived(Socket connection, int receivedOn)
     { 
-        
     	/*When a gate subscribes add it to the listen and start listening
     	 *We shouldn't hear any communication from it, we should just send it a manager
     	 */
@@ -188,9 +187,6 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     		onManagerSubscribe(connection);
     	}
     	
-        MessageListener msgListener = new MessageListener(this, connection);
-        msgListener.setDaemon(false);
-        msgListener.start();
     
     }
     
@@ -198,7 +194,8 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     	MessageListener listener = new MessageListener(this, sock);
     	listener.setDaemon(false);
     	this.carReceivers.add(listener);
-    	
+    	listener.start();
+
     	if(this.carReceivers.size() == numGates){ //if we have the required number of gates
     		this.start();
     	}
@@ -209,6 +206,8 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     	MessageListener listener = new MessageListener(this, sock);
     	listener.setDaemon(false);
     	this.gates.add(listener);
+    	listener.start();
+    	
     }
 
     public void onServerError(ServerSocket failedSocket)
@@ -218,6 +217,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 
 	@Override
 	public void onMessageReceived(AbstractMessage message, Socket socket) {
+		
 		for(int i = 0; i < this.gates.size(); i++){ //check if a gate sent it to us
 			if(this.gates.get(i).getSocketListeningOn().equals(socket)){
 				try{
@@ -229,7 +229,8 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 				return;
 			}
 		}
-		onMessageFromManager(message);
+		
+		onMessageFromManager(message); //if it wasn't a message from a gate it is from a manager
 	}
 	
 	private void onMessageFromGate(AbstractMessage message, Socket sock) throws IOException{
@@ -253,7 +254,15 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 	}
 	
 	private void onMessageFromManager(AbstractMessage message){
-		
+		switch(message.getMessageType()){
+		case AbstractMessage.TYPE_CAR_ARRIVAL:
+		{
+			synchronized(this.parkingLot){
+				CarArrivalMessage arrival = (CarArrivalMessage) message;
+				this.parkingLot.add(new Car(arrival.getCarSentTime(), arrival.getCarReturnTime()));
+			}
+		}
+		}
 	}
 
 	@Override

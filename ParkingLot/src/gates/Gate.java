@@ -89,6 +89,7 @@ public class Gate implements MessageHandler{
 	public void onCarArrived(CarArrivalMessage arrival) {
 		Car carToQueue = new Car(arrival.getCarSentTime(), arrival.getCarReturnTime());
 
+		
 		//Add Car to queue
 		long timeArrived = arrival.getCarSentTime().getTime();
 		long leavingTime = timeArrived + amountOfTimeToWait;
@@ -97,6 +98,17 @@ public class Gate implements MessageHandler{
 		timeToLeave.setTime(leavingTime);
 		CarWrapper carWrapper = new CarWrapper(carToQueue, timeToLeave);
 		waitingCars.add(carWrapper);
+
+		while(this.numberOfTokens > 0 && this.waitingCars.size() > 0){
+			Car c = this.waitingCars.poll().carRepresenting;
+			try {
+				this.manager.writeMessage(new CarArrivalMessage(c.getTimeSent(), c.getTimeDeparts()));
+			} catch (IOException e) {
+				// TODO DEAL WITH THAT
+			}
+			this.numberOfTokens -= 1;
+		}
+		
 		
 	}
 
