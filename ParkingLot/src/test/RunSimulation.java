@@ -30,17 +30,17 @@ public class RunSimulation
         try {
             Config config = Config.getSharedInstance();
 
-            this.trafficGenerator = new TrafficGenerator(SIMULATION_LENGTH, MAGIC_POLY, config.trafficGenerator.iaddr, config.trafficGenerator.port);
+            //this.trafficGenerator = new TrafficGenerator(SIMULATION_LENGTH, MAGIC_POLY, config.trafficGenerator.gate.iaddr, config.trafficGenerator.gate.port);
 
             System.out.println("Created a traffic generator successfully");
 
             this.gates = new ArrayList<Gate>();
 
-            for(HostPort h: config.gates)
+            /*for(HostPort h: config.gates)
             {
                 Gate g = new Gate(TIME_TO_WAIT, TOKENS_TO_START, CASH_MONEY_TO_START,  h.iaddr, h.port, CASH_MONEY_PER_CAR);
                 this.gates.add(g);
-            }
+            }*/
 
             System.out.println("Created "+config.gates.length+" gates successfully");
         }

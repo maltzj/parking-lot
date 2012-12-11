@@ -32,6 +32,7 @@ public abstract class AbstractMessage {
 	
 	public static final byte TYPE_GATE = 25;
 	
+	public static final byte TYPE_CONNECT = 50;
 	
 	protected int length;
 	protected byte messageType;
@@ -127,6 +128,10 @@ public abstract class AbstractMessage {
 				case TYPE_CLOSE_CONNECTION:
 				{
 					return new SimpleMessage(TYPE_CLOSE_CONNECTION);
+				}
+				case TYPE_CONNECT:
+				{
+					return new SimpleMessage(TYPE_CONNECT);
 				}
 				case TYPE_MONEY_QUERY_MESSAGE:
 				{
@@ -275,6 +280,11 @@ public abstract class AbstractMessage {
 					break;
 				}
 				case TYPE_CLOSE_CONNECTION:
+				{
+					dataOutput.flush();
+					break;
+				}
+				case TYPE_CONNECT:
 				{
 					dataOutput.flush();
 					break;

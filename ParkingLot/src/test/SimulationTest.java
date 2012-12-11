@@ -13,7 +13,7 @@ public class SimulationTest {
 	@SuppressWarnings("unused")
 	public static void main(String[] args) throws Exception{
 		Config c = Config.getSharedInstance();
-		TrafficGenerator generator = new TrafficGenerator();
+		TrafficGenerator generator = new TrafficGenerator(c.managers);
 		
 		ArrayList<Gate> gates = new ArrayList<Gate>();
 		ArrayList<Manager> managers = new ArrayList<Manager>();
@@ -24,7 +24,7 @@ public class SimulationTest {
 		}
 		
 		for(int i = 0; i < c.managers.length; i++) {
-			managers.add(new Manager(c.managers[i].tokens, c.managers[i].money, c.managers[i].hostport.port));
+			managers.add(new Manager(-1, c.managers[i].money, c.managers[i].hostport.port));
 		}
 		
 		

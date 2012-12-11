@@ -26,14 +26,12 @@ public class ConnectionListener extends Thread {
 		while(!server.isClosed()){ //keep running for as long as the application is
 			try {
 				Socket connection = server.accept();
-				this.connectionHandler.onConnectionReceived(connection);
+				this.connectionHandler.onConnectionReceived(connection, this.port);
 			} catch (IOException e) {
 				this.connectionHandler.onServerError(this.server);
 			}
 		}
 	}
-	
-	
 	
 	public ConnectionHandler getConnectionHandler() {
 		return connectionHandler;

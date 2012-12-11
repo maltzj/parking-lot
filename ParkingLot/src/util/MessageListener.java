@@ -62,8 +62,34 @@ public class MessageListener extends Thread {
 		AbstractMessage.encodeMessage(socketListeningOn.getOutputStream(), messageToSend);
 	}
 	
+	public boolean equals(Object o){
+		if(!(o instanceof MessageListener)){
+			return false;
+		}
+		MessageListener other = (MessageListener) o;
+		return other.getSocketListeningOn().equals(this.socketListeningOn);
+	}
+	
 	public void close() throws IOException {
 		this.socketListeningOn.close();
 	}
+
+	public MessageHandler getHandler() {
+		return handler;
+	}
+
+	public void setHandler(MessageHandler handler) {
+		this.handler = handler;
+	}
+
+	public Socket getSocketListeningOn() {
+		return socketListeningOn;
+	}
+
+	public void setSocketListeningOn(Socket socketListeningOn) {
+		this.socketListeningOn = socketListeningOn;
+	}
+	
+	
 
 }

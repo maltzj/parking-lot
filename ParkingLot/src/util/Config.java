@@ -9,11 +9,10 @@ import java.net.InetAddress;
  */
 public class Config
 {
-	
-	
+
 	private static Config instance = null;
 	
-	public HostPort trafficGenerator;
+	public TrafficGenInfo trafficGenerator;
 	public GateInfo[] gates;
 	public ManagerInfo[] managers;
 	
@@ -27,6 +26,7 @@ public class Config
 	/**
 	 * Starts up the config class and initializes the TrafficGenerator and Gates.
 	 * The ipAddress defaults to localhost and the ports default to:
+	 * Traffic Generator for managers 7549
 	 * Traffic Generator at 	7500.
 	 * Gates start at 			7501 and up.
 	 * Managers start at 		8050 and up.
@@ -36,7 +36,9 @@ public class Config
 		try
 		{
 			//Set up Traffic Generator
-			trafficGenerator = new HostPort(InetAddress.getByName("localhost"), 7500);
+			trafficGenerator = new TrafficGenInfo();
+			trafficGenerator.gate = new HostPort(InetAddress.getByName("localhost"), 7500);
+			trafficGenerator.manager = new HostPort(InetAddress.getByName("localhost"), 7549);
 			
 			//Set up Gates
 			gates = new GateInfo[6];
@@ -67,7 +69,7 @@ public class Config
 	
 	public void printConfig()
 	{
-		System.out.println(trafficGenerator.iaddr + " " + trafficGenerator.port);
+		System.out.println(trafficGenerator.gate.iaddr + " " + trafficGenerator.gate.port);
 		
 		for(int i = 0; i < gates.length; i++) {
 			System.out.println(gates[i]);
@@ -100,7 +102,11 @@ public class Config
 			ret += hostport + " Number of Tokens: " + tokens + " Money: " + money;
 			return ret;
 		}
-		
+	}
+	
+	public class TrafficGenInfo {
+		public HostPort manager;
+		public HostPort gate;
 	}
 }
 

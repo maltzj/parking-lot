@@ -1,12 +1,10 @@
 package gates;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import messaging.AbstractMessage;
@@ -15,11 +13,11 @@ import messaging.GateDoneMessage;
 import messaging.GateMessage;
 import messaging.GateSubscribeMessage;
 import messaging.MoneyMessage;
+import messaging.SimpleMessage;
 import messaging.TimeMessage;
 import messaging.TimeSubscribeMessage;
 import messaging.TokenMessage;
 import util.Config;
-import util.ConnectionHandler;
 import util.MessageHandler;
 import util.MessageListener;
 import car.Car;
@@ -30,7 +28,7 @@ import car.Car;
  * @author Jonathan
  *
  */
-public class Gate implements MessageHandler, ConnectionHandler{
+public class Gate implements MessageHandler{
 	
     public static boolean stillRunning = true;
 
@@ -38,7 +36,7 @@ public class Gate implements MessageHandler, ConnectionHandler{
     long amountOfTimeToWait; //Seconds
 
     MessageListener simulationMessageListener;
-    List<MessageListener> connectedGates;
+    MessageListener manager;
     
     int numberOfTokens;
 
@@ -47,7 +45,7 @@ public class Gate implements MessageHandler, ConnectionHandler{
     
     InetAddress addrListeningOn;
     int portListeningOn;
-    private int realPort = 0;
+    private int realPort;
     
     int numberOfSadnessCars = 0;
     int totalCarWait = 0;
@@ -78,13 +76,12 @@ public class Gate implements MessageHandler, ConnectionHandler{
 		this.moneyPerCarPassed = moneyPerCarPassed;
 		
 		/*Connect to the simulation*/
-		Socket s = new Socket(c.trafficGenerator.iaddr, c.trafficGenerator.port);
+		Socket s = new Socket(c.trafficGenerator.gate.iaddr, c.trafficGenerator.gate.port);
 		simulationMessageListener = new MessageListener(this, s);
 		simulationMessageListener.setDaemon(true);
 		simulationMessageListener.start();
+		simulationMessageListener.writeMessage(new SimpleMessage(AbstractMessage.TYPE_CONNECT));
 		
-		simulationMessageListener.writeMessage(new GateSubscribeMessage(this.addrListeningOn, this.portListeningOn));
-	
 		realPort = s.getLocalPort();
     }
 	
@@ -235,14 +232,16 @@ public class Gate implements MessageHandler, ConnectionHandler{
             	}
             	case AbstractMessage.TYPE_GATE:
             	{
-            		System.out.println("Got a gate message, a la a boss " + this.portListeningOn);
+            		System.out.println("Got a gate message!!!");
             		GateMessage gateMessage = (GateMessage) message;
             		try {
 						Socket sock = new Socket(gateMessage.getAddr(), gateMessage.getPort());
 						MessageListener listener = new MessageListener(this, sock);
-						this.connectedGates.add(listener);
+						this.manager = listener;
+						this.manager.start();
+						this.simulationMessageListener.getSocketListeningOn().close();
 					} catch (IOException e) {
-						System.out.println("ERROR WHEN CONNECTING TO A NEW GATE");
+						System.out.println("ERROR WHEN CONNECTING TO THE MANAGER");
 						return;
 					}
             		
@@ -270,23 +269,6 @@ public class Gate implements MessageHandler, ConnectionHandler{
    			//disconnect the socket
    			//remove the gate from the list
    	}
-   	
-	@Override
-	public void onConnectionReceived(Socket newConnection) {
-		synchronized(this){
-			MessageListener newGate = new MessageListener(this, newConnection); //create a new message listener and start it
-			this.connectedGates.add(newGate);
-			newGate.start();
-		}
-	}
-
-
-	@Override
-	public void onServerError(ServerSocket failedServer) {
-		// TODO Auto-generated method stub
-		
-	}
-
 
        /**
         * Returns the number of cars currently waiting to enter
