@@ -9,19 +9,24 @@ public class GlobalTokenTrader extends TokenTrader {
 	}
 
 	@Override
-	public void onTokenRequestReceived() {
-		//get the number of tokens of the gate has
-		
-			//if(numTokens >= 3)
-				//take the min of 3 tokens and numTokens - 3
-			//else
-				//do nothing
+	public int onTokenRequestReceived() {
+		int currTokens = this.tokenTrader.getNumberTokens();
+		if(currTokens > 3){
+			return Math.min(3, currTokens - 3);
+		}
+		else{
+			return 0;
+		}
 	}
 
 	@Override
-	public void requestTokens() {
-		//pick two random gates that are neighbors
-		//request two tokens from each of them
+	public int requestTokens() {
+		int currTokens = this.tokenTrader.getNumberTokens();
+		if(currTokens < 3){
+			return 3 - currTokens;
+		}
+		
+		return 0;
 	}
 
 }

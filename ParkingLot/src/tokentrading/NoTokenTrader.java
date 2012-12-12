@@ -10,13 +10,13 @@ public class NoTokenTrader extends TokenTrader {
 	}
 
 	@Override
-	public void onTokenRequestReceived() {
-		//do nothing
+	public int onTokenRequestReceived() {
+		return 0;
 	}
 
 	@Override
-	public void requestTokens() {
-		//do nothing
+	public int requestTokens() {
+		return 0;
 	}
 
 }

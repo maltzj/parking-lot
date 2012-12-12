@@ -10,6 +10,6 @@ public abstract class TokenTrader {
 		this.tokenTrader = tokenTrader;
 	}
 	
-	public abstract void onTokenRequestReceived();
-	public abstract void requestTokens();
+	public abstract int onTokenRequestReceived();
+	public abstract int requestTokens();
 }
