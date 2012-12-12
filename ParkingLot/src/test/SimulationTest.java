@@ -22,7 +22,7 @@ public class SimulationTest {
 		//Startup Gates
 		for(int i = 0; i < c.gates.length; i++) {
 			gates.add(new Gate(10, c.gates[i].tokens, c.gates[i].money, c.gates[i].hostport.iaddr,
-					c.gates[i].hostport.port, 10, Gate.NO_TRADING_POLICY));
+					c.gates[i].hostport.port, 10, Gate.GLOBAL_TRADING_POLICY));
 		}
 		
 		for(int i = 0; i < c.managers.length; i++) {

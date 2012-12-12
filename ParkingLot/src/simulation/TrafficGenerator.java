@@ -66,7 +66,6 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
         
         this.managers = new ConcurrentLinkedQueue<ManagerInfo>(); //setup a list of managers
         for(ManagerInfo m: managers){
-        	System.out.println("m is " + m);
         	this.managers.add(m);
         }
         
@@ -259,6 +258,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 		case AbstractMessage.TYPE_CAR_ARRIVAL:
 		{
 			synchronized(this.parkingLot){
+				System.out.println("GOT A CAR FOR THE PARKING LOT");
 				CarArrivalMessage arrival = (CarArrivalMessage) message;
 				this.parkingLot.add(new Car(arrival.getCarSentTime(), arrival.getCarReturnTime()));
 			}
