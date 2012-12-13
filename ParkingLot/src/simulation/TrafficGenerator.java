@@ -4,26 +4,32 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import car.Car;
 
 import messaging.AbstractMessage;
 import messaging.CarArrivalMessage;
 import messaging.GateMessage;
+import messaging.GateSubscribeMessage;
 import messaging.TimeMessage;
 import messaging.TokenMessage;
 import util.Config;
 import util.Config.ManagerInfo;
 import util.ConnectionHandler;
 import util.ConnectionListener;
+import util.HostPort;
 import util.MessageHandler;
 import util.MessageListener;
+import car.Car;
 
 /**
  * This class encompases all of the TrafficGeneration capabilities within the program.  It is also somewhat responsible for the redistribution of tokens.
@@ -34,12 +40,14 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 	List<Car> parkingLot = new ArrayList<Car>();
 	
 	List<MessageListener> carReceivers;
+	Map<MessageListener, HostPort> connectedManagers;
+	
 	List<MessageListener> gates;
 	
 	ConnectionListener gatePort;
 	ConnectionListener managerPort;
 	
-	Queue<ManagerInfo> managers;
+	Queue<ManagerInfo> availableManagers;
 	
 	private int currentTime;
 	private int simulationLength;
@@ -64,15 +72,17 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
         this.gatePort.setDaemon(false);
         this.gatePort.start();
         
-        this.managers = new ConcurrentLinkedQueue<ManagerInfo>(); //setup a list of managers
+        this.availableManagers = new ConcurrentLinkedQueue<ManagerInfo>(); //setup a list of managers
         for(ManagerInfo m: managers){
-        	this.managers.add(m);
+        	this.availableManagers.add(m);
         }
         
         this.managerPort = new ConnectionListener(this, config.trafficGenerator.manager.port);
         this.managerPort.setDaemon(false);
         this.managerPort.start();
-    }
+    
+        this.connectedManagers = new HashMap<MessageListener, HostPort>();
+	}
 
 	public void run()
 	{
@@ -195,6 +205,10 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     	listener.setDaemon(false);
     	this.carReceivers.add(listener);
     	listener.start();
+    	
+    	//get a list of all currently connected connected gates
+    	//select three of those randomly
+    	//send them to the new listener
 
     	if(this.carReceivers.size() == numGates){ //if we have the required number of gates
     		this.start();
@@ -216,12 +230,12 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     }
 
 	@Override
-	public void onMessageReceived(AbstractMessage message, Socket socket) {
+	public void onMessageReceived(AbstractMessage message, MessageListener listener) {
 		
 		for(int i = 0; i < this.gates.size(); i++){ //check if a gate sent it to us
-			if(this.gates.get(i).getSocketListeningOn().equals(socket)){
+			if(this.gates.get(i).equals(listener)){
 				try{
-					this.onMessageFromGate(message, socket);
+					this.onMessageFromGate(message, listener);
 				}
 				catch(IOException e){
 					//TODO worry about that later
@@ -230,18 +244,22 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 			}
 		}
 		
-		onMessageFromManager(message); //if it wasn't a message from a gate it is from a manager
+		try { //if it wasn't a message from a gate it is from a manager
+			onMessageFromManager(message, listener);
+		} catch (IOException e) {
+			//TODO Do it!
+		} 
 	}
 	
-	private void onMessageFromGate(AbstractMessage message, Socket sock) throws IOException{
+	private void onMessageFromGate(AbstractMessage message, MessageListener listener) throws IOException{
 		switch(message.getMessageType()){
 		case AbstractMessage.TYPE_CONNECT:
 		{
-			ManagerInfo m = this.managers.poll();
+			ManagerInfo m = this.availableManagers.poll();
 			if(m == null){ //if we don't have any lfet on the queue do nothing
 				return;
 			}
-			AbstractMessage.encodeMessage(sock.getOutputStream(), new GateMessage(m.hostport));
+			listener.writeMessage(new GateMessage(m.hostport));
 			break;
 		}
 		default:
@@ -253,15 +271,45 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 		}
 	}
 	
-	private void onMessageFromManager(AbstractMessage message){
+	private void onMessageFromManager(AbstractMessage message, MessageListener listener) throws IOException{
 		switch(message.getMessageType()){
-		case AbstractMessage.TYPE_CAR_ARRIVAL:
+		case AbstractMessage.TYPE_CAR_ARRIVAL: //if one of the managers sent us a car arrival, add it to the parking lot
 		{
 			synchronized(this.parkingLot){
-				System.out.println("GOT A CAR FOR THE PARKING LOT");
 				CarArrivalMessage arrival = (CarArrivalMessage) message;
 				this.parkingLot.add(new Car(arrival.getCarSentTime(), arrival.getCarReturnTime()));
 			}
+			break;
+		}
+		case AbstractMessage.TYPE_GATE_SUBSCRIBE: //treat these as ways to broadcast manager ports
+		{
+			GateSubscribeMessage gateSub = (GateSubscribeMessage) message;
+			synchronized (this.connectedManagers) {
+				Set<MessageListener> connectedManagersSet = this.connectedManagers.keySet();
+				Iterator<MessageListener> managerIter = connectedManagersSet.iterator();
+				
+				if(connectedManagers.size() <= 3){ //if there are less than three connected managers send them all
+					
+					while(managerIter.hasNext()){
+						HostPort toSend = this.connectedManagers.get(managerIter.next());
+						listener.writeMessage(new GateMessage(toSend));
+					}
+					
+				}
+				
+				else{ //otherwise just generate three random numbers
+					List<MessageListener> managersAsList =  Arrays.asList(connectedManagersSet.toArray(new MessageListener[0])); //give me a list of managers
+					Collections.shuffle(managersAsList);
+					for(int i = 0; i < 3; i++){
+						listener.writeMessage(new GateMessage(this.connectedManagers.get(managersAsList.get(i))));
+					}
+				}
+				
+			}
+			
+			
+			this.connectedManagers.put(listener, new HostPort(gateSub.getAddressOfGate(), gateSub.getPort()));
+			break;
 		}
 		}
 	}

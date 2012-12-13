@@ -144,6 +144,8 @@ public class Gate implements MessageHandler{
 		Calendar timeToCheckAgainst = Calendar.getInstance();
 		timeToCheckAgainst.setTime(newTime);
 
+		boolean allowedCar = false;
+		
 		for(Iterator<CarWrapper> iter = this.waitingCars.iterator(); iter.hasNext(); )
 		{
 			CarWrapper currentCar = iter.next();
@@ -168,11 +170,15 @@ public class Gate implements MessageHandler{
 					this.totalCarWait += newTime.getTime() - currentCar.getCarRepresenting().getTimeSent().getTime();
 
 					iter.remove();
+					
+					allowedCar = true;
 				} 
 			}
 		}
 		
-		checkTokenStatus();
+		if(allowedCar){
+			checkTokenStatus();
+		}
 	}
 
 	/**
@@ -214,7 +220,7 @@ public class Gate implements MessageHandler{
 	 * @param message The message which is being acted upon
 	 */
 
-	public void onMessageReceived(AbstractMessage message, Socket receivedFrom) {
+	public void onMessageReceived(AbstractMessage message, MessageListener receivedFrom) {
 		synchronized(this){
 			switch(message.getMessageType())
 			{

@@ -22,11 +22,13 @@ public class Manager implements ConnectionHandler, MessageHandler {
 	MessageListener gateListener;
 	MessageListener trafficGenListener;
 	
-	List<MessageListener> managers = new ArrayList<MessageListener>();
+	List<MessageListener> neighbors = new ArrayList<MessageListener>();
 	
 	ConnectionListener gateConnectionListener;
+	ConnectionListener managerConnectionListener;
 	
 	int gatePort;
+	int managerPort;
 	
 	int numberOfTokens;
 	int numberOfCars;
@@ -45,6 +47,10 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		
 		gateConnectionListener = new ConnectionListener(this, this.gatePort);
 		gateConnectionListener.start();
+	
+		this.managerPort = managerPort;
+		this.managerConnectionListener = new ConnectionListener(this, this.managerPort);
+		this.managerConnectionListener.start();
 	}
 	
 	/**
@@ -84,13 +90,14 @@ public class Manager implements ConnectionHandler, MessageHandler {
 				trafficGenListener = new MessageListener(this, trafficSock);
 				trafficGenListener.start();
 				try { //become subscribed and write a gate subscribe message
-					trafficGenListener.writeMessage(new GateSubscribeMessage(this.gateConnectionListener.getServer().getInetAddress(), this.gatePort));
+					trafficGenListener.writeMessage(new GateSubscribeMessage(this.gateConnectionListener.getServer().getInetAddress(), this.managerPort));
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 				}
 			}
 		}
 		else{  //otherwise we received this from another manager
+			System.out.println("Manager #"+ this.managerPort + " Got a connection on our manager port!!");
 			MessageListener listener = new MessageListener(this, newConnection);
 			listener.setDaemon(false);
 			listener.start();
@@ -104,16 +111,16 @@ public class Manager implements ConnectionHandler, MessageHandler {
 	}
 
 	@Override
-	public void onMessageReceived(AbstractMessage message, Socket socket) {
+	public void onMessageReceived(AbstractMessage message, MessageListener listener) {
 		synchronized(this){
-			if(socket.equals(this.gateListener.getSocketListeningOn())){
+			if(listener.equals(this.gateListener)){
 				try {
 					this.onMessageFromGate(message);
 				} catch (IOException e) {
 					//TODO figure this out
 				}
 			}
-			else if(socket.equals(this.trafficGenListener.getSocketListeningOn())){ //if we got a message from traffic
+			else if(listener.equals(this.trafficGenListener)){ //if we got a message from traffic
 				try{
 					onMessageFromTraffic(message);		
 				}
@@ -123,7 +130,7 @@ public class Manager implements ConnectionHandler, MessageHandler {
 			}
 			else{ //otherwise it is message from a manager
 				try {
-					onMessageFromManager(message, socket);
+					onMessageFromManager(message, listener);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -132,7 +139,7 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		}
 	}
 	
-	private void onMessageFromManager(AbstractMessage message, Socket socket) throws IOException{
+	private void onMessageFromManager(AbstractMessage message, MessageListener listener) throws IOException{
 		switch(message.getMessageType()){
 		case AbstractMessage.TYPE_TOKEN_MESSAGE:
 		{
@@ -167,7 +174,8 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		}
 		default:
 		{
-			System.out.println("GOT A BAD MESSAGE FROM A GATE");
+			
+			System.out.println("GOT A BAD MESSAGE FROM A GATE " + message.getMessageType());
 		}
 		}
 	}
@@ -196,10 +204,16 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		case AbstractMessage.TYPE_GATE: //use this to note other managers
 		{
 			GateMessage gateMess = (GateMessage) message;
+			Socket sock = new Socket(gateMess.getAddr(), gateMess.getPort());
+			MessageListener neighbor = new MessageListener(this, sock);
+			neighbor.start();
 			
+			this.neighbors.add(neighbor);
+			break;
 		}
 		default:
 		{
+			System.out.println("Message type is " + message.getMessageType());
 			System.out.println("GOT A BAD MESSAGE FROM THE TRAFFIC GEN!");
 		}
 		}

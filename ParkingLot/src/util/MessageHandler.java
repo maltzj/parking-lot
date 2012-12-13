@@ -7,6 +7,6 @@ import messaging.AbstractMessage;
 public interface MessageHandler {
 
 	
-	public void onMessageReceived(AbstractMessage message, Socket socket);
+	public void onMessageReceived(AbstractMessage message, MessageListener socket);
 	public void onSocketClosed(Socket socket);
 }

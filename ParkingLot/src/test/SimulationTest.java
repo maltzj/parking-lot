@@ -6,7 +6,6 @@ import java.util.ArrayList;
 
 import manager.Manager;
 import simulation.TrafficGenerator;
-import tokentrading.NoTokenTrader;
 import util.Config;
 
 public class SimulationTest {

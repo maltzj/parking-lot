@@ -1,10 +1,10 @@
 package util;
-import messaging.*;
-import java.util.*;
-import util.Config;
-import util.HostPort;
-import java.net.*;
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+
+import messaging.AbstractMessage;
 /** This contains all the utilities you may ever need. */
 
 public class Everything

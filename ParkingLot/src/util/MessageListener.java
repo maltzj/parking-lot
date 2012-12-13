@@ -33,17 +33,22 @@ public class MessageListener extends Thread {
 			AbstractMessage messageReceived;
 			try {
 				messageReceived = AbstractMessage.decodeMessage(socketListeningOn.getInputStream());
+				
+				if(messageReceived == null){ //if we got sent a bad message don't worry about it
+					continue;
+				}
+				
 			} catch (IOException e) {
                 //e.printStackTrace();
                 try {
 					this.socketListeningOn.close();
-				} catch (IOException e1) {
-					//it's already closed so we don't need to worry about that
+				} catch (IOException e1) {//it's already closed so we don't need to worry about that		
 				}
+                
                 handler.onSocketClosed(this.socketListeningOn);
 				break;
 			}
-			handler.onMessageReceived(messageReceived, socketListeningOn);
+			handler.onMessageReceived(messageReceived, this);
 		}
 		try {
 			socketListeningOn.close();
