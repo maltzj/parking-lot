@@ -29,11 +29,11 @@ import car.Car;
 public class TimeBombGate extends Gate implements MessageHandler
 {
     public TimeBombGate(long timeToWait, int tokensToStartWith, int moneyToStartWith, InetAddress addr, int port, int moneyPerCarPassed, int tradingPolicy) throws Exception
-	{
+    {
         super(timeToWait, tokensToStartWith, moneyToStartWith, addr, port, moneyPerCarPassed, tradingPolicy);
     }
 
-	public void onTimeUpdate(TimeMessage messageFromChronos)
+    public void onTimeUpdate(TimeMessage messageFromChronos)
     {
         Date time = messageFromChronos.getNewTime();
         Date tmptime = new Date(500 * 1000);
