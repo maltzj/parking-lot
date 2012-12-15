@@ -91,13 +91,28 @@ public abstract class AbstractMessage {
 				case TYPE_TOKEN_REQUEST_MESSAGE:
 				{
 					int length = dataInput.readInt();
-					int tokens = dataInput.readInt();
+					int tokens = dataInput.readInt(); //get length and TTL
 					int ttl = dataInput.readInt();
 					byte[] hostPorts = new byte[length - 8];
 					dataInput.read(hostPorts);
-					String formatted = new String(hostPorts, "ASCII");
+					String formatted = new String(hostPorts, "ASCII"); //encode the bytes
 					Stack<HostPort> stackOfHosts = AbstractMessage.convertStringToHostPort(formatted);
 					return new TokenRequestMessage(tokens, stackOfHosts, ttl);
+				}
+				case TYPE_TOKEN_RESPONSE_MESSAGE:
+				{
+					int length = dataInput.readInt();
+					int tokens = dataInput.readInt();
+					byte[] stackAsBytes = new byte[length - 4];
+					dataInput.read(stackAsBytes);
+					String stackString = new String(stackAsBytes, "ASCII"); //encode the bytes
+					Stack<HostPort> stackOfHosts = AbstractMessage.convertStringToHostPort(stackString);
+					return new TokenResponseMessage(tokens, stackOfHosts);
+				}
+				case TYPE_TOKEN_REQUIRE_MESSAGE:
+				{
+					int tokens = dataInput.readInt();
+					return new TokenRequireMessage(tokens);
 				}
 				case TYPE_TOKEN_MESSAGE:
 				{
@@ -229,7 +244,23 @@ public abstract class AbstractMessage {
 					dataOutput.writeInt(requestMessage.getTokensRequested());
 					dataOutput.writeInt(requestMessage.getTtl());
 					dataOutput.write(parsedStack.getBytes("ASCII"));
+					dataOutput.flush();
 					break;
+				}
+				case TYPE_TOKEN_RESPONSE_MESSAGE:
+				{
+					TokenResponseMessage responseMessage = (TokenResponseMessage) messageWriting;
+					String parsedStack = AbstractMessage.convertHostPortsToStrings(responseMessage.getReceivers());
+					dataOutput.writeInt(parsedStack.length() + 4);
+					dataOutput.writeInt(responseMessage.getNumberOfTokens());
+					dataOutput.write(parsedStack.getBytes("ASCII"));
+					dataOutput.flush();
+				}
+				case TYPE_TOKEN_REQUIRE_MESSAGE:
+				{
+					TokenRequireMessage requireMessage = (TokenRequireMessage) messageWriting;
+					dataOutput.writeInt(requireMessage.getTokensRequired());
+					dataOutput.flush();
 				}
 				case TYPE_TOKEN_MESSAGE:
 				{
@@ -335,32 +366,30 @@ public abstract class AbstractMessage {
 	
 	private static String convertHostPortsToStrings(Stack<HostPort> hosts){
 		StringBuilder encoded = new StringBuilder("");
-		while(!hosts.isEmpty()){
+		while(!hosts.isEmpty()){ //for all the items in the stack
 			HostPort top = hosts.pop();
 			InetAddress ipAddr = top.iaddr;
 			int port = top.port;
-			encoded.append(ipAddr.getHostAddress());
+			encoded.append(ipAddr.getHostAddress()); //get the ip address
 			encoded.append(":");
-			encoded.append(port);
-			encoded.append(";");
+			encoded.append(port); //add the port
+			encoded.append(";"); //delimit it accordingly
 		}
 		return encoded.toString();
 	}
 	
 	private static Stack<HostPort> convertStringToHostPort(String hostPorts){
 		Stack<HostPort> receivers = new Stack<HostPort>();
-		String[] hosts = hostPorts.split(";");
+		String[] hosts = hostPorts.split(";"); //split the string on semicolons
 		for(String host: hosts){
-			String[] information = host.split(":");
+			String[] information = host.split(":"); //split each string on semicolol
 			try {
-				InetAddress addr = InetAddress.getByAddress(information[0].getBytes("ASCII"));
+				InetAddress addr = InetAddress.getByAddress(information[0].getBytes("ASCII")); //format the string for bytes
 				int port = Integer.parseInt(information[1]);
 				HostPort toAdd = new HostPort(addr, port);
 				receivers.push(toAdd);
 			} catch (UnknownHostException e) {
 				// TODO Auto-generated catch block
-				
-				
 				e.printStackTrace();
 			} catch (UnsupportedEncodingException e) {
 				// TODO Auto-generated catch block
