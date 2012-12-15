@@ -10,9 +10,7 @@ CLASSPATH = $(CURRPATH)/src
 CLASSES = \
         src/test/SimulationTest.java
 
-fuck: you
-
-go:
+go: classes
 	CLASSPATH=$(CLASSPATH) java -ea test.SimulationTest $(filter-out $@, $(MAKECMDGOALS))
 
 default: classes

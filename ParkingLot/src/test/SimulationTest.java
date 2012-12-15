@@ -2,6 +2,7 @@ package test;
 
 import gates.Gate;
 import gates.FastAndLooseGate;
+import gates.TimeBombGate;
 
 import java.util.ArrayList;
 
@@ -46,7 +47,7 @@ public class SimulationTest {
                     gates.add(new Gate(10, c.gates[i].tokens, c.gates[i].money, c.gates[i].hostport.iaddr, c.gates[i].hostport.port, 10, Gate.GLOBAL_TRADING_POLICY));
                     break;
                 case Config.GateInfo.TIME_BOMB:
-                    //insert kyle code here.
+                    gates.add(new TimeBombGate(10, c.gates[i].tokens, c.gates[i].money, c.gates[i].hostport.iaddr, c.gates[i].hostport.port, 10, Gate.GLOBAL_TRADING_POLICY));
                     break;
                 case Config.GateInfo.FAST_AND_LOOSE:
                     gates.add(new FastAndLooseGate(10, c.gates[i].tokens, c.gates[i].money, c.gates[i].hostport.iaddr, c.gates[i].hostport.port, 10, Gate.GLOBAL_TRADING_POLICY));

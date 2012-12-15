@@ -14,6 +14,8 @@ public class MessageListener extends Thread {
 
 	private MessageHandler handler;
 	private Socket socketListeningOn;
+
+    public boolean die = false;
 	
 	/**
 	 * Creates a simulation listener which listens on the given socket
@@ -28,33 +30,34 @@ public class MessageListener extends Thread {
 	
 	@Override
 	public void run() {
-		while(!this.socketListeningOn.isClosed()) //Keep running until we give it permission to die
-		{
-			AbstractMessage messageReceived;
-			try {
-				messageReceived = AbstractMessage.decodeMessage(socketListeningOn.getInputStream());
-				
-				if(messageReceived == null){ //if we got sent a bad message don't worry about it
-					continue;
-				}
-				
-			} catch (IOException e) {
+        while(!die && !this.socketListeningOn.isClosed()) //Keep running until we give it permission to die
+        {
+            AbstractMessage messageReceived;
+            try {
+                messageReceived = AbstractMessage.decodeMessage(socketListeningOn.getInputStream());
+                
+                if(messageReceived == null){ //if we got sent a bad message don't worry about it
+                    continue;
+                }
+                
+            } catch (IOException e) {
                 //e.printStackTrace();
                 try {
-					this.socketListeningOn.close();
-				} catch (IOException e1) {//it's already closed so we don't need to worry about that		
-				}
+                    this.socketListeningOn.close();
+                } catch (IOException e1) {//it's already closed so we don't need to worry about that		
+                }
                 
                 handler.onSocketClosed(this.socketListeningOn);
-				break;
-			}
-			handler.onMessageReceived(messageReceived, this);
-		}
-		try {
-			socketListeningOn.close();
-		} catch (IOException e) {
-			//cry
-		}
+                break;
+            }
+            handler.onMessageReceived(messageReceived, this);
+        }
+        System.out.println(" I am dead");
+        try {
+            socketListeningOn.close();
+        } catch (IOException e) {
+            //cry. WTF ARE WE DOING CLOSING THE SOCKET AFTER IT ALREADY CLOSED.
+        }
 	}
 	
 	/**
