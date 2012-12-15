@@ -359,6 +359,8 @@ public abstract class AbstractMessage {
 				receivers.push(toAdd);
 			} catch (UnknownHostException e) {
 				// TODO Auto-generated catch block
+				
+				
 				e.printStackTrace();
 			} catch (UnsupportedEncodingException e) {
 				// TODO Auto-generated catch block
