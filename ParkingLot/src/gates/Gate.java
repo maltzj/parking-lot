@@ -18,6 +18,7 @@ import messaging.TimeMessage;
 import messaging.TokenMessage;
 import messaging.TokenRequestMessage;
 import messaging.TokenRequireMessage;
+import messaging.TokenResponseMessage;
 import tokentrading.GlobalTokenTrader;
 import tokentrading.NoTokenTrader;
 import tokentrading.ProfitTokenTrader;
@@ -265,6 +266,22 @@ public class Gate implements MessageHandler{
 				this.amountOfMoney += money.getAmountOfMoney();
 				break;
 			}
+			case AbstractMessage.TYPE_TOKEN_REQUEST_MESSAGE:
+			{
+				TokenRequestMessage request = (TokenRequestMessage) message;
+				int tokensToSend = trader.onTokenRequestReceived();
+				
+				if(tokensToSend >= request.getTokensRequested()){
+					tokensToSend = request.getTokensRequested();
+				}
+				
+				TokenResponseMessage response = new TokenResponseMessage(tokensToSend, request.getReceivers());
+				try {
+					this.manager.writeMessage(response);
+				} catch (IOException e) {
+					//TODO Do stuff
+				}
+			}
 			case AbstractMessage.TYPE_GATE:
 			{
 				GateMessage gateMessage = (GateMessage) message;
@@ -433,3 +450,4 @@ public class Gate implements MessageHandler{
 
 	}
 }
+>>>>>>> Added the basic formula for dealing with token requests
