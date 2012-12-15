@@ -18,17 +18,17 @@ public class SimulationTest {
 		ArrayList<Gate> gates = new ArrayList<Gate>();
 		ArrayList<Manager> managers = new ArrayList<Manager>();
 		
+		for(int i = 0; i < c.managers.length; i++) {
+			managers.add(new Manager(-1, c.managers[i].money, c.managers[i].hostport.port, c.managers[i].managerPort.port));
+		}
+	
+		
 		//Startup Gates
 		for(int i = 0; i < c.gates.length; i++) {
 			gates.add(new Gate(10, c.gates[i].tokens, c.gates[i].money, c.gates[i].hostport.iaddr,
 					c.gates[i].hostport.port, 10, Gate.GLOBAL_TRADING_POLICY));
 		}
-		
-		for(int i = 0; i < c.managers.length; i++) {
-			managers.add(new Manager(-1, c.managers[i].money, c.managers[i].hostport.port, c.managers[i].managerPort.port));
-		}
-		
-		
+	
 	}
 	
 }

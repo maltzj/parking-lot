@@ -268,6 +268,7 @@ public class Gate implements MessageHandler{
 			{
 				GateMessage gateMessage = (GateMessage) message;
 				try {
+                    System.out.println("Trying to connect to manager on "+gateMessage.getPort());
 					Socket sock = new Socket(gateMessage.getAddr(), gateMessage.getPort());
 					MessageListener listener = new MessageListener(this, sock);
 					this.manager = listener;
@@ -276,7 +277,6 @@ public class Gate implements MessageHandler{
 					this.manager.writeMessage(new TokenMessage(this.numberOfTokens));
 					this.simulationMessageListener.getSocketListeningOn().close();
 				} catch (IOException e) {
-                    e.printStackTrace();
 					System.out.println("ERROR WHEN CONNECTING TO THE MANAGER");
 					return;
 				}
