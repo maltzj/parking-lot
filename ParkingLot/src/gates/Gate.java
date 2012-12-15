@@ -114,12 +114,13 @@ public class Gate implements MessageHandler{
 		}
 
 		realPort = s.getLocalPort();
-			}
+	}
 
 
 	public void onCarArrived(CarArrivalMessage arrival) {
+		
 		Car carToQueue = new Car(arrival.getCarSentTime(), arrival.getCarReturnTime());
-
+		
 		//Add Car to queue
 		long timeArrived = arrival.getCarSentTime().getTime();
 		long leavingTime = timeArrived + amountOfTimeToWait;
@@ -134,7 +135,8 @@ public class Gate implements MessageHandler{
 			this.sendCarToParkingLot(c);
 		}
 		
-
+		this.checkTokenStatus();
+		
 	}
 
 

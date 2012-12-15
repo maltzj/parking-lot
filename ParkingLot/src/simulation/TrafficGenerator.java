@@ -205,11 +205,6 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     	listener.setDaemon(false);
     	this.carReceivers.add(listener);
     	listener.start();
-    	
-    	//get a list of all currently connected connected gates
-    	//select three of those randomly
-    	//send them to the new listener
-
     	if(this.carReceivers.size() == numGates){ //if we have the required number of gates
     		this.start();
     	}

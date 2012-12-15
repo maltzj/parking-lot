@@ -149,7 +149,7 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		}
 		case AbstractMessage.TYPE_TOKEN_REQUEST_MESSAGE:
 		{
-			//TODO figure out what to do here
+			
 		}
 		}
 	}
@@ -172,9 +172,14 @@ public class Manager implements ConnectionHandler, MessageHandler {
 			}
 			break;
 		}
+		case AbstractMessage.TYPE_TOKEN_REQUEST_MESSAGE:
+		{
+			for(MessageListener neighbor: neighbors){
+				neighbor.writeMessage(message);
+			}
+		}
 		default:
 		{
-			
 			System.out.println("GOT A BAD MESSAGE FROM A GATE " + message.getMessageType());
 		}
 		}
@@ -184,7 +189,6 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		switch(message.getMessageType()){
 		case AbstractMessage.TYPE_CAR_ARRIVAL: //this means a car is being sent to the parking lot
 		{
-			System.out.println("A manager received a car from traffic ");
 			this.gateListener.writeMessage(message);
 			this.numberOfCars += 1;
 			break;
