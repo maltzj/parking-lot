@@ -13,7 +13,7 @@ CLASSES = \
 fuck: you
 
 go:
-	CLASSPATH=$(CLASSPATH) java -ea test.SimulationTest
+	CLASSPATH=$(CLASSPATH) java -ea test.SimulationTest $(filter-out $@, $(MAKECMDGOALS))
 
 default: classes
 

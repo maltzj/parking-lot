@@ -22,6 +22,26 @@ public class Config
 		} 
 		return instance;
 	}
+
+    /** Make two of our gates fast and loose */
+    public static Config getByzantine()
+    {
+        Config c = getSharedInstance();
+        c.gates[0].makeFastAndLoose();
+        c.gates[1].makeFastAndLoose();
+        
+        return c;
+    }
+
+    /** Make two of our gates time bombs. */
+    public static Config getFailure()
+    {
+        Config c = getSharedInstance();
+        c.gates[0].makeTimeBomb();
+        c.gates[1].makeTimeBomb();
+        
+        return c;
+    }
 	
 	/**
 	 * Starts up the config class and initializes the TrafficGenerator and Gates.
@@ -98,12 +118,29 @@ public class Config
 		public HostPort hostport;
 		public int tokens;
 		public int money;
-		
+
+        public static final int NORMAL = 0;
+        public static final int TIME_BOMB = 1;
+        public static final int FAST_AND_LOOSE = 2;
+
+
+        public int type = NORMAL;
+
 		public String toString() {
 			String ret = "Manager -- ";
 			ret += hostport + " Number of Tokens: " + tokens + " Money: " + money;
 			return ret;
 		}
+
+        public void makeFastAndLoose()
+        {
+            this.type = FAST_AND_LOOSE;
+        }
+
+        public void makeTimeBomb()
+        {
+            this.type = TIME_BOMB;
+        }
 	}
 	
 	public class TrafficGenInfo {
