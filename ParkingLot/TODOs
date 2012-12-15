@@ -1,7 +1,4 @@
-Jerry
-    - Create a MessageHandler when a connection is received in trafficGenerator.
-    - Make gates start up somehow. Make them send shit to TrafficGenerator - Use 
-
-Brozas/V 
-    - Figure out how our Messages are sent between things. Do we want to serialize? Do we want to make classes explode or what? - Serializable doesn't do anything for us that we don't already do.
-    - Consider if we want to make AbstractMessage work with ObjectInput/Output Streams.
+- Make redistribution better.
+    * right now our global strategy requires that we have 3 tokens at all times. We need to deal with corner cases here. What if there ain't 3 tokens in the world.
+    * Perhaps we can use info about parking lot size to further facilitate this process
+- Make gates byzantine

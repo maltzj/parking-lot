@@ -268,7 +268,6 @@ public class Gate implements MessageHandler{
 			{
 				GateMessage gateMessage = (GateMessage) message;
 				try {
-                    System.out.println("Trying to connect to manager on "+gateMessage.getPort());
 					Socket sock = new Socket(gateMessage.getAddr(), gateMessage.getPort());
 					MessageListener listener = new MessageListener(this, sock);
 					this.manager = listener;
