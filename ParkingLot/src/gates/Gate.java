@@ -293,7 +293,7 @@ public class Gate implements MessageHandler{
 	}
 
 
-	private void checkTokenStatus(){
+	protected void checkTokenStatus(){
 		int tokensToRequest = this.trader.requestTokens();
 		
 		System.out.println("We need " + tokensToRequest + " tokens and we have " + this.numberOfTokens);
@@ -416,7 +416,7 @@ public class Gate implements MessageHandler{
 	/**
 	 * This is just a utility class which easily wraps the car and the time that it should leave the queue.
 	 */
-	private static class CarWrapper {
+	protected static class CarWrapper {
 		Car carRepresenting;
 		Date timeToLeaveQueue;
 
