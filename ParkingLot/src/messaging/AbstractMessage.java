@@ -5,8 +5,13 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Date;
+import java.util.Stack;
+
+import util.HostPort;
 
 public abstract class AbstractMessage {
 
@@ -14,9 +19,12 @@ public abstract class AbstractMessage {
 	public static final byte TYPE_GATE_SUBSCRIBE = 2;
 	public static final byte TYPE_TIME_SUBSCRIBE = 3;
 	public static final byte TYPE_TIME_MESSAGE = 4;
+	
 	public static final byte TYPE_TOKEN_REQUEST_MESSAGE = 6;
 	public static final byte TYPE_TOKEN_MESSAGE = 7;
 	public static final byte TYPE_MONEY_MESSAGE = 8;
+	public static final byte TYPE_TOKEN_REQUIRE_MESSAGE = 9;
+	public static final byte TYPE_TOKEN_RESPONSE_MESSAGE = 100;
 	
 	public static final byte TYPE_GATE_DONE = 10;
 	public static final byte TYPE_LOT_DONE = 11;
@@ -82,8 +90,14 @@ public abstract class AbstractMessage {
 				}
 				case TYPE_TOKEN_REQUEST_MESSAGE:
 				{
-					int numberOfTokens = dataInput.readInt();
-					return new TokenRequestMessage(numberOfTokens);
+					int length = dataInput.readInt();
+					int tokens = dataInput.readInt();
+					int ttl = dataInput.readInt();
+					byte[] hostPorts = new byte[length - 8];
+					dataInput.read(hostPorts);
+					String formatted = new String(hostPorts, "ASCII");
+					Stack<HostPort> stackOfHosts = AbstractMessage.convertStringToHostPort(formatted);
+					return new TokenRequestMessage(tokens, stackOfHosts, ttl);
 				}
 				case TYPE_TOKEN_MESSAGE:
 				{
@@ -210,8 +224,11 @@ public abstract class AbstractMessage {
 				case TYPE_TOKEN_REQUEST_MESSAGE:
 				{
 					TokenRequestMessage requestMessage = (TokenRequestMessage) messageWriting;
-					dataOutput.writeInt(requestMessage.getTotalNumberOfTokensRequested());
-					dataOutput.flush();
+					String parsedStack = AbstractMessage.convertHostPortsToStrings(requestMessage.getReceivers());
+					dataOutput.writeInt(parsedStack.length()  + 8);
+					dataOutput.writeInt(requestMessage.getTokensRequested());
+					dataOutput.writeInt(requestMessage.getTtl());
+					dataOutput.write(parsedStack.getBytes("ASCII"));
 					break;
 				}
 				case TYPE_TOKEN_MESSAGE:
@@ -314,5 +331,41 @@ public abstract class AbstractMessage {
 	public byte getMessageType()
 	{
 		return this.messageType;
+	}
+	
+	private static String convertHostPortsToStrings(Stack<HostPort> hosts){
+		StringBuilder encoded = new StringBuilder("");
+		while(!hosts.isEmpty()){
+			HostPort top = hosts.pop();
+			InetAddress ipAddr = top.iaddr;
+			int port = top.port;
+			encoded.append(ipAddr.getHostAddress());
+			encoded.append(":");
+			encoded.append(port);
+			encoded.append(";");
+		}
+		return encoded.toString();
+	}
+	
+	private static Stack<HostPort> convertStringToHostPort(String hostPorts){
+		Stack<HostPort> receivers = new Stack<HostPort>();
+		String[] hosts = hostPorts.split(";");
+		for(String host: hosts){
+			String[] information = host.split(":");
+			try {
+				InetAddress addr = InetAddress.getByAddress(information[0].getBytes("ASCII"));
+				int port = Integer.parseInt(information[1]);
+				HostPort toAdd = new HostPort(addr, port);
+				receivers.push(toAdd);
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		return receivers;
 	}
 }

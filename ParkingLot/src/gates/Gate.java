@@ -17,6 +17,7 @@ import messaging.SimpleMessage;
 import messaging.TimeMessage;
 import messaging.TokenMessage;
 import messaging.TokenRequestMessage;
+import messaging.TokenRequireMessage;
 import tokentrading.GlobalTokenTrader;
 import tokentrading.NoTokenTrader;
 import tokentrading.ProfitTokenTrader;
@@ -293,14 +294,14 @@ public class Gate implements MessageHandler{
 	}
 
 
-	protected void checkTokenStatus(){
+	private void checkTokenStatus(){
 		int tokensToRequest = this.trader.requestTokens();
 		
 		System.out.println("We need " + tokensToRequest + " tokens and we have " + this.numberOfTokens);
 		
 		if(tokensToRequest > 0){
 			try {
-				this.manager.writeMessage(new TokenRequestMessage(tokensToRequest));
+				this.manager.writeMessage(new TokenRequireMessage(tokensToRequest));
 			} catch (IOException e) {
 				// TODO Don't do anything???
 			}
@@ -416,7 +417,7 @@ public class Gate implements MessageHandler{
 	/**
 	 * This is just a utility class which easily wraps the car and the time that it should leave the queue.
 	 */
-	protected static class CarWrapper {
+	private static class CarWrapper {
 		Car carRepresenting;
 		Date timeToLeaveQueue;
 
