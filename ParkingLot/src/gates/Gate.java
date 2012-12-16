@@ -247,7 +247,7 @@ public class Gate implements MessageHandler{
 			{
 				TokenMessage tokenMessage = (TokenMessage) message;
 				this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
-
+				System.out.println("Received a token message and now I have " + this.numberOfTokens + " tokens on " + this.realPort);
 				break;
 			}
 			case AbstractMessage.TYPE_MONEY_QUERY_MESSAGE:
@@ -281,6 +281,7 @@ public class Gate implements MessageHandler{
 				} catch (IOException e) {
 					//TODO Do stuff
 				}
+				break;
 			}
 			case AbstractMessage.TYPE_GATE:
 			{
@@ -290,7 +291,6 @@ public class Gate implements MessageHandler{
 					MessageListener listener = new MessageListener(this, sock);
 					this.manager = listener;
 					this.manager.start();
-					this.manager.writeMessage(new TokenMessage(this.numberOfTokens));
 					this.manager.writeMessage(new TokenMessage(this.numberOfTokens));
 					this.simulationMessageListener.getSocketListeningOn().close();
 				} catch (IOException e) {
@@ -313,8 +313,6 @@ public class Gate implements MessageHandler{
 
 	private void checkTokenStatus(){
 		int tokensToRequest = this.trader.requestTokens();
-		
-		System.out.println("We need " + tokensToRequest + " tokens and we have " + this.numberOfTokens);
 		
 		if(tokensToRequest > 0){
 			try {
@@ -420,10 +418,11 @@ public class Gate implements MessageHandler{
 
 		CarArrivalMessage message = new CarArrivalMessage(new Date(), carWrapper.getCarRepresenting().getTimeDeparts());
 
-		if(this.numberOfTokens >0){
+		if(this.numberOfTokens > 0){
 			try {
 				this.manager.writeMessage(message);
 				this.numberOfTokens --;
+				System.out.println("number of tokens that the gate counts is " + this.numberOfTokens);
 			} catch (IOException e) {
 				//Do stuff
 			}
@@ -450,4 +449,3 @@ public class Gate implements MessageHandler{
 
 	}
 }
->>>>>>> Added the basic formula for dealing with token requests

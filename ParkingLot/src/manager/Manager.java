@@ -14,6 +14,7 @@ import messaging.GateMessage;
 import messaging.GateSubscribeMessage;
 import messaging.TokenMessage;
 import messaging.TokenRequestMessage;
+import messaging.TokenRequireMessage;
 import messaging.TokenResponseMessage;
 import util.Config;
 import util.ConnectionHandler;
@@ -24,6 +25,8 @@ import util.MessageListener;
 
 public class Manager implements ConnectionHandler, MessageHandler {
 
+	
+	private static final int ttl = 2;
 	
 	MessageListener gateListener;
 	MessageListener trafficGenListener;
@@ -107,7 +110,6 @@ public class Manager implements ConnectionHandler, MessageHandler {
 			}
 		}
 		else{  //otherwise we received this from another manager
-			System.out.println("Manager #"+ this.managerPort + " Got a connection on our manager port!!");
 			MessageListener listener = new MessageListener(this, newConnection);
 			listener.setDaemon(false);
 			listener.start();
@@ -156,17 +158,34 @@ public class Manager implements ConnectionHandler, MessageHandler {
 			TokenMessage tokenMessage = (TokenMessage) message;
 			this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
 			this.gateListener.writeMessage(tokenMessage);
+			break;
 		}
 		case AbstractMessage.TYPE_TOKEN_REQUEST_MESSAGE:
 		{
 			TokenRequestMessage request = (TokenRequestMessage) message;
 			HostPort hp = new HostPort(listener.getSocketListeningOn().getInetAddress(), listener.getSocketListeningOn().getLocalPort());
-			request.getReceivers().push(hp);		
+			request.getReceivers().push(hp);
+			this.gateListener.writeMessage(request);
+			break;
+		}
+		case AbstractMessage.TYPE_TOKEN_RESPONSE_MESSAGE:
+		{
+			TokenResponseMessage response = (TokenResponseMessage) message;
+			HostPort hp = response.getReceivers().pop();
+			
+			if(hp != null){
+				MessageListener neighbor = this.findNeighbor(hp);
+				neighbor.writeMessage(new TokenResponseMessage(response.getNumberOfTokens(), response.getReceivers()));
+			}
+			else{
+				this.numberOfTokens += response.getNumberOfTokens();
+				System.out.println("gate number is " + this.gatePort + " and number of tokens is now " + this.numberOfTokens);
+				this.gateListener.writeMessage(new TokenMessage(response.getNumberOfTokens()));
+			}
 		}
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void onMessageFromGate(AbstractMessage message) throws IOException{
 		switch(message.getMessageType()){
 		case AbstractMessage.TYPE_CAR_ARRIVAL: //pass on any cars to our gate
@@ -175,8 +194,10 @@ public class Manager implements ConnectionHandler, MessageHandler {
 				this.trafficGenListener.writeMessage(message);
 				this.numberOfCars--;
 				this.numberOfTokens--;
+				System.out.println("Received a car arrival message on " + this.gatePort + " with number of tokens " + this.numberOfTokens);
 			}
 			else{
+				System.out.println(this.numberOfTokens + " is the current number of tokens " + " and we currently say the gate has " + this.numberOfTokens + " tokens on " + this.gatePort);
 				System.out.println("ONE OF OUR GATES IS BYZANTINE");
 			}
 			break;
@@ -185,13 +206,16 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		{
 			if(this.numberOfTokens == -1){
 				this.numberOfTokens = ((TokenMessage) message).getNumberOfTokensSent();
+				System.out.println("Gate# " + this.gatePort + " received a token number " + this.numberOfTokens);
 			}
 			break;
 		}
 		case AbstractMessage.TYPE_TOKEN_REQUIRE_MESSAGE:
 		{
+			System.out.println("Require message received");
+			TokenRequireMessage requires = (TokenRequireMessage) message;
 			for(MessageListener neighbor: neighbors){
-				neighbor.writeMessage(message);
+				neighbor.writeMessage(new TokenRequestMessage(requires.getTokensRequired(), new Stack<HostPort>(), Manager.ttl));
 			}
 			break;
 		}
@@ -214,14 +238,12 @@ public class Manager implements ConnectionHandler, MessageHandler {
 				
 				int unfilledTokens = request.getTokensRequested() - response.getNumberOfTokens();
 				
-				if(unfilledTokens > 0){ //if there are still unfilled tokens
+				if(unfilledTokens > 0){ //if there are still unfilled tokens forward it along
 					request.getReceivers().push(tokenHostPort);
 					request.setTokensRequested(unfilledTokens);
 					this.forwardTokenRequest(request);
 				}
 				
-				
-					
 			}
 	
 			break;
@@ -243,10 +265,12 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		}
 		case AbstractMessage.TYPE_TOKEN_MESSAGE:
 		{
-			if(this.numberOfTokens == -1){ //if they havent sent us how many tokens they have, set that to their value
-				this.numberOfTokens+= ((TokenMessage) message).getNumberOfTokensSent();
-				this.gateListener.writeMessage(message);
-			}
+				TokenMessage tokens = (TokenMessage) message;
+				this.numberOfTokens += tokens.getNumberOfTokensSent();
+				System.out.println("Gate# " + this.gatePort + " has tokens number " + this.numberOfTokens + 
+							" after receiving a token message from traffic and it sent " + tokens.getNumberOfTokensSent());
+				this.gateListener.writeMessage(tokens);
+				break;
 		}
 		case AbstractMessage.TYPE_TIME_MESSAGE: //just pass on time messages
 		{
@@ -335,6 +359,4 @@ public class Manager implements ConnectionHandler, MessageHandler {
 			}
 		}
 	}
-	
->>>>>>> Added the basic formula for dealing with token requests
 }

@@ -5,7 +5,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Date;
@@ -255,12 +254,14 @@ public abstract class AbstractMessage {
 					dataOutput.writeInt(responseMessage.getNumberOfTokens());
 					dataOutput.write(parsedStack.getBytes("ASCII"));
 					dataOutput.flush();
+					break;
 				}
 				case TYPE_TOKEN_REQUIRE_MESSAGE:
 				{
 					TokenRequireMessage requireMessage = (TokenRequireMessage) messageWriting;
 					dataOutput.writeInt(requireMessage.getTokensRequired());
 					dataOutput.flush();
+					break;
 				}
 				case TYPE_TOKEN_MESSAGE:
 				{
@@ -381,20 +382,23 @@ public abstract class AbstractMessage {
 	private static Stack<HostPort> convertStringToHostPort(String hostPorts){
 		Stack<HostPort> receivers = new Stack<HostPort>();
 		String[] hosts = hostPorts.split(";"); //split the string on semicolons
+		hostPorts = hostPorts.trim();
+		
 		for(String host: hosts){
-			String[] information = host.split(":"); //split each string on semicolol
+
+			if(host.length() == 0){//account for edge cases
+				break;
+			}
+			
+			String[] information = host.split(":"); //split each string on semicolon
 			try {
-				InetAddress addr = InetAddress.getByAddress(information[0].getBytes("ASCII")); //format the string for bytes
+				InetAddress addr = InetAddress.getByName(information[0]); //format the string for bytes
 				int port = Integer.parseInt(information[1]);
 				HostPort toAdd = new HostPort(addr, port);
 				receivers.push(toAdd);
 			} catch (UnknownHostException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			} 
 		}
 		
 		return receivers;
