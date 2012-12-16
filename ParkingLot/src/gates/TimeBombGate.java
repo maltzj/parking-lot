@@ -20,7 +20,16 @@ public class TimeBombGate extends Gate implements MessageHandler
         {
             System.out.println("Exiting the time bomb "+this.portListeningOn);
             System.out.println("Mexico");
-            this.simulationMessageListener.die = true;
+            try
+            {
+                this.simulationMessageListener.close();
+                this.manager.close();
+                this.simulationMessageListener.die = true;
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+            }
         }
         super.onTimeUpdate(messageFromChronos);
     }
