@@ -109,9 +109,6 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 			}
 			
 			leavingGate = (int)(rdm.nextDouble() * this.carReceivers.size() );
-			if (nextGate >= numGates){
-				nextGate = numGates-1;
-			}
 			
 			currentTime = currentTime + nextTime;
 			leavingTime = currentTime + stayTime;
@@ -168,6 +165,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     			Car c = iter.next();
     			if(c.getTimeDeparts().compareTo(curr) <= 0){ //if a car is past its leaving time send it
     				int gate = rdm.nextInt(this.carReceivers.size());
+    				System.out.println("sending a token to gate " + gate);
     				try {
 						this.carReceivers.get(gate).writeMessage(new TokenMessage(1));
 					} catch (IOException e) {
@@ -298,7 +296,6 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 						HostPort toSend = this.connectedManagers.get(managerIter.next());
 						listener.writeMessage(new GateMessage(toSend));
 					}
-					
 				}
 				
 				else{ //otherwise just generate three random numbers

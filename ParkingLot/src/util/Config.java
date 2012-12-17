@@ -27,8 +27,9 @@ public class Config
     public static Config getByzantine()
     {
         Config c = getSharedInstance();
-        c.gates[0].makeFastAndLoose();
-        c.gates[1].makeFastAndLoose();
+        for(int i = 0; i < c.gates.length; i++){
+        	c.gates[i].makeFastAndLoose();
+        }
         
         return c;
     }

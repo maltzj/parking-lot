@@ -96,9 +96,12 @@ public class Gate implements MessageHandler{
 		simulationMessageListener.start();
 		simulationMessageListener.writeMessage(new SimpleMessage(AbstractMessage.TYPE_CONNECT));
 
+		realPort = s.getLocalPort();
+		
 		switch(tradingPolicy){
 		case Gate.NO_TRADING_POLICY:
 		{
+			System.out.println("Gate number " + realPort + " has a no trader policy");
 			this.trader = new NoTokenTrader(this);
 			break;
 		}
@@ -115,7 +118,6 @@ public class Gate implements MessageHandler{
 
 		}
 
-		realPort = s.getLocalPort();
 	}
 
 
@@ -245,6 +247,7 @@ public class Gate implements MessageHandler{
 			}
 			case AbstractMessage.TYPE_TOKEN_MESSAGE:
 			{
+				System.out.println("Gate number " + this.realPort + " received a token ");
 				TokenMessage tokenMessage = (TokenMessage) message;
 				this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
 				break;
@@ -312,7 +315,7 @@ public class Gate implements MessageHandler{
 
 	protected void checkTokenStatus(){
 		int tokensToRequest = this.trader.requestTokens();
-		
+	
 		if(tokensToRequest > 0){
 			try {
 				this.manager.writeMessage(new TokenRequireMessage(tokensToRequest));
@@ -412,20 +415,18 @@ public class Gate implements MessageHandler{
 	public void sendCarToParkingLot(CarWrapper carWrapper)
 	{
 		System.out.println("Gate #"+realPort +": Sending a car to the parking lot. It will leave at " 
-				+ carWrapper.timeToLeaveQueue+" Tokens: "+this.numberOfTokens + " amount of money is: " 
+				+ carWrapper.carRepresenting.getTimeDeparts() +" Tokens: "+this.numberOfTokens + " amount of money is: " 
 				+ this.amountOfMoney + " length of queue is " + this.getCarsWaiting());
 
 		CarArrivalMessage message = new CarArrivalMessage(new Date(), carWrapper.getCarRepresenting().getTimeDeparts());
 
-		if(this.numberOfTokens > 0){
-			try {
+		try {
 				this.manager.writeMessage(message);
 				this.numberOfTokens --;
-				System.out.println("number of tokens that the gate counts is " + this.numberOfTokens);
+				System.out.println("number of tokens that the gate counts is " + this.numberOfTokens + " on " + this.realPort);
 			} catch (IOException e) {
 				//Do stuff
 			}
-		}
 
 	}
 

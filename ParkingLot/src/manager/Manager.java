@@ -200,7 +200,7 @@ public class Manager implements ConnectionHandler, MessageHandler {
 			
 			}
 			else{ //otherwise it is due for us
-				System.out.println("Manager# " + this.gatePort + " received " + this.numberOfTokens + " tokens in a trade");
+				System.out.println("Manager# " + this.gatePort + " received " + response.getNumberOfTokens() + " tokens in a trade");
 				this.numberOfTokens += response.getNumberOfTokens();
 				System.out.println("gate number is " + this.gatePort + " and number of tokens is now " + this.numberOfTokens);
 				this.gateListener.writeMessage(new TokenMessage(response.getNumberOfTokens()));
@@ -221,7 +221,7 @@ public class Manager implements ConnectionHandler, MessageHandler {
 				}
 			else{
 				System.out.println(this.numberOfTokens + " is the current number of tokens " + " and we currently say the gate has " + this.numberOfTokens + " tokens on " + this.gatePort);
-				System.out.println("ONE OF OUR GATES IS BYZANTINE");
+				System.out.println(" ONE OF OUR GATES IS BYZANTINE and tried to send a car when it doesn't have enough tokens ");
 			}
 			break;
 		}
@@ -257,6 +257,7 @@ public class Manager implements ConnectionHandler, MessageHandler {
 					if(tokenDestination != null){
 						tokenDestination.writeMessage(new TokenResponseMessage(response.getNumberOfTokens(), request.getReceivers()));
 					}
+					this.gateListener.writeMessage(new TokenMessage(response.getNumberOfTokens() * -1));
 				}
 				
 				int unfilledTokens = request.getTokensRequested() - response.getNumberOfTokens();
