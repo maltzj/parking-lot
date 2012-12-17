@@ -22,7 +22,6 @@ public class TimeBombGate extends Gate implements MessageHandler
             System.out.println("Mexico");
             try
             {
-                this.simulationMessageListener.close();
                 this.manager.close();
                 this.simulationMessageListener.die = true;
             }

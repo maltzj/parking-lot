@@ -33,7 +33,9 @@ public class HostPort
         if(other instanceof HostPort)
         {
             HostPort h = (HostPort) other;
-            return this.iaddr.equals(h.iaddr) && this.port == h.port;
+            boolean iaddrEqual = this.iaddr.equals(h.iaddr);
+            boolean portEqual = this.port == h.port;
+            return iaddrEqual && portEqual;
         }
         return false;
     }

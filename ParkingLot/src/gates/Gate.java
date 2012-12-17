@@ -247,7 +247,6 @@ public class Gate implements MessageHandler{
 			{
 				TokenMessage tokenMessage = (TokenMessage) message;
 				this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
-				System.out.println("Received a token message and now I have " + this.numberOfTokens + " tokens on " + this.realPort);
 				break;
 			}
 			case AbstractMessage.TYPE_MONEY_QUERY_MESSAGE:
@@ -311,7 +310,7 @@ public class Gate implements MessageHandler{
 	}
 
 
-	private void checkTokenStatus(){
+	protected void checkTokenStatus(){
 		int tokensToRequest = this.trader.requestTokens();
 		
 		if(tokensToRequest > 0){
@@ -433,7 +432,7 @@ public class Gate implements MessageHandler{
 	/**
 	 * This is just a utility class which easily wraps the car and the time that it should leave the queue.
 	 */
-	private static class CarWrapper {
+	static class CarWrapper {
 		Car carRepresenting;
 		Date timeToLeaveQueue;
 

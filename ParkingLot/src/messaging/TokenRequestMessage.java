@@ -42,5 +42,8 @@ public class TokenRequestMessage extends AbstractMessage {
 		this.ttl = ttl;
 	}
 	
-
+	public String toString(){
+		return this.receivers.toString() + " " + this.tokensRequested;
+	}
+	
 }

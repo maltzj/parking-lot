@@ -52,11 +52,11 @@ public class MessageListener extends Thread {
             }
             handler.onMessageReceived(messageReceived, this);
         }
-        System.out.println(" I am dead");
         try {
             socketListeningOn.close();
         } catch (IOException e) {
-            //cry. WTF ARE WE DOING CLOSING THE SOCKET AFTER IT ALREADY CLOSED.
+            //WTF ARE WE DOING CLOSING THE SOCKET AFTER IT ALREADY CLOSED. 
+        	//You could break this just by having die set -Jon
         }
 	}
 	

@@ -29,4 +29,8 @@ public class TokenResponseMessage extends AbstractMessage{
 		this.receivers = receivers;
 	}
 	
+	public String toString(){
+		return this.receivers.toString();
+	}
+	
 }
