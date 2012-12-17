@@ -9,6 +9,7 @@ public class TimeBombGate extends Gate implements MessageHandler
     public TimeBombGate(long timeToWait, int tokensToStartWith, int moneyToStartWith, InetAddress addr, int port, int moneyPerCarPassed, int tradingPolicy) throws Exception
     {
         super(timeToWait, tokensToStartWith, moneyToStartWith, addr, port, moneyPerCarPassed, tradingPolicy);
+    	System.out.println("THIS IS A TIME BOMB GATE");
     }
 
     public void onTimeUpdate(TimeMessage messageFromChronos)
@@ -23,7 +24,7 @@ public class TimeBombGate extends Gate implements MessageHandler
             try
             {
                 this.manager.close();
-                this.simulationMessageListener.die = true;
+                this.manager.die = true;
             }
             catch(Exception e)
             {

@@ -37,6 +37,8 @@ public abstract class AbstractMessage {
 	
 	public static final byte TYPE_GATE = 25;
 	
+	public static final byte TYPE_MANAGER_AVAILABLE = 26;
+	
 	public static final byte TYPE_CONNECT = 50;
 	
 	protected int length;
@@ -94,7 +96,7 @@ public abstract class AbstractMessage {
 					int ttl = dataInput.readInt();
 					byte[] hostPorts = new byte[length - 8];
 					dataInput.read(hostPorts);
-					String formatted = new String(hostPorts, "ASCII"); //encode the bytes
+					String formatted = new String(hostPorts, "UTF-8"); //encode the bytes
 					Stack<HostPort> stackOfHosts = AbstractMessage.convertStringToHostPort(formatted);
 					return new TokenRequestMessage(tokens, stackOfHosts, ttl);
 				}
@@ -104,7 +106,7 @@ public abstract class AbstractMessage {
 					int tokens = dataInput.readInt();
 					byte[] stackAsBytes = new byte[length - 4];
 					dataInput.read(stackAsBytes);
-					String stackString = new String(stackAsBytes, "ASCII"); //encode the bytes
+					String stackString = new String(stackAsBytes, "UTF-8"); //encode the bytes
 					Stack<HostPort> stackOfHosts = AbstractMessage.convertStringToHostPort(stackString);
 					return new TokenResponseMessage(tokens, stackOfHosts);
 				}
@@ -169,7 +171,7 @@ public abstract class AbstractMessage {
 					int length = dataInput.readInt();
 					int numberOfTokens = dataInput.readInt();
 					int port = dataInput.readInt();
-					String inetAddString = getIpAddress(dataInput, length -8);
+					String inetAddString = getIpAddress(dataInput, length - 8);
 					return new TokenAmountMessage(numberOfTokens, InetAddress.getByName(inetAddString), port);
 				}
 				case TYPE_GATE:
@@ -178,6 +180,14 @@ public abstract class AbstractMessage {
 					int port = dataInput.readInt();
 					String inetAddress = getIpAddress(dataInput, length - 4);
 					return new GateMessage(InetAddress.getByName(inetAddress), port);
+				}
+				case TYPE_MANAGER_AVAILABLE:
+				{
+					int length = dataInput.readInt();
+					int gatePort = dataInput.readInt();
+					int managerPort = dataInput.readInt();
+					String inetAddr = getIpAddress(dataInput, length - 8);
+					return new ManagerAvailableMessage(InetAddress.getByName(inetAddr), gatePort, managerPort);
 				}
 				default:
 					return null;
@@ -242,7 +252,7 @@ public abstract class AbstractMessage {
 					dataOutput.writeInt(parsedStack.length()  + 8);
 					dataOutput.writeInt(requestMessage.getTokensRequested());
 					dataOutput.writeInt(requestMessage.getTtl());
-					dataOutput.write(parsedStack.getBytes("ASCII"));
+					dataOutput.write(parsedStack.getBytes("UTF-8"));
 					dataOutput.flush();
 					break;
 				}
@@ -252,7 +262,7 @@ public abstract class AbstractMessage {
 					String parsedStack = AbstractMessage.convertHostPortsToStrings(responseMessage.getReceivers());
 					dataOutput.writeInt(parsedStack.length() + 4);
 					dataOutput.writeInt(responseMessage.getNumberOfTokens());
-					dataOutput.write(parsedStack.getBytes("ASCII"));
+					dataOutput.write(parsedStack.getBytes("UTF-8"));
 					dataOutput.flush();
 					break;
 				}
@@ -342,6 +352,17 @@ public abstract class AbstractMessage {
 					dataOutput.writeInt(gateMessage.getPort());
 					dataOutput.write(addressAsBytes);
 					dataOutput.flush();
+					break;
+				}
+				case TYPE_MANAGER_AVAILABLE:
+				{
+					ManagerAvailableMessage availableMessage = (ManagerAvailableMessage) messageWriting;
+					InetAddress addr = availableMessage.getAddr();
+					byte[] addrAsBytes = addr.getHostAddress().getBytes("UTF-8");
+					dataOutput.writeInt(addrAsBytes.length + 8);
+					dataOutput.writeInt(availableMessage.getGatePort());
+					dataOutput.writeInt(availableMessage.getManagerPort());
+					dataOutput.write(addrAsBytes);
 					break;
 				}
 				default:

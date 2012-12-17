@@ -13,6 +13,7 @@ import java.util.Vector;
 import messaging.AbstractMessage;
 import messaging.GateMessage;
 import messaging.GateSubscribeMessage;
+import messaging.ManagerAvailableMessage;
 import messaging.TokenMessage;
 import messaging.TokenRequestMessage;
 import messaging.TokenRequireMessage;
@@ -100,10 +101,9 @@ public class Manager implements ConnectionHandler, MessageHandler {
 
 				trafficGenListener = new MessageListener(this, trafficSock);
 				trafficGenListener.setDaemon(true);
-				trafficGenListener = new MessageListener(this, trafficSock);
 				trafficGenListener.start();
 				try { //become subscribed and write a gate subscribe message
-					trafficGenListener.writeMessage(new GateSubscribeMessage(this.gateConnectionListener.getServer().getInetAddress(), this.managerPort));
+					trafficGenListener.writeMessage(new GateSubscribeMessage(this.managerConnectionListener.getServer().getInetAddress(), this.managerPort));
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 				}
@@ -165,15 +165,25 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		case AbstractMessage.TYPE_TOKEN_REQUEST_MESSAGE:
 		{
 			synchronized(this.tokenRequests){
-				TokenRequestMessage request = (TokenRequestMessage) message;
-				HostPort hp = new HostPort(listener.getSocketListeningOn().getLocalAddress(), listener.getSocketListeningOn().getPort());
-				request.getReceivers().push(hp);
-				
-				TokenRequestMessage copy = new TokenRequestMessage(request.getTokensRequested(), (Stack<HostPort>) request.getReceivers().clone(), request.getTtl());
-				
-				this.tokenRequests.add(copy);
-				
-				this.gateListener.writeMessage(request);
+				if(this.gateListener != null){
+					TokenRequestMessage request = (TokenRequestMessage) message;
+					HostPort hp = new HostPort(listener.getSocketListeningOn().getLocalAddress(), listener.getSocketListeningOn().getPort());
+					request.getReceivers().push(hp);
+
+					TokenRequestMessage copy = new TokenRequestMessage(request.getTokensRequested(), (Stack<HostPort>) request.getReceivers().clone(), request.getTtl());
+
+					this.tokenRequests.add(copy);
+
+					this.gateListener.writeMessage(request);
+				}
+				else{
+					TokenRequestMessage request = (TokenRequestMessage) message;
+					if(request.getTtl() > 0){
+						request.getReceivers().push(new HostPort(listener.getSocketListeningOn().getLocalAddress(), listener.getSocketListeningOn().getPort()));
+						request.setTtl(request.getTtl() - 1);
+						this.forwardTokenRequest(request);
+					}
+				}
 			}
 			
 			break;
@@ -273,20 +283,26 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		switch(message.getMessageType()){
 		case AbstractMessage.TYPE_CAR_ARRIVAL: //this means a car is being sent to the parking lot
 		{
-			this.gateListener.writeMessage(message);
-			this.numberOfCars += 1;
-			break;
+			if(this.gateListener != null){
+				this.gateListener.writeMessage(message);
+				this.numberOfCars += 1;
+				break;
+			}
 		}
 		case AbstractMessage.TYPE_TOKEN_MESSAGE:
 		{
-			TokenMessage tokens = (TokenMessage) message;
-			this.numberOfTokens += tokens.getNumberOfTokensSent();
-			this.gateListener.writeMessage(tokens);
-			break;
+			if(this.gateListener != null){
+				TokenMessage tokens = (TokenMessage) message;
+				this.numberOfTokens += tokens.getNumberOfTokensSent();
+				this.gateListener.writeMessage(tokens);
+				break;
+			}
 		}
 		case AbstractMessage.TYPE_TIME_MESSAGE: //just pass on time messages
 		{
-			this.gateListener.writeMessage(message);
+			if(this.gateListener != null){
+				this.gateListener.writeMessage(message);
+			}
 			break;
 		}
 		case AbstractMessage.TYPE_GATE: //use this to note other managers
@@ -309,7 +325,21 @@ public class Manager implements ConnectionHandler, MessageHandler {
 	
 	@Override
 	public void onSocketClosed(Socket socket) {
-		//TODO 
+		if( gateListener != null && socket.equals(gateListener.getSocketListeningOn())){//
+			System.out.println("OUR GATE DISCONNECTED");
+			try {
+				this.onGateDisconnect();
+			} catch (IOException e) {
+				// TODO don't worry about it
+			}
+		}
+		else if(socket.equals(trafficGenListener.getSocketListeningOn())){
+			this.onTrafficDisconnect();
+		}
+		else{ //It is one of our neighbors, handle accordingly
+			
+		}
+		
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -351,8 +381,7 @@ public class Manager implements ConnectionHandler, MessageHandler {
 	private MessageListener findNeighbor(HostPort hp){
 		
 		for(MessageListener neighbor: neighbors){ //loop over all of our neighbors
-			Socket neighborSocket = neighbor.getSocketListeningOn();
-			
+			Socket neighborSocket = neighbor.getSocketListeningOn();		
 			
 			if(neighborSocket.getPort() == hp.port){
 				return neighbor;
@@ -379,5 +408,21 @@ public class Manager implements ConnectionHandler, MessageHandler {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	private void onGateDisconnect() throws IOException{;
+		//disconnect the gate
+		this.gateListener.die = true;
+		this.gateListener = null;
+		this.numberOfCars = 0;
+		this.numberOfTokens = -1;
+	
+		this.trafficGenListener.writeMessage(new ManagerAvailableMessage(this.gateConnectionListener.getServer().getInetAddress(), gatePort, managerPort));
+	}
+	
+	private void onTrafficDisconnect(){
+		this.trafficGenListener.die = true;
+		this.trafficGenListener = null;
+		
 	}
 }

@@ -20,6 +20,7 @@ import messaging.AbstractMessage;
 import messaging.CarArrivalMessage;
 import messaging.GateMessage;
 import messaging.GateSubscribeMessage;
+import messaging.ManagerAvailableMessage;
 import messaging.TimeMessage;
 import messaging.TokenMessage;
 import util.Config;
@@ -101,8 +102,13 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 		{
 			nextTime = (int)nextTime(nextTimePolynomial.evaluate(currentTime));
 			stayTime = (int)(Math.abs(rdm.nextGaussian() * ( simulationLength - currentTime )/4 + (simulationLength - currentTime)/2));
-			nextGate = (int)(rdm.nextDouble() * ( numGates + 2 ));
-			leavingGate = (int)(rdm.nextDouble() * numGates );
+			nextGate = (int)(rdm.nextDouble() * ( this.carReceivers.size() + 2));
+			
+			while(nextGate >= this.carReceivers.size()){ //get a gate that is valid
+				nextGate = (int)(rdm.nextDouble() * ( this.carReceivers.size() + 2));
+			}
+			
+			leavingGate = (int)(rdm.nextDouble() * this.carReceivers.size() );
 			if (nextGate >= numGates){
 				nextGate = numGates-1;
 			}
@@ -176,12 +182,14 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     
     private void notifySubscribers()
     {
-    	for(MessageListener listener: this.carReceivers){
-    		try {
-				listener.writeMessage(new TimeMessage(this.getCurrentDate()));
-			} catch (IOException e) {
-				//TODO Auto-generated catch block
-			}
+    	synchronized(this){
+    		for(MessageListener listener: this.carReceivers){
+    			try {
+    				listener.writeMessage(new TimeMessage(this.getCurrentDate()));
+    			} catch (IOException e) {
+    				//TODO Auto-generated catch block
+    			}
+    		}
     	}
     }
 
@@ -306,6 +314,22 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 			
 			this.connectedManagers.put(listener, new HostPort(gateSub.getAddressOfGate(), gateSub.getPort()));
 			break;
+		}
+		case AbstractMessage.TYPE_MANAGER_AVAILABLE:
+		{
+			synchronized(this){
+				ManagerAvailableMessage available = (ManagerAvailableMessage) message;
+				this.connectedManagers.remove(listener);
+				this.carReceivers.remove(listener);
+				listener.die = true;
+				listener.getSocketListeningOn().close();
+				ManagerInfo info = Config.getSharedInstance().new ManagerInfo();
+				info.hostport = new HostPort(available.getAddr(), available.getGatePort());
+				info.managerPort = new HostPort(available.getAddr(), available.getManagerPort());
+				info.money = 0;
+				info.tokens = 0;
+				this.availableManagers.add(info);
+			}
 		}
 		}
 	}
