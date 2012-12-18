@@ -6,9 +6,10 @@ import java.util.Date;
 
 public class TimeBombGate extends Gate implements MessageHandler
 {
-    public TimeBombGate(long timeToWait, int tokensToStartWith, int moneyToStartWith, InetAddress addr, int port, int moneyPerCarPassed, int tradingPolicy) throws Exception
+    public TimeBombGate(long timeToWait, int tokensToStartWith, int moneyToStartWith, InetAddress addr, 
+    		int port, int moneyPerCarPassed, int tradingPolicy, int costPerToken) throws Exception
     {
-        super(timeToWait, tokensToStartWith, moneyToStartWith, addr, port, moneyPerCarPassed, tradingPolicy);
+        super(timeToWait, tokensToStartWith, moneyToStartWith, addr, port, moneyPerCarPassed, tradingPolicy, costPerToken);
     	System.out.println("THIS IS A TIME BOMB GATE");
     }
 

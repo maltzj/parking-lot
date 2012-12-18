@@ -33,6 +33,17 @@ public class Config
         
         return c;
     }
+    
+    public static Config getTokenThief()
+    {
+    	Config c = getSharedInstance();
+    	c.gates[0].makeTokenThief();
+    	c.gates[1].makeTokenThief();
+    	c.gates[2].makeTokenThief();
+    	
+    	return c;
+    }
+    
 
     /** Make two of our gates time bombs. */
     public static Config getFailure()
@@ -123,7 +134,7 @@ public class Config
         public static final int NORMAL = 0;
         public static final int TIME_BOMB = 1;
         public static final int FAST_AND_LOOSE = 2;
-
+        public static final int TOKEN_THIEF = 3;
 
         public int type = NORMAL;
 
@@ -141,6 +152,10 @@ public class Config
         public void makeTimeBomb()
         {
             this.type = TIME_BOMB;
+        }
+        
+        public void makeTokenThief(){
+        	this.type = TOKEN_THIEF;
         }
 	}
 	

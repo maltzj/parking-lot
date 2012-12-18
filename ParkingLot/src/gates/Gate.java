@@ -42,7 +42,6 @@ public class Gate implements MessageHandler{
 
 	public static boolean stillRunning = true;
 
-
 	ConcurrentLinkedQueue<CarWrapper> waitingCars = new ConcurrentLinkedQueue<CarWrapper>();
 	long amountOfTimeToWait; //Seconds
 
@@ -52,7 +51,7 @@ public class Gate implements MessageHandler{
 	int numberOfTokens;
 	int amountOfMoney;
 	int moneyPerCarPassed;
-
+	int costPerToken;
 
 	InetAddress addrListeningOn;
 	int portListeningOn;
@@ -75,7 +74,7 @@ public class Gate implements MessageHandler{
 	 * @throws Exception
 	 */
 	public Gate(long timeToWait, int tokensToStartWith, int moneyToStartWith, 
-			InetAddress addr, int port, int moneyPerCarPassed, int tradingPolicy) throws Exception
+			InetAddress addr, int port, int moneyPerCarPassed, int tradingPolicy, int costOfTokens) throws Exception
 			{
 
 		Config c = Config.getSharedInstance();
@@ -86,7 +85,8 @@ public class Gate implements MessageHandler{
 		this.amountOfTimeToWait = timeToWait*1000; //dates deal with milliseconds, we want to expose all APIs as seconds
 		this.amountOfMoney = moneyToStartWith;
 		this.numberOfTokens = tokensToStartWith;
-
+		this.costPerToken = costOfTokens;
+		
 		this.moneyPerCarPassed = moneyPerCarPassed;
 
 		/*Connect to the simulation*/
@@ -302,6 +302,11 @@ public class Gate implements MessageHandler{
 
 				break;
 			}
+			case AbstractMessage.TYPE_TOKEN_RESPONSE_MESSAGE:
+			{
+				this.onTokenResponseReceived((TokenResponseMessage) message);
+				break;
+			}
 			default:
 			{
 				System.out.println("What are you doing Message Type = "+message.getMessageType());
@@ -311,7 +316,18 @@ public class Gate implements MessageHandler{
 			}
 		}
 	}
-
+	
+	protected void onTokenResponseReceived(TokenResponseMessage message){
+		
+			System.out.println("RECEIVED A TOKEN TRADE OF " + message.getNumberOfTokens());
+			
+			if(this.trader instanceof ProfitTokenTrader){ //if we have a profit token trader, add the necessary amnt of money	
+				this.amountOfMoney += -1 * message.getNumberOfTokens() * this.costPerToken;
+			}
+			
+			this.numberOfTokens += message.getNumberOfTokens();
+			
+	}
 
 	protected void checkTokenStatus(){
 		int tokensToRequest = this.trader.requestTokens();
@@ -429,6 +445,18 @@ public class Gate implements MessageHandler{
 			}
 
 	}
+
+	public int getCostPerToken() {
+		return costPerToken;
+	}
+
+
+	public void setCostPerToken(int costPerToken) {
+		this.costPerToken = costPerToken;
+	}
+
+
+
 
 	/**
 	 * This is just a utility class which easily wraps the car and the time that it should leave the queue.

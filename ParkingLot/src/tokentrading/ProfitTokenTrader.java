@@ -18,7 +18,12 @@ public class ProfitTokenTrader extends TokenTrader {
 
 	@Override
 	public int requestTokens() {
-		return this.tokenTrader.getNumberTokens() == 0 ? 1 : 0;  //ensure that we have one token
+		if(this.tokenTrader.getAmountOfMoneyLeft() > this.tokenTrader.getCostPerToken()){
+			return this.tokenTrader.getNumberTokens() == 0 ? 1 : 0;  //ensure that we have one token
+		}
+		else{ //otherwise we cant afford this, return nothing
+			return 0;
+		}
 	}
 
 }

@@ -203,7 +203,7 @@ public class Manager implements ConnectionHandler, MessageHandler {
 				System.out.println("Manager# " + this.gatePort + " received " + response.getNumberOfTokens() + " tokens in a trade");
 				this.numberOfTokens += response.getNumberOfTokens();
 				System.out.println("gate number is " + this.gatePort + " and number of tokens is now " + this.numberOfTokens);
-				this.gateListener.writeMessage(new TokenMessage(response.getNumberOfTokens()));
+				this.gateListener.writeMessage(response);
 			}
 			break;
 		}
@@ -257,7 +257,8 @@ public class Manager implements ConnectionHandler, MessageHandler {
 					if(tokenDestination != null){
 						tokenDestination.writeMessage(new TokenResponseMessage(response.getNumberOfTokens(), request.getReceivers()));
 					}
-					this.gateListener.writeMessage(new TokenMessage(response.getNumberOfTokens() * -1));
+					this.gateListener.writeMessage(new TokenResponseMessage(response.getNumberOfTokens() * -1, new Stack<HostPort>()));
+					this.numberOfTokens -= response.getNumberOfTokens();
 				}
 				
 				int unfilledTokens = request.getTokensRequested() - response.getNumberOfTokens();

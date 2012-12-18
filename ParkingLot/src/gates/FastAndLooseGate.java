@@ -7,9 +7,10 @@ import java.util.Date;
 /** This gate will send tokens to the parking lot regardless of how many tokens it has. */
 
  public class FastAndLooseGate extends Gate {
-     public FastAndLooseGate(long timeToWait, int tokensToStartWith, int moneyToStartWith, InetAddress addr, int port, int moneyPerCarPassed, int tradingPolicy) throws Exception
+     public FastAndLooseGate(long timeToWait, int tokensToStartWith, int moneyToStartWith, 
+    		 InetAddress addr, int port, int moneyPerCarPassed, int tradingPolicy, int costPerToken) throws Exception
      {
-         super(timeToWait, tokensToStartWith, moneyToStartWith, addr, port, moneyPerCarPassed, tradingPolicy);
+         super(timeToWait, tokensToStartWith, moneyToStartWith, addr, port, moneyPerCarPassed, tradingPolicy, costPerToken);
      }
 
      //override
