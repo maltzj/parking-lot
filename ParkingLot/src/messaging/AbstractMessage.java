@@ -46,6 +46,10 @@ public abstract class AbstractMessage {
 	protected int length;
 	protected byte messageType;
 	
+	/**
+	 * The one thing that every instance of AbstractMessage must do is initialize its type
+	 * @param type
+	 */
 	public AbstractMessage(byte type)
 	{
 		this.messageType = type;
@@ -122,12 +126,7 @@ public abstract class AbstractMessage {
 				{
 					int tokensSent = dataInput.readInt();
 					return new TokenMessage(tokensSent);
-				}
-				case TYPE_MONEY_MESSAGE:
-				{
-					int amountOfMoney = dataInput.readInt();
-					return new MoneyMessage(amountOfMoney);
-				}			
+				}	
                 case TYPE_GATE_DONE:
 				{
 
@@ -136,14 +135,6 @@ public abstract class AbstractMessage {
 					String inetAddress = getIpAddress(dataInput, length - 4);
                 
 					return new GateDoneMessage(InetAddress.getByName(inetAddress), port);
-				}
-                case TYPE_LOT_DONE:
-				{
-					int length = dataInput.readInt();
-					int port = dataInput.readInt();
-					String inetAddress = getIpAddress(dataInput, length - 4);
-                
-					return new LotDoneMessage(InetAddress.getByName(inetAddress), port);
 				}
 				case TYPE_CLOSE_CONNECTION:
 				{
@@ -161,14 +152,6 @@ public abstract class AbstractMessage {
 				{
 					return new SimpleMessage(TYPE_TOKEN_QUERY_MESSAGE);
 				}
-				case TYPE_MONEY_AMOUNT_MESSAGE:
-				{
-					int length = dataInput.readInt();
-					int amountOfMoney = dataInput.readInt();
-					int port = dataInput.readInt();
-					String inetAddString = getIpAddress(dataInput, length -8);
-					return new MoneyAmountMessage(amountOfMoney, InetAddress.getByName(inetAddString), port);
-				}
 				case TYPE_TOKEN_AMOUNT_MESSAGE:
 				{
 					int length = dataInput.readInt();
@@ -180,7 +163,6 @@ public abstract class AbstractMessage {
 				case TYPE_GATE:
 				{
 					int length = dataInput.readInt();
-					System.out.println("Length BEING READ is " + length + " OFF OF " + (dataInput.available() + 4) + " on " + inputStream);
 					int port = dataInput.readInt();
 					String inetAddress = getIpAddress(dataInput, length - 4);
 					return new GateMessage(InetAddress.getByName(inetAddress), port);
@@ -286,13 +268,6 @@ public abstract class AbstractMessage {
 					dataOutput.writeInt(tokenMessage.getNumberOfTokensSent());
 					break;
 				}
-				case TYPE_MONEY_MESSAGE:
-				{
-					MoneyMessage moneyMessage = (MoneyMessage) messageWriting;
-					dataOutput.writeInt(moneyMessage.amountOfMoney);
-					
-					break;
-				}
 				case TYPE_GATE_DONE:
 				{
 					GateDoneMessage gateMessage = (GateDoneMessage) messageWriting;
@@ -304,17 +279,6 @@ public abstract class AbstractMessage {
 					
 					break;
 				}
-				case TYPE_LOT_DONE:
-				{
-					LotDoneMessage lotMessage = (LotDoneMessage) messageWriting;
-					String addressAsString = lotMessage.getAddressSubscribing().getHostAddress();
-					byte[] addressAsBytes = addressAsString.getBytes("ASCII");
-					dataOutput.writeInt(addressAsBytes.length + 4);
-					dataOutput.writeInt(lotMessage.getPortSubscribingOn());
-					dataOutput.write(addressAsBytes);
-					
-					break;
-				}
 				case TYPE_CLOSE_CONNECTION:
 				{
 					
@@ -322,18 +286,6 @@ public abstract class AbstractMessage {
 				}
 				case TYPE_CONNECT:
 				{
-					
-					break;
-				}
-				case TYPE_MONEY_AMOUNT_MESSAGE:
-				{
-					MoneyAmountMessage moneyAmountMessage = (MoneyAmountMessage) messageWriting;
-					String addressAsString = moneyAmountMessage.getIpAddress().getHostAddress();
-					byte[] addressAsBytes = addressAsString.getBytes("ASCII");
-					dataOutput.writeInt(addressAsBytes.length + 8);
-					dataOutput.writeInt(moneyAmountMessage.getAmountOfMoney());
-					dataOutput.writeInt(moneyAmountMessage.getPort());
-					dataOutput.write(addressAsBytes);
 					
 					break;
 				}
@@ -354,7 +306,6 @@ public abstract class AbstractMessage {
 					GateMessage gateMessage = (GateMessage) messageWriting;
 					InetAddress addr = gateMessage.addr;
 					byte[] addressAsBytes = addr.getHostAddress().getBytes("ASCII");
-					System.out.println("LENGTH BEING WRITTEN IS " +addressAsBytes.length);
 					dataOutput.writeInt(addressAsBytes.length + 4);
 					dataOutput.writeInt(gateMessage.getPort());
 					dataOutput.write(addressAsBytes);

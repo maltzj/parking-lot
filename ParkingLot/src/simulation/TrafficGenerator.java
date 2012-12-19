@@ -86,7 +86,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
         this.connectedManagers = new HashMap<MessageListener, HostPort>();
 	}
 
-	public synchronized void run()
+	public void run()
 	{
 		System.out.println("Running the run method of traffic generator");
 		/**

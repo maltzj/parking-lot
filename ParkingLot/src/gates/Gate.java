@@ -11,8 +11,6 @@ import messaging.AbstractMessage;
 import messaging.CarArrivalMessage;
 import messaging.GateDoneMessage;
 import messaging.GateMessage;
-import messaging.GateSubscribeMessage;
-import messaging.MoneyMessage;
 import messaging.SimpleMessage;
 import messaging.TimeMessage;
 import messaging.TokenMessage;
@@ -268,12 +266,6 @@ public class Gate implements MessageHandler{
 				this.onTokenAmountQuery();
 				break;
 			}
-			case AbstractMessage.TYPE_MONEY_MESSAGE:
-			{
-				MoneyMessage money = (MoneyMessage) message;
-				this.amountOfMoney += money.getAmountOfMoney();
-				break;
-			}
 			case AbstractMessage.TYPE_TOKEN_REQUEST_MESSAGE:
 			{
 				TokenRequestMessage request = (TokenRequestMessage) message;
@@ -330,10 +322,13 @@ public class Gate implements MessageHandler{
 	
 	protected void onTokenResponseReceived(TokenResponseMessage message){
 
-		if(message.getNumberOfTokens() > 0)
-			System.out.println("Gate# " + this.realPort + " received " + message.getNumberOfTokens() + " tokens ");
+		System.out.println("Gate# " + this.realPort + " received " + message.getNumberOfTokens() + " tokens ");
 		
-		if(this.trader instanceof ProfitTokenTrader){ //if we have a profit token trader, add the necessary amnt of money	
+		//if we have a profit token trader, add the necessary amnt of money
+		if(this.trader instanceof ProfitTokenTrader){
+			
+			int moneyToChange = -1 * message.getNumberOfTokens() * this.costPerToken;
+			System.out.println("Have a profit tokenTrader " + moneyToChange);
 			this.amountOfMoney += -1 * message.getNumberOfTokens() * this.costPerToken;
 		}
 
@@ -357,12 +352,6 @@ public class Gate implements MessageHandler{
 	public void onSocketClosed(Socket socket) {
 		//TODO implement this!
 
-		System.out.println("ON SOCKET CLOSED GOT CALLED, THAT SHIT NEEDS TO BE IMPLEMENTED!!!");
-		//check if it is the simulation
-		//if yes, do something
-		//if it is not, then find out which gate we're connected to
-		//disconnect the socket
-		//remove the gate from the list
 	}
 
 	/**

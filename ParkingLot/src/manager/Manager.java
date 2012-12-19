@@ -433,6 +433,11 @@ public class Manager implements ConnectionHandler, MessageHandler {
 	}
 	
 	private void forwardTokenRequest(TokenRequestMessage message) throws IOException{
+		
+		if(this.neighbors.size() == 0){
+			return;
+		}
+		
 		int tokensPerNeighbor = message.getTokensRequested() /this.neighbors.size();
 		int leftoverTokens = message.getTokensRequested() - tokensPerNeighbor;
 		synchronized(this.neighbors){
