@@ -169,7 +169,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     private void checkCarLeaving()
     {
     	Date curr = this.getCurrentDate();
-    	synchronized(this.parkingLot){
+    	synchronized(this){
     		for(Iterator<Car> iter = this.parkingLot.iterator(); iter.hasNext();){ //iterate over parking lot
     			Car c = iter.next();
     			if(c.getTimeDeparts().compareTo(curr) <= 0){ //if a car is past its leaving time send it
@@ -202,9 +202,6 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 	
     public void onConnectionReceived(Socket connection, int receivedOn)
     { 
-    	/*When a gate subscribes add it to the listen and start listening
-    	 *We shouldn't hear any communication from it, we should just send it a manager
-    	 */
     	synchronized(this){
     		if(receivedOn == gatePort.getPort()){ 
     			onGateSubscribe(connection);
@@ -218,12 +215,14 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     }
     
     private void onManagerSubscribe(Socket sock){
-    	MessageListener listener = new MessageListener(this, sock);
-    	listener.setDaemon(false);
-    	this.carReceivers.add(listener);
-    	listener.start();
-    	if(this.carReceivers.size() == numGates){ //if we have the required number of gates
-    		this.start();
+    	synchronized(this){
+    		MessageListener listener = new MessageListener(this, sock);
+    		listener.setDaemon(false);
+    		this.carReceivers.add(listener);
+    		listener.start();
+    		if(this.carReceivers.size() == numGates){ //if we have the required number of gates
+    			this.start();
+    		}
     	}
     
     }
@@ -344,16 +343,19 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 
 	@Override
 	public void onSocketClosed(Socket socket) {
-		for(int i = 0; i < this.gates.size(); i++){ //If it is a gate, remove it from the list of gates
-			if(this.gates.get(i).getSocketListeningOn().equals(socket)){
-				this.gates.remove(i);
-			}
+		synchronized (this) {
+			for(int i = 0; i < this.gates.size(); i++){ //If it is a gate, remove it from the list of gates
+				if(this.gates.get(i).getSocketListeningOn().equals(socket)){
+					this.gates.remove(i);
+				}
+			}	
 		}
+		
 	}
 	
 	private void killGenerator() throws IOException
 	{
-		synchronized(this.carReceivers){
+		synchronized(this){
 
 			//send a message to each of our car receivers
 			for(MessageListener listener: this.carReceivers){
