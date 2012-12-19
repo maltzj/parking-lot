@@ -2,8 +2,16 @@ package tokentrading;
 
 import gates.Gate;
 
+/**
+ * Trades tokens with the goal of gaining as much profit as possible for a gate
+ * In order to maximize the profit of a gate it ensures that a gate always has one token
+ */
 public class ProfitTokenTrader extends TokenTrader {
 
+	/**
+	 * Creats a TokenTrader which is responsible for a given Gate and trades for profit
+	 * @param tokenTrader The gate that this is trading for
+	 */
 	public ProfitTokenTrader(Gate tokenTrader) {
 		super(tokenTrader);
 	}
