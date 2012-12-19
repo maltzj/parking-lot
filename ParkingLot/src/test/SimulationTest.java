@@ -10,8 +10,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
-import com.sun.imageio.plugins.common.InputStreamAdapter;
-
 import manager.Manager;
 import simulation.TrafficGenerator;
 import util.Config;
