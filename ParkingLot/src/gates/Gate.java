@@ -29,7 +29,6 @@ import car.Car;
 /**
  * A concrete implementation of the Gate interface.  This is responsible for handling all the responsibilities of a Gate
  * This includes trading tokens, listening for messages, and allowing cars into the parking lot.
- * @author Jonathan
  *
  */
 public class Gate implements MessageHandler{
@@ -117,7 +116,12 @@ public class Gate implements MessageHandler{
 
 	}
 
-
+	/**
+	 * Specifies what to do when a car arrives at the Gate.
+	 * First the car is added to the queue of waiting cars,
+	 * Then, while there are still tokens left cars are let in
+	 * @param arrival The information about the car that just arrived
+	 */
 	public void onCarArrived(CarArrivalMessage arrival) {
 		
 		Car carToQueue = new Car(arrival.getCarSentTime(), arrival.getCarReturnTime());
@@ -142,6 +146,12 @@ public class Gate implements MessageHandler{
 	}
 
 
+	/**
+	 * Updates the state of the Gate based on a new published canonical time of the system
+	 * On time updates, we loop over our list of waiting cars.  
+	 * If any are due to walk away from the gate because they have waited too long we let them go
+	 * @param messageFromChronos The new time published by Chronos
+	 */
 	public void onTimeUpdate(TimeMessage messageFromChronos){
 
 		Date newTime = messageFromChronos.getNewTime();
@@ -320,6 +330,11 @@ public class Gate implements MessageHandler{
 		}
 	}
 	
+	/**
+	 * Updates the number of tokens that are sent to us after we have received or given up tokens in a trade.
+	 * Also, if we are using a profit token trader policy this method will adjust for any changes in our money
+	 * @param message The token
+	 */
 	protected void onTokenResponseReceived(TokenResponseMessage message){
 
 		System.out.println("Gate# " + this.realPort + " received " + message.getNumberOfTokens() + " tokens ");
@@ -336,6 +351,9 @@ public class Gate implements MessageHandler{
 
 	}
 
+	/**
+	 * Checks to see if the gate needs to trade for more tokens.  If it does, the gate sends a request for more tokens
+	 */
 	protected void checkTokenStatus(){
 		int tokensToRequest = this.trader.requestTokens();
 	
@@ -362,14 +380,27 @@ public class Gate implements MessageHandler{
 		return waitingCars.size();
 	}
 
+	/**
+	 * Addes tokens to the number that the gate has
+	 * @param tokens The number of tokens being added
+	 */
 	public void onTokensAdded(int tokens) {
 		this.numberOfTokens += tokens;
 	}
-
+	
+	/**
+	 * Gets the number of tokens that this gate currently has
+	 * @return The number of tokens the gate has
+	 */
 	public int getNumberTokens() {
 		return this.numberOfTokens;
 	}
-
+	
+	/**
+	 * Removes tokens from this gate
+	 * @param numberOfTokensToReceive The number of tokens to remove
+	 * @return Whether or not the tokens could be removed
+	 */
 	public boolean removeTokens(int numberOfTokensToReceive) {
 		if(this.numberOfTokens - numberOfTokensToReceive > 0)
 		{
@@ -378,23 +409,13 @@ public class Gate implements MessageHandler{
 		}
 		return false;
 	}
-
+	
+	/**
+	 * Gets the amount of money the gate has
+	 * @return The amount of money the gate has
+	 */
 	public int getAmountOfMoneyLeft() {
 		return this.amountOfMoney;
-	}
-
-	public boolean removeMoney(int amountOfMoneyToTake) {
-		if(this.amountOfMoney < amountOfMoneyToTake)
-			return false;
-		else
-		{
-			this.amountOfMoney -= amountOfMoneyToTake;
-			return true;
-		}
-	}
-
-	public void addMoney(int amountOfMoneyToAdd) {
-		this.amountOfMoney += amountOfMoneyToAdd;
 	}
 
 
@@ -436,16 +457,13 @@ public class Gate implements MessageHandler{
 
 	}
 
+	/**
+	 * Gets the cost for each token
+	 * @return The cost of each token
+	 */
 	public int getCostPerToken() {
 		return costPerToken;
 	}
-
-
-	public void setCostPerToken(int costPerToken) {
-		this.costPerToken = costPerToken;
-	}
-
-
 
 
 	/**

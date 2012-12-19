@@ -24,6 +24,14 @@ import util.HostPort;
 import util.MessageHandler;
 import util.MessageListener;
 
+/**
+ * 
+ * The Manager is our source of truth within this system.  Managers intially start and ar listening for connections from gates
+ * Once a gate is connected to the manager, it queries the gate for the number of tokens it has, once that is done.
+ * Once that is completed, it connects to the traffic generator and starts receiving cars and passing them on to its paired gate
+ * This layer removes the possibility of byzantine gates as the Manager keeps track of any necessary data and alerts the system when its gate is byzantine 
+ *
+ */
 public class Manager implements ConnectionHandler, MessageHandler {
 
 	private static final int ttl = 3;
@@ -45,11 +53,12 @@ public class Manager implements ConnectionHandler, MessageHandler {
 	Vector<TokenRequestMessage> tokenRequests;
 	
 	/**
-	 * 
-	 * @param numTokens
-	 * @param numCars
-	 * @param port
-	 * @throws IOException
+	 * Initializes the Manager to have all the necessary information for it to run
+	 * @param numTokens The number of tokens that it should start with
+	 * @param numCars The number of cars that that are intiially with gates
+	 * @param gatePort The port that this will use to accept connections from gates
+	 * @param managerPort The port that this will use to accept connections from managers
+	 * @throws IOException If servers cannot be started for one reason or another
 	 */
 	public Manager(int numTokens, int numCars, int gatePort, int managerPort) throws IOException{
 		this.numberOfTokens = numTokens;
@@ -78,9 +87,13 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		this.numberOfCars = 0;
 		this.numberOfTokens = -1;
 		this.gatePort = gatePort;
+		this.managerPort = managerPort;
 	
 		gateConnectionListener = new ConnectionListener(this, this.gatePort);
 		gateConnectionListener.start();
+		
+		managerConnectionListener = new ConnectionListener(this, this.managerPort);
+		managerConnectionListener.start();
 	}
 	
 
@@ -215,6 +228,11 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		}
 	}
 
+	/**
+	 * Specifies how a Manager should handle messages from its paired gate
+	 * @param message The message which was received
+	 * @throws IOException If an IOException occurs
+	 */
 	private void onMessageFromGate(AbstractMessage message) throws IOException{
 		switch(message.getMessageType()){
 		case AbstractMessage.TYPE_CAR_ARRIVAL: //pass on any cars to our gate
@@ -286,6 +304,11 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		}
 	}
 	
+	/**
+	 * Specifies how to deal with a message from the traffic simulation
+	 * @param message The message that was received from the traffic simulator
+	 * @throws IOException If an IOException occurs
+	 */
 	private void onMessageFromTraffic(AbstractMessage message) throws IOException{
 		switch(message.getMessageType()){
 		case AbstractMessage.TYPE_CAR_ARRIVAL: //this means a car is being sent to the parking lot
@@ -367,10 +390,14 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		}
 	}
 	
+	/**
+	 * Closes up the manager, closing all the managers and closing down the servers
+	 * @throws IOException
+	 */
 	private void closeShop() throws IOException{
 		
 		for(MessageListener neighbor: this.neighbors){
-			neighbor.close();
+			closeManager(neighbor);
 		}
 		
 		this.managerConnectionListener.getServer().close();
@@ -378,10 +405,22 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		this.trafficGenListener.close();
 	}
 	
+	/**
+	 * Closes a manager and performs any necessary cleanup
+	 * @param manager, The manager which will be closed
+	 * @throws IOException
+	 */
 	private void closeManager(MessageListener manager) throws IOException{
 		manager.close();
 	}
 	
+	/**
+	 * Gets the TokenRequestMessage which matches the response we just received
+	 * A request is matching if it has the same path and number of tokens as the response
+	 * This is useful when a Gate sends you a TokenResponse and you need to find which one they responded for
+	 * @param message The TokenResponseMessage which was we are matching
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	private TokenRequestMessage getMatchingRequest(TokenResponseMessage message){
 		Stack<HostPort> requestChain = message.getReceivers();
@@ -418,9 +457,14 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		
 	}
 	
+	/**
+	 * Finds the neighbor who is listening at a given HostPort
+	 * @param hp The HostPort that we are trying to find a match for
+	 * @return
+	 */
 	private MessageListener findNeighbor(HostPort hp){
 		
-		for(MessageListener neighbor: neighbors){ //loop over all of our neighbors
+		for(MessageListener neighbor: neighbors){ //loop over all of our neighbors and check if their ports match
 			Socket neighborSocket = neighbor.getSocketListeningOn();		
 			
 			if(neighborSocket.getPort() == hp.port){
@@ -432,6 +476,11 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		return null;
 	}
 	
+	/**
+	 * Forwards a token request message to neighbors.  To accomplish this we evenly distribute the token request among our neighbors
+	 * @param message The token request that is getting sent along
+	 * @throws IOException If an IOException occurs
+	 */
 	private void forwardTokenRequest(TokenRequestMessage message) throws IOException{
 		
 		if(this.neighbors.size() == 0){
@@ -454,6 +503,10 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		}
 	}
 	
+	/**
+	 * Specifies what to do when a gate disconnects
+	 * @throws IOException
+	 */
 	private void onGateDisconnect() throws IOException{;
 		//disconnect the gate
 		this.gateListener.die = true;
@@ -467,6 +520,10 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		this.trafficGenListener.writeMessage(new ManagerAvailableMessage(this.gateConnectionListener.getServer().getInetAddress(), gatePort, managerPort));
 	}
 	
+	/**
+	 * Distributes the remaining tokens amongst a managers neighbors
+	 * @throws IOException
+	 */
 	private void distributeTokens() throws IOException{
 		
 		if(this.neighbors.size() == 0){
@@ -493,6 +550,9 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		}
 	}
 	
+	/**
+	 * Specifies what to do when the traffic generator disconnects
+	 */
 	private void onTrafficDisconnect(){
 		this.trafficGenListener.die = true;
 		this.trafficGenListener = null;

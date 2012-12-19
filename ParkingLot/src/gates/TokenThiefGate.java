@@ -4,6 +4,12 @@ import java.net.InetAddress;
 
 import messaging.TokenResponseMessage;
 
+
+/**
+ * 
+ * The TokenThiefGate is an implementation of Gate which trades tokens with other gates but then doesn't remove them from itself
+ * 
+ */
 public class TokenThiefGate extends Gate {
 
 	public TokenThiefGate(long timeToWait, int tokensToStartWith,
