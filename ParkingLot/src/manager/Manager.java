@@ -58,10 +58,13 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		this.gatePort = gatePort;
 		
 		gateConnectionListener = new ConnectionListener(this, this.gatePort);
+		gateConnectionListener.setDaemon(true);
 		gateConnectionListener.start();
+		
 	
 		this.managerPort = managerPort;
 		this.managerConnectionListener = new ConnectionListener(this, this.managerPort);
+		this.managerConnectionListener.setDaemon(true);
 		this.managerConnectionListener.start();
 	
 		this.tokenRequests = new Vector<TokenRequestMessage>();
@@ -157,9 +160,12 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		switch(message.getMessageType()){
 		case AbstractMessage.TYPE_TOKEN_MESSAGE:
 		{
-			TokenMessage tokenMessage = (TokenMessage) message;
-			this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
-			this.gateListener.writeMessage(tokenMessage);
+			if(this.gateListener != null){
+				System.out.println("GOT TOKENS FROM ANOTHER MANAGER IN A STRAIGHT TOKEN MESSAGE");
+				TokenMessage tokenMessage = (TokenMessage) message;
+				this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
+				this.gateListener.writeMessage(tokenMessage);
+			}
 			break;
 		}
 		case AbstractMessage.TYPE_TOKEN_REQUEST_MESSAGE:
@@ -200,10 +206,12 @@ public class Manager implements ConnectionHandler, MessageHandler {
 			
 			}
 			else{ //otherwise it is due for us
-				System.out.println("Manager# " + this.gatePort + " received " + response.getNumberOfTokens() + " tokens in a trade");
-				this.numberOfTokens += response.getNumberOfTokens();
-				System.out.println("gate number is " + this.gatePort + " and number of tokens is now " + this.numberOfTokens);
-				this.gateListener.writeMessage(response);
+				if(this.gateListener != null){
+					System.out.println("Manager# " + this.gatePort + " received " + response.getNumberOfTokens() + " tokens in a trade");
+					this.numberOfTokens += response.getNumberOfTokens();
+					System.out.println("gate number is " + this.gatePort + " and number of tokens is now " + this.numberOfTokens);
+					this.gateListener.writeMessage(response);
+				}
 			}
 			break;
 		}
@@ -317,6 +325,14 @@ public class Manager implements ConnectionHandler, MessageHandler {
 			this.neighbors.add(neighbor);
 			break;
 		}
+		case AbstractMessage.TYPE_DONE:
+		{
+			if(this.gateListener != null){
+				closeShop();
+				this.gateListener.writeMessage(message);
+			}
+			break;
+		}
 		default:
 		{
 			System.out.println("GOT A BAD MESSAGE FROM THE TRAFFIC GEN! " + message.getMessageType());
@@ -327,21 +343,47 @@ public class Manager implements ConnectionHandler, MessageHandler {
 	
 	@Override
 	public void onSocketClosed(Socket socket) {
-		if( gateListener != null && socket.equals(gateListener.getSocketListeningOn())){//
-			System.out.println("OUR GATE DISCONNECTED");
-			try {
-				this.onGateDisconnect();
-			} catch (IOException e) {
-				// TODO don't worry about it
+		synchronized(this){
+			if( gateListener != null && socket.equals(gateListener.getSocketListeningOn())){//
+				System.out.println("OUR GATE DISCONNECTED");
+				try {
+					this.onGateDisconnect();
+				} catch (IOException e) {
+					// TODO don't worry about it
+				}
+			}
+			else if(trafficGenListener != null && socket.equals(trafficGenListener.getSocketListeningOn())){
+				this.onTrafficDisconnect();
+			}
+			else{
+				
+				for(Iterator<MessageListener> iter = neighbors.iterator(); iter.hasNext();){
+					MessageListener neighbor = iter.next();
+					try {
+						closeManager(neighbor);
+					} catch (IOException e) {
+						// TODO Do nothing now
+					}
+					iter.remove();
+				}
+			
 			}
 		}
-		else if(socket.equals(trafficGenListener.getSocketListeningOn())){
-			this.onTrafficDisconnect();
-		}
-		else{ //It is one of our neighbors, handle accordingly
-			
+	}
+	
+	private void closeShop() throws IOException{
+		
+		for(MessageListener neighbor: this.neighbors){
+			neighbor.close();
 		}
 		
+		this.managerConnectionListener.getServer().close();
+		this.gateConnectionListener.getServer().close();
+		this.trafficGenListener.close();
+	}
+	
+	private void closeManager(MessageListener manager) throws IOException{
+		manager.close();
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -415,11 +457,40 @@ public class Manager implements ConnectionHandler, MessageHandler {
 	private void onGateDisconnect() throws IOException{;
 		//disconnect the gate
 		this.gateListener.die = true;
+		this.gateListener.close();
 		this.gateListener = null;
 		this.numberOfCars = 0;
 		this.numberOfTokens = -1;
+		
+		distributeTokens();
 	
 		this.trafficGenListener.writeMessage(new ManagerAvailableMessage(this.gateConnectionListener.getServer().getInetAddress(), gatePort, managerPort));
+	}
+	
+	private void distributeTokens() throws IOException{
+		
+		if(this.neighbors.size() == 0){
+			return;
+		}
+		
+		//send our tokens to our neighbors
+		synchronized(this.neighbors){
+			
+			int tokensPerNeighbor = this.numberOfTokens / this.neighbors.size();
+			int leftoverTokens = this.numberOfTokens - tokensPerNeighbor;
+
+			for(MessageListener neighbor: this.neighbors){
+				int tokensToSend = tokensPerNeighbor;
+
+				//make sure we send any leftover tokens
+				if(leftoverTokens > 0){
+					tokensToSend++;
+					leftoverTokens--;
+				}
+
+				neighbor.writeMessage(new TokenMessage(tokensToSend));
+			}
+		}
 	}
 	
 	private void onTrafficDisconnect(){
@@ -427,4 +498,5 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		this.trafficGenListener = null;
 		
 	}
+	
 }

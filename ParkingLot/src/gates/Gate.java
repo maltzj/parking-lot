@@ -211,7 +211,14 @@ public class Gate implements MessageHandler{
 	public void killMyself()
 	{
 		try {
-			this.simulationMessageListener.close();
+			//close the simulation listener if it is open
+			if(this.simulationMessageListener != null){
+				this.simulationMessageListener.close();
+			}
+			//close the manager connection if it is still open
+			if(this.manager != null){
+				this.manager.close();
+			}
 		} catch (IOException e) {
 			//Already closed
 		}
@@ -307,10 +314,15 @@ public class Gate implements MessageHandler{
 				this.onTokenResponseReceived((TokenResponseMessage) message);
 				break;
 			}
+			case AbstractMessage.TYPE_DONE:
+			{
+				killMyself();
+				break;
+			}
 			default:
 			{
 				System.out.println("What are you doing Message Type = "+message.getMessageType());
-				System.exit(1);
+				break;
 				//Do something
 			}
 			}
@@ -318,8 +330,6 @@ public class Gate implements MessageHandler{
 	}
 	
 	protected void onTokenResponseReceived(TokenResponseMessage message){
-		
-			System.out.println("RECEIVED A TOKEN TRADE OF " + message.getNumberOfTokens());
 			
 			if(this.trader instanceof ProfitTokenTrader){ //if we have a profit token trader, add the necessary amnt of money	
 				this.amountOfMoney += -1 * message.getNumberOfTokens() * this.costPerToken;

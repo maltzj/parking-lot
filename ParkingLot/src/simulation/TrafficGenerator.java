@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import messaging.AbstractMessage;
 import messaging.CarArrivalMessage;
+import messaging.DoneMessage;
 import messaging.GateMessage;
 import messaging.GateSubscribeMessage;
 import messaging.ManagerAvailableMessage;
@@ -135,6 +136,14 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
   				System.out.println(ie.getMessage());
   			}
 		}
+		System.out.println("Done running the simulation");
+		
+		try {
+			this.killGenerator();
+		} catch (IOException e) {
+			//don't worry about it
+		}
+		
 	}
 
 	public double nextTime(double expectedValue)
@@ -165,7 +174,6 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     			Car c = iter.next();
     			if(c.getTimeDeparts().compareTo(curr) <= 0){ //if a car is past its leaving time send it
     				int gate = rdm.nextInt(this.carReceivers.size());
-    				System.out.println("sending a token to gate " + gate);
     				try {
 						this.carReceivers.get(gate).writeMessage(new TokenMessage(1));
 					} catch (IOException e) {
@@ -339,6 +347,24 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 				this.gates.remove(i);
 			}
 		}
+	}
+	
+	private void killGenerator() throws IOException
+	{
+		synchronized(this.carReceivers){
+
+			//send a message to each of our car receivers
+			for(MessageListener listener: this.carReceivers){
+				try {
+					listener.writeMessage(new DoneMessage());
+				} catch (IOException e) {
+					//cry
+				}
+			}
+		}
+		
+		this.gatePort.getServer().close();
+		this.managerPort.getServer().close();
 	}
 	
 	

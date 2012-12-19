@@ -27,6 +27,8 @@ public abstract class AbstractMessage {
 	
 	public static final byte TYPE_GATE_DONE = 10;
 	public static final byte TYPE_LOT_DONE = 11;
+	public static final byte TYPE_DONE = 12;
+	
 	public static final byte TYPE_CLOSE_CONNECTION = 20;
 	
 	public static final byte TYPE_MONEY_QUERY_MESSAGE = 21;
@@ -189,6 +191,10 @@ public abstract class AbstractMessage {
 					String inetAddr = getIpAddress(dataInput, length - 8);
 					return new ManagerAvailableMessage(InetAddress.getByName(inetAddr), gatePort, managerPort);
 				}
+				case TYPE_DONE:
+				{
+					return new DoneMessage();
+				}
 				default:
 					return null;
 			}
@@ -214,7 +220,7 @@ public abstract class AbstractMessage {
 					CarArrivalMessage arrivalMessage = (CarArrivalMessage) messageWriting;
 					dataOutput.writeLong(arrivalMessage.getCarSentTime().getTime());
 					dataOutput.writeLong(arrivalMessage.getCarReturnTime().getTime());
-					dataOutput.flush();
+					
 					break;
 				}
 				case TYPE_GATE_SUBSCRIBE:
@@ -225,7 +231,7 @@ public abstract class AbstractMessage {
 					dataOutput.writeInt(addressAsBytes.length + 4);
 					dataOutput.writeInt(subsribeMessage.getPort());
 					dataOutput.write(addressAsBytes);
-					dataOutput.flush();
+					
 					break;
 				}
 				case TYPE_TIME_SUBSCRIBE:
@@ -236,13 +242,13 @@ public abstract class AbstractMessage {
 					dataOutput.writeInt(addressAsBytes.length + 4);
 					dataOutput.writeInt(subsribeMessage.getPortSubscribingOn());
 					dataOutput.write(addressAsBytes);
-					dataOutput.flush();
+					
 					break;
 				}
 				case TYPE_TIME_MESSAGE:
 				{
 					dataOutput.writeLong(((TimeMessage) messageWriting).getNewTime().getTime());
-					dataOutput.flush();
+					
 					break;
 				}
 				case TYPE_TOKEN_REQUEST_MESSAGE:
@@ -253,7 +259,7 @@ public abstract class AbstractMessage {
 					dataOutput.writeInt(requestMessage.getTokensRequested());
 					dataOutput.writeInt(requestMessage.getTtl());
 					dataOutput.write(parsedStack.getBytes("UTF-8"));
-					dataOutput.flush();
+					
 					break;
 				}
 				case TYPE_TOKEN_RESPONSE_MESSAGE:
@@ -263,28 +269,28 @@ public abstract class AbstractMessage {
 					dataOutput.writeInt(parsedStack.length() + 4);
 					dataOutput.writeInt(responseMessage.getNumberOfTokens());
 					dataOutput.write(parsedStack.getBytes("UTF-8"));
-					dataOutput.flush();
+					
 					break;
 				}
 				case TYPE_TOKEN_REQUIRE_MESSAGE:
 				{
 					TokenRequireMessage requireMessage = (TokenRequireMessage) messageWriting;
 					dataOutput.writeInt(requireMessage.getTokensRequired());
-					dataOutput.flush();
+					
 					break;
 				}
 				case TYPE_TOKEN_MESSAGE:
 				{
 					TokenMessage tokenMessage = (TokenMessage) messageWriting;
 					dataOutput.writeInt(tokenMessage.getNumberOfTokensSent());
-					dataOutput.flush();
+					
 					break;
 				}
 				case TYPE_MONEY_MESSAGE:
 				{
 					MoneyMessage moneyMessage = (MoneyMessage) messageWriting;
 					dataOutput.writeInt(moneyMessage.amountOfMoney);
-					dataOutput.flush();
+					
 					break;
 				}
 				case TYPE_GATE_DONE:
@@ -295,7 +301,7 @@ public abstract class AbstractMessage {
 					dataOutput.writeInt(addressAsBytes.length + 4);
 					dataOutput.writeInt(gateMessage.getPortSubscribingOn());
 					dataOutput.write(addressAsBytes);
-					dataOutput.flush();
+					
 					break;
 				}
 				case TYPE_LOT_DONE:
@@ -306,17 +312,17 @@ public abstract class AbstractMessage {
 					dataOutput.writeInt(addressAsBytes.length + 4);
 					dataOutput.writeInt(lotMessage.getPortSubscribingOn());
 					dataOutput.write(addressAsBytes);
-					dataOutput.flush();
+					
 					break;
 				}
 				case TYPE_CLOSE_CONNECTION:
 				{
-					dataOutput.flush();
+					
 					break;
 				}
 				case TYPE_CONNECT:
 				{
-					dataOutput.flush();
+					
 					break;
 				}
 				case TYPE_MONEY_AMOUNT_MESSAGE:
@@ -328,7 +334,7 @@ public abstract class AbstractMessage {
 					dataOutput.writeInt(moneyAmountMessage.getAmountOfMoney());
 					dataOutput.writeInt(moneyAmountMessage.getPort());
 					dataOutput.write(addressAsBytes);
-					dataOutput.flush();
+					
 					break;
 				}
 				case TYPE_TOKEN_AMOUNT_MESSAGE:
@@ -340,7 +346,7 @@ public abstract class AbstractMessage {
 					dataOutput.writeInt(tokenAmount.getNumberOfTokens());
 					dataOutput.writeInt(tokenAmount.getPort());
 					dataOutput.write(addressAsBytes);
-					dataOutput.flush();
+					
 					break;
 				}
 				case TYPE_GATE:
@@ -351,7 +357,7 @@ public abstract class AbstractMessage {
 					dataOutput.writeInt(addressAsBytes.length + 4);
 					dataOutput.writeInt(gateMessage.getPort());
 					dataOutput.write(addressAsBytes);
-					dataOutput.flush();
+					
 					break;
 				}
 				case TYPE_MANAGER_AVAILABLE:
@@ -363,14 +369,16 @@ public abstract class AbstractMessage {
 					dataOutput.writeInt(availableMessage.getGatePort());
 					dataOutput.writeInt(availableMessage.getManagerPort());
 					dataOutput.write(addrAsBytes);
+					
 					break;
 				}
 				default:
 				{
-					dataOutput.flush();
-					return;
+					break;
 				}
+				
 			}
+			dataOutput.flush();
 		}
 	}
 	
