@@ -152,14 +152,6 @@ public abstract class AbstractMessage {
 				{
 					return new SimpleMessage(TYPE_TOKEN_QUERY_MESSAGE);
 				}
-				case TYPE_TOKEN_AMOUNT_MESSAGE:
-				{
-					int length = dataInput.readInt();
-					int numberOfTokens = dataInput.readInt();
-					int port = dataInput.readInt();
-					String inetAddString = getIpAddress(dataInput, length - 8);
-					return new TokenAmountMessage(numberOfTokens, InetAddress.getByName(inetAddString), port);
-				}
 				case TYPE_GATE:
 				{
 					int length = dataInput.readInt();
@@ -286,18 +278,6 @@ public abstract class AbstractMessage {
 				}
 				case TYPE_CONNECT:
 				{
-					
-					break;
-				}
-				case TYPE_TOKEN_AMOUNT_MESSAGE:
-				{
-					TokenAmountMessage tokenAmount = (TokenAmountMessage) messageWriting;
-					String addressAsString = tokenAmount.getIpAddress().getHostAddress();
-					byte[] addressAsBytes = addressAsString.getBytes("ASCII");
-					dataOutput.writeInt(addressAsBytes.length + 8);
-					dataOutput.writeInt(tokenAmount.getNumberOfTokens());
-					dataOutput.writeInt(tokenAmount.getPort());
-					dataOutput.write(addressAsBytes);
 					
 					break;
 				}

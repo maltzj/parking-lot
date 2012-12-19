@@ -3,7 +3,7 @@ package messaging;
 import java.net.InetAddress;
 
 /**
- * ManagerAvailableMessages specficy that a given manager has come online and is able to receive cars
+ * ManagerAvailableMessages specficy that a given manager has come online and is able to receive a paired gate
  *
  */
 public class ManagerAvailableMessage extends AbstractMessage {

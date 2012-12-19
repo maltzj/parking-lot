@@ -4,6 +4,11 @@ import java.net.InetAddress;
 
 import util.HostPort;
 
+
+/**
+ * A GateMessage specifies the location of a Gate in the system.  This is represented as an ip address and port pairing combination
+ *
+ */
 public class GateMessage extends AbstractMessage{
 
 	InetAddress addr;

@@ -2,6 +2,13 @@ package messaging;
 
 import java.net.InetAddress;
 
+/**
+ * 
+ * A GateSubscribeMessage is a message which is used to announce to the Traffic Generator that a given actor would like to receive cars
+ * The message contains information about the receiver's ip and port
+ *
+ */
+
 public class GateSubscribeMessage extends AbstractMessage{
 	
 	private InetAddress addressOfGate;
