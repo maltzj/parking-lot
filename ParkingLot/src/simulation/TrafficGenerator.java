@@ -86,7 +86,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
         this.connectedManagers = new HashMap<MessageListener, HostPort>();
 	}
 
-	public void run()
+	public synchronized void run()
 	{
 		System.out.println("Running the run method of traffic generator");
 		/**
@@ -166,7 +166,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     	return d;
     }
 
-    private void checkCarLeaving()
+    private synchronized void checkCarLeaving()
     {
     	Date curr = this.getCurrentDate();
     	synchronized(this){
@@ -186,7 +186,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     	}
     }
     
-    private void notifySubscribers()
+    private synchronized void notifySubscribers()
     {
     	synchronized(this){
     		for(MessageListener listener: this.carReceivers){
@@ -200,7 +200,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     }
 
 	
-    public void onConnectionReceived(Socket connection, int receivedOn)
+    public synchronized void onConnectionReceived(Socket connection, int receivedOn)
     { 
     	synchronized(this){
     		if(receivedOn == gatePort.getPort()){ 
@@ -214,7 +214,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     
     }
     
-    private void onManagerSubscribe(Socket sock){
+    private synchronized void onManagerSubscribe(Socket sock){
     	synchronized(this){
     		MessageListener listener = new MessageListener(this, sock);
     		listener.setDaemon(false);
@@ -227,7 +227,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     
     }
     
-    private void onGateSubscribe(Socket sock){
+    private synchronized void onGateSubscribe(Socket sock){
     	MessageListener listener = new MessageListener(this, sock);
     	listener.setDaemon(false);
     	this.gates.add(listener);
@@ -235,13 +235,13 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     	
     }
 
-    public void onServerError(ServerSocket failedSocket)
+    public synchronized void onServerError(ServerSocket failedSocket)
     {
    
     }
 
 	@Override
-	public void onMessageReceived(AbstractMessage message, MessageListener listener) {
+	public synchronized void onMessageReceived(AbstractMessage message, MessageListener listener) {
 		synchronized(this){
 			for(int i = 0; i < this.gates.size(); i++){ //check if a gate sent it to us
 				if(this.gates.get(i).equals(listener)){
@@ -263,7 +263,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 		}
 	}
 	
-	private void onMessageFromGate(AbstractMessage message, MessageListener listener) throws IOException{
+	private synchronized void onMessageFromGate(AbstractMessage message, MessageListener listener) throws IOException{
 		switch(message.getMessageType()){
 		case AbstractMessage.TYPE_CONNECT:
 		{
@@ -283,7 +283,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 		}
 	}
 	
-	private void onMessageFromManager(AbstractMessage message, MessageListener listener) throws IOException{
+	private synchronized void onMessageFromManager(AbstractMessage message, MessageListener listener) throws IOException{
 		switch(message.getMessageType()){
 		case AbstractMessage.TYPE_CAR_ARRIVAL: //if one of the managers sent us a car arrival, add it to the parking lot
 		{
@@ -309,7 +309,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 				}
 				
 				else{ //otherwise just generate three random numbers
-					List<MessageListener> managersAsList =  Arrays.asList(connectedManagersSet.toArray(new MessageListener[0])); //give me a list of managers
+					List<MessageListener> managersAsList = Arrays.asList(connectedManagersSet.toArray(new MessageListener[0])); //give me a list of managers
 					Collections.shuffle(managersAsList);
 					for(int i = 0; i < 3; i++){
 						listener.writeMessage(new GateMessage(this.connectedManagers.get(managersAsList.get(i))));
@@ -342,7 +342,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 	}
 
 	@Override
-	public void onSocketClosed(Socket socket) {
+	public synchronized void onSocketClosed(Socket socket) {
 		synchronized (this) {
 			for(int i = 0; i < this.gates.size(); i++){ //If it is a gate, remove it from the list of gates
 				if(this.gates.get(i).getSocketListeningOn().equals(socket)){
@@ -353,7 +353,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 		
 	}
 	
-	private void killGenerator() throws IOException
+	private synchronized void killGenerator() throws IOException
 	{
 		synchronized(this){
 

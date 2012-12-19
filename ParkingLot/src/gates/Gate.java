@@ -410,19 +410,6 @@ public class Gate implements MessageHandler{
 
 
 	/**
-	 * Subscribes to another Gate so that it can trade tokens with that Gate.
-	 */
-	public void gateSubscribe()
-	{
-		GateSubscribeMessage message = new GateSubscribeMessage(this.addrListeningOn, this.portListeningOn);
-		try {
-			this.manager.writeMessage(message);
-		} catch (IOException e) {
-			//do stuff
-		}
-	}
-
-	/**
 	 * Sends a message to the TrafficSimulator that this gate has completed its responsibilities.
 	 */
 	public void sendDone()

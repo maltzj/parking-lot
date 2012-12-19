@@ -180,7 +180,7 @@ public abstract class AbstractMessage {
 				case TYPE_GATE:
 				{
 					int length = dataInput.readInt();
-					System.out.println("Length BEING READ is " + length);
+					System.out.println("Length BEING READ is " + length + " OFF OF " + (dataInput.available() + 4) + " on " + inputStream);
 					int port = dataInput.readInt();
 					String inetAddress = getIpAddress(dataInput, length - 4);
 					return new GateMessage(InetAddress.getByName(inetAddress), port);
@@ -379,6 +379,7 @@ public abstract class AbstractMessage {
 				
 			}
 			dataOutput.flush();
+			outputStream.flush();
 		}
 	}
 	
