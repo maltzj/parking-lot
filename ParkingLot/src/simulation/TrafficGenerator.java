@@ -294,6 +294,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 					
 					while(managerIter.hasNext()){
 						HostPort toSend = this.connectedManagers.get(managerIter.next());
+						System.out.println("Sending port " + toSend.port + " and addr " + toSend.iaddr);
 						listener.writeMessage(new GateMessage(toSend));
 					}
 				}
@@ -306,10 +307,10 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 					}
 				}
 				
+				this.connectedManagers.put(listener, new HostPort(gateSub.getAddressOfGate(), gateSub.getPort()));
 			}
 			
 			
-			this.connectedManagers.put(listener, new HostPort(gateSub.getAddressOfGate(), gateSub.getPort()));
 			break;
 		}
 		case AbstractMessage.TYPE_MANAGER_AVAILABLE:
