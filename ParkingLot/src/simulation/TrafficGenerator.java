@@ -73,7 +73,6 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 		
 		this.gates = new ArrayList<MessageListener>();
 		this.carReceivers = new ArrayList<MessageListener>();
-        System.out.println("I am a traffic generator");
         
         Config config = Config.getSharedInstance();
         
