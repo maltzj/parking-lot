@@ -16,6 +16,10 @@ public class Config
 	public GateInfo[] gates;
 	public ManagerInfo[] managers;
 	
+	/**
+	 * Gets the currently active config
+	 * @return A singleton, immutable, config
+	 */
 	public static Config getSharedInstance() {
 		if(instance == null) {
 			instance = new Config();
@@ -34,6 +38,10 @@ public class Config
         return c;
     }
     
+    /**
+     * Creates a config with token thief gates
+     * @return A config that contains GateInfo for token thieves
+     */
     public static Config getTokenThief()
     {
     	Config c = getSharedInstance();
@@ -113,6 +121,15 @@ public class Config
 		}	
 	}
 	
+	/**
+	 * Contains all the information that a manager contains
+	 * 	managerPort: The specification of where other managers should connect
+	 * 	hostPort: The specification of where gates should connect
+	 *  tokens: the number of tokens it starts with
+	 *  money: the amount of money it starts with
+	 * @author Jonathan
+	 *
+	 */
 	public class ManagerInfo {
 		public HostPort hostport;
 		public HostPort managerPort;
@@ -126,6 +143,14 @@ public class Config
 		}
 	}
 	
+	/**
+	 * Contains all the information about a gate
+	 * 	hostPort: The specification of where the gate starts
+	 * 	tokens: The number of tokens a gate starts with
+	 * 	money: The amount of money a gate starts with
+	 * @author Jonathan
+	 *
+	 */
 	public class GateInfo {
 		public HostPort hostport;
 		public int tokens;
@@ -144,21 +169,36 @@ public class Config
 			return ret;
 		}
 
+		/**
+		 * Makes it so that this gate is specified as a FastAndLooseGate
+		 */
         public void makeFastAndLoose()
         {
             this.type = FAST_AND_LOOSE;
         }
 
+        /**
+         * Specifies this gate as a TimeBombGate
+         */
         public void makeTimeBomb()
         {
             this.type = TIME_BOMB;
         }
         
+        /**
+         * Specifies this as a TokenThiefGate
+         */
         public void makeTokenThief(){
         	this.type = TOKEN_THIEF;
         }
 	}
 	
+	/**
+	 * Contains all the information for networking our traffic generator.  Includes
+	 * 	manager: The specification for where managers should connect
+	 * 	gate: The specification of where gates should connect
+	 *
+	 */
 	public class TrafficGenInfo {
 		public HostPort manager;
 		public HostPort gate;

@@ -28,16 +28,21 @@ public class HostPort
         return (""+this.iaddr.hashCode() + ""+ port).hashCode();
     }
 
+    /**
+     * Checks if two HostPorts are equal.  Equality is defined as having the same InetAddress and port
+     * Returns false if any object other than a HostPort is passed in
+     */
     public boolean equals(Object other)
     {
-        if(other instanceof HostPort)
+        if(!(other instanceof HostPort))
         {
-            HostPort h = (HostPort) other;
-            boolean iaddrEqual = this.iaddr.equals(h.iaddr);
-            boolean portEqual = this.port == h.port;
-            return iaddrEqual && portEqual;
+        	return false;
         }
-        return false;
+        HostPort h = (HostPort) other;
+        boolean iaddrEqual = this.iaddr.equals(h.iaddr);
+        boolean portEqual = this.port == h.port;
+        return iaddrEqual && portEqual;
+       
     }
     
     public String toString() {

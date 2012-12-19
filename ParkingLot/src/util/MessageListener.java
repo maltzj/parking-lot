@@ -70,6 +70,9 @@ public class MessageListener extends Thread {
 		AbstractMessage.encodeMessage(socketListeningOn.getOutputStream(), messageToSend);
 	}
 	
+	/**
+	 * Checks to see if two message listeners are equal.  Equality is defined as listening on the same socket
+	 */
 	public boolean equals(Object o){
 		if(!(o instanceof MessageListener)){
 			return false;
@@ -78,25 +81,38 @@ public class MessageListener extends Thread {
 		return other.getSocketListeningOn().equals(this.socketListeningOn);
 	}
 	
+	/**
+	 * Closes the socket that this MessageListener is listening on
+	 * @throws IOException
+	 */
 	public void close() throws IOException {
 		this.socketListeningOn.close();
 	}
 
+	/**
+	 * Gets the handler that this MessageListener passes its messages back to
+	 * @return The current MessageHandler that is handling messages
+	 */
 	public MessageHandler getHandler() {
 		return handler;
 	}
 
+	/**
+	 * Sets the MessageHandler which is handling messages for this Listener
+	 * @param handler, The new MessageHandler which will handle messages for this connection
+	 */
 	public void setHandler(MessageHandler handler) {
 		this.handler = handler;
 	}
 
+	/**
+	 * Gets the socket that this MessageListener is listening on
+	 * @return The socket that is being listened on
+	 */
 	public Socket getSocketListeningOn() {
 		return socketListeningOn;
 	}
 
-	public void setSocketListeningOn(Socket socketListeningOn) {
-		this.socketListeningOn = socketListeningOn;
-	}
 	
 	
 

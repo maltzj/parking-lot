@@ -13,6 +13,12 @@ public class ConnectionListener extends Thread {
 	private int port;
 	private ServerSocket server;
 	
+	/**
+	 * Initializes a ConnectionListener to report back to a given ConnectionHandler
+	 * @param connectionHandler Where new connections will be passed
+	 * @param port The port where the ServerSocket will listen
+	 * @throws IOException
+	 */
 	public ConnectionListener(ConnectionHandler connectionHandler, int port) throws IOException {
 		super();
 		this.connectionHandler = connectionHandler;
@@ -33,28 +39,36 @@ public class ConnectionListener extends Thread {
 		}
 	}
 	
+	/**
+	 * Returns the ConnectionHandler which handles connections for this ConnectionListener
+	 * @return This instance's ConnectionHandler
+	 */
 	public ConnectionHandler getConnectionHandler() {
 		return connectionHandler;
 	}
 
+	/**
+	 * Sets the ConnectionHandler which handles connections for this ConnectionListener
+	 * @param connectionHandler The new ConnectionHandler for this instance
+	 */
 	public void setConnectionHandler(ConnectionHandler connectionHandler) {
 		this.connectionHandler = connectionHandler;
 	}
 
+	/**
+	 * Gets the port that this ConnectionHandler is listening on
+	 * @return The port that is being listened on
+	 */
 	public int getPort() {
 		return port;
 	}
 
-	public void setPort(int port) {
-		this.port = port;
-	}
-
+	/**
+	 * Gets the ServerSocket that this ConnectionListener is using to listen for connections
+	 * @return The ServerSocket which is being used to listen for connections
+	 */
 	public ServerSocket getServer() {
 		return server;
-	}
-
-	public void setServer(ServerSocket server) {
-		this.server = server;
 	}
 
 }
