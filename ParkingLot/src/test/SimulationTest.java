@@ -36,7 +36,7 @@ public class SimulationTest {
         else{
             c = Config.getSharedInstance();
         }
-		TrafficGenerator generator = new TrafficGenerator(c.managers, 200, "2,0.000000000275,1,-0.0000099,0,0.1");
+		TrafficGenerator generator = new TrafficGenerator(c.managers, 2000, "2,0.000000000275,1,-0.0000099,0,0.1");
 		
 		ArrayList<Gate> gates = new ArrayList<Gate>();
 		ArrayList<Manager> managers = new ArrayList<Manager>();
@@ -51,7 +51,7 @@ public class SimulationTest {
             switch(c.gates[i].type)
             {
                 case Config.GateInfo.NORMAL:
-                    gates.add(new Gate(10, c.gates[i].tokens, c.gates[i].money, c.gates[i].hostport.iaddr, c.gates[i].hostport.port, 10, Gate.GLOBAL_TRADING_POLICY, COST_PER_TOKEN));
+                    gates.add(new Gate(10, c.gates[i].tokens, c.gates[i].money, c.gates[i].hostport.iaddr, c.gates[i].hostport.port, 10, Gate.PROFIT_TRADING_POLICY, COST_PER_TOKEN));
                     break;
                 case Config.GateInfo.TIME_BOMB:
                     gates.add(new TimeBombGate(10, c.gates[i].tokens, c.gates[i].money, c.gates[i].hostport.iaddr, c.gates[i].hostport.port, 10, Gate.GLOBAL_TRADING_POLICY, COST_PER_TOKEN));

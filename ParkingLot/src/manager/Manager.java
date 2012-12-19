@@ -6,7 +6,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import java.util.Stack;
 import java.util.Vector;
 
@@ -172,12 +171,10 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		{
 			synchronized(this.tokenRequests){
 				if(this.gateListener != null){
-					Socket sock = listener.getSocketListeningOn();
 					TokenRequestMessage request = (TokenRequestMessage) message;
 					HostPort hp = new HostPort(listener.getSocketListeningOn().getLocalAddress(), listener.getSocketListeningOn().getPort());
 					request.getReceivers().push(hp);
-					System.out.println("Port is " + sock.getPort() + " local port is " + sock.getLocalPort());
-
+				
 					TokenRequestMessage copy = new TokenRequestMessage(request.getTokensRequested(), (Stack<HostPort>) request.getReceivers().clone(), request.getTtl());
 
 					this.tokenRequests.add(copy);
@@ -435,20 +432,19 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		return null;
 	}
 	
-	private void forwardTokenRequest(TokenRequestMessage message){
-		Random rdm = new Random(System.currentTimeMillis());
+	private void forwardTokenRequest(TokenRequestMessage message) throws IOException{
+		int tokensPerNeighbor = message.getTokensRequested() /this.neighbors.size();
+		int leftoverTokens = message.getTokensRequested() - tokensPerNeighbor;
 		synchronized(this.neighbors){
 			
-			if(this.neighbors.size() == 0){ //account for having no neighbors
-				return;
-			}
-			
-			int indexToSend = rdm.nextInt(this.neighbors.size());
-			try {
-				this.neighbors.get(indexToSend).writeMessage(message);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			for(MessageListener neighbor: this.neighbors){
+				int tokensToSend = tokensPerNeighbor;
+				
+				if(leftoverTokens > 0){
+					tokensToSend++;
+					leftoverTokens--;
+				}
+				neighbor.writeMessage(new TokenRequestMessage(tokensToSend, message.getReceivers(), message.getTtl()));
 			}
 		}
 	}

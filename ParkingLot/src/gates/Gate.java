@@ -101,7 +101,6 @@ public class Gate implements MessageHandler{
 		switch(tradingPolicy){
 		case Gate.NO_TRADING_POLICY:
 		{
-			System.out.println("Gate number " + realPort + " has a no trader policy");
 			this.trader = new NoTokenTrader(this);
 			break;
 		}
@@ -443,9 +442,9 @@ public class Gate implements MessageHandler{
 	 */
 	public void sendCarToParkingLot(CarWrapper carWrapper)
 	{
-		/*System.out.println("Gate #"+realPort +": Sending a car to the parking lot. It will leave at " 
+		System.out.println("Gate #"+realPort +": Sending a car to the parking lot. It will leave at " 
 				+ carWrapper.carRepresenting.getTimeDeparts() +" Tokens: "+this.numberOfTokens + " amount of money is: " 
-				+ this.amountOfMoney + " length of queue is " + this.getCarsWaiting());*/
+				+ this.amountOfMoney + " length of queue is " + this.getCarsWaiting());
 
 		CarArrivalMessage message = new CarArrivalMessage(new Date(), carWrapper.getCarRepresenting().getTimeDeparts());
 
