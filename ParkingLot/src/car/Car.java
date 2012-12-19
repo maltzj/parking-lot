@@ -7,7 +7,6 @@ import java.util.Date;
  * An abstraction of a Car as it is used by all parts of the simulation.
  * Note that the only information that is necessary about a car is when it is sent from the simulator
  * and when it departs from the parkingLot.
- * @author Jonathan
  *
  */
 public class Car {

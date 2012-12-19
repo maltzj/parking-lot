@@ -57,6 +57,13 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 	private Random rdm;
 	private static int numGates = 6;
 	
+	/**
+	 * Creates a Traffic Generator with a given list of managers to distribute, a simulation time and polynomial
+	 * @param managers The list of valid managers
+	 * @param simLength The length of the simulation
+	 * @param poly The polynomial that describes how cars are being produced
+	 * @throws Exception
+	 */
 	public TrafficGenerator(ManagerInfo[] managers, int simLength, String poly) throws Exception
 	{
 		this.currentTime = 0;
@@ -166,6 +173,9 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     	return d;
     }
 
+    /**
+     * Checks if any cars are leaving the parking lot
+     */
     private synchronized void checkCarLeaving()
     {
     	Date curr = this.getCurrentDate();
@@ -186,6 +196,9 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     	}
     }
     
+    /**
+     * Notify all subscribers that are listening for time updates
+     */
     private synchronized void notifySubscribers()
     {
     	synchronized(this){
@@ -199,7 +212,6 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     	}
     }
 
-	
     public synchronized void onConnectionReceived(Socket connection, int receivedOn)
     { 
     	synchronized(this){
@@ -213,7 +225,11 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     	
     
     }
-    
+
+    /**
+     * Handles a manager subscribing to traffic.  This involves adding the manager to the list of car receivers and listening for messages
+     * @param sock The socket from a new manager
+     */
     private synchronized void onManagerSubscribe(Socket sock){
     	synchronized(this){
     		MessageListener listener = new MessageListener(this, sock);
@@ -227,6 +243,10 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     
     }
     
+    /**
+     * Handles a new gate subscribing.  The traffic generator adds the new gate to the list of connected gates and starts listening for messages
+     * @param sock The socket of the gate which has just subscribed
+     */
     private synchronized void onGateSubscribe(Socket sock){
     	MessageListener listener = new MessageListener(this, sock);
     	listener.setDaemon(false);
@@ -263,6 +283,12 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 		}
 	}
 	
+	/**
+	 * Handles a message being received from one of the Gate
+	 * @param message The message that a Gate sent
+	 * @param listener The listener which correspond to the Gate
+	 * @throws IOException If an IOException occurs
+	 */
 	private synchronized void onMessageFromGate(AbstractMessage message, MessageListener listener) throws IOException{
 		switch(message.getMessageType()){
 		case AbstractMessage.TYPE_CONNECT:
@@ -283,6 +309,12 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 		}
 	}
 	
+	/**
+	 * Handles a message being send by a Manager
+	 * @param message The message that the manager sent
+	 * @param listener The listener which correspond to the manager which sent the message
+	 * @throws IOException If an Exception occurs
+	 */
 	private synchronized void onMessageFromManager(AbstractMessage message, MessageListener listener) throws IOException{
 		switch(message.getMessageType()){
 		case AbstractMessage.TYPE_CAR_ARRIVAL: //if one of the managers sent us a car arrival, add it to the parking lot
@@ -353,6 +385,10 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 		
 	}
 	
+	/**
+	 * Kills the traffic generator and writes a Done Message to all of the car receivers
+	 * @throws IOException If an IOException occurs
+	 */
 	private synchronized void killGenerator() throws IOException
 	{
 		synchronized(this){
