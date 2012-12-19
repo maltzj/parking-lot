@@ -27,7 +27,7 @@ import util.MessageListener;
 
 public class Manager implements ConnectionHandler, MessageHandler {
 
-	private static final int ttl = 2;
+	private static final int ttl = 3;
 	
 	MessageListener gateListener;
 	MessageListener trafficGenListener;
@@ -87,36 +87,37 @@ public class Manager implements ConnectionHandler, MessageHandler {
 
 	@Override
 	public void onConnectionReceived(Socket newConnection, int receivedOn) {
-		
-		if(receivedOn == gatePort){  //if a gate connected
-			if(this.gateListener == null){
-				gateListener = new MessageListener(this, newConnection);
-				gateListener.setDaemon(true);
-				gateListener.start();
+		synchronized(this){
+			if(receivedOn == gatePort){  //if a gate connected
+				if(this.gateListener == null){
+					gateListener = new MessageListener(this, newConnection);
+					gateListener.setDaemon(true);
+					gateListener.start();
 
-				Config c = Config.getSharedInstance();
-				Socket trafficSock = null;
-				try { //connect this manager to the traffic generator
-					trafficSock = new Socket(c.trafficGenerator.manager.iaddr, c.trafficGenerator.manager.port);
-				} catch (IOException e) {
-					return;
-				}
+					Config c = Config.getSharedInstance();
+					Socket trafficSock = null;
+					try { //connect this manager to the traffic generator
+						trafficSock = new Socket(c.trafficGenerator.manager.iaddr, c.trafficGenerator.manager.port);
+					} catch (IOException e) {
+						return;
+					}
 
-				trafficGenListener = new MessageListener(this, trafficSock);
-				trafficGenListener.setDaemon(true);
-				trafficGenListener.start();
-				try { //become subscribed and write a gate subscribe message
-					trafficGenListener.writeMessage(new GateSubscribeMessage(this.managerConnectionListener.getServer().getInetAddress(), this.managerPort));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
+					trafficGenListener = new MessageListener(this, trafficSock);
+					trafficGenListener.setDaemon(true);
+					trafficGenListener.start();
+					try { //become subscribed and write a gate subscribe message
+						trafficGenListener.writeMessage(new GateSubscribeMessage(this.managerConnectionListener.getServer().getInetAddress(), this.managerPort));
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+					}
 				}
 			}
-		}
-		else{  //otherwise we received this from another manager
-			MessageListener listener = new MessageListener(this, newConnection);
-			listener.setDaemon(false);
-			listener.start();
-			this.neighbors.add(listener);
+			else{  //otherwise we received this from another manager
+				MessageListener listener = new MessageListener(this, newConnection);
+				listener.setDaemon(false);
+				listener.start();
+				this.neighbors.add(listener);
+			}
 		}
 		
 	}
@@ -161,7 +162,6 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		case AbstractMessage.TYPE_TOKEN_MESSAGE:
 		{
 			if(this.gateListener != null){
-				System.out.println("GOT TOKENS FROM ANOTHER MANAGER IN A STRAIGHT TOKEN MESSAGE");
 				TokenMessage tokenMessage = (TokenMessage) message;
 				this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
 				this.gateListener.writeMessage(tokenMessage);
@@ -172,9 +172,11 @@ public class Manager implements ConnectionHandler, MessageHandler {
 		{
 			synchronized(this.tokenRequests){
 				if(this.gateListener != null){
+					Socket sock = listener.getSocketListeningOn();
 					TokenRequestMessage request = (TokenRequestMessage) message;
 					HostPort hp = new HostPort(listener.getSocketListeningOn().getLocalAddress(), listener.getSocketListeningOn().getPort());
 					request.getReceivers().push(hp);
+					System.out.println("Port is " + sock.getPort() + " local port is " + sock.getLocalPort());
 
 					TokenRequestMessage copy = new TokenRequestMessage(request.getTokensRequested(), (Stack<HostPort>) request.getReceivers().clone(), request.getTtl());
 
@@ -207,9 +209,7 @@ public class Manager implements ConnectionHandler, MessageHandler {
 			}
 			else{ //otherwise it is due for us
 				if(this.gateListener != null){
-					System.out.println("Manager# " + this.gatePort + " received " + response.getNumberOfTokens() + " tokens in a trade");
 					this.numberOfTokens += response.getNumberOfTokens();
-					System.out.println("gate number is " + this.gatePort + " and number of tokens is now " + this.numberOfTokens);
 					this.gateListener.writeMessage(response);
 				}
 			}
@@ -345,7 +345,6 @@ public class Manager implements ConnectionHandler, MessageHandler {
 	public void onSocketClosed(Socket socket) {
 		synchronized(this){
 			if( gateListener != null && socket.equals(gateListener.getSocketListeningOn())){//
-				System.out.println("OUR GATE DISCONNECTED");
 				try {
 					this.onGateDisconnect();
 				} catch (IOException e) {

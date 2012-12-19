@@ -104,6 +104,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 			nextTime = (int)nextTime(nextTimePolynomial.evaluate(currentTime));
 			stayTime = (int)(Math.abs(rdm.nextGaussian() * ( simulationLength - currentTime )/4 + (simulationLength - currentTime)/2));
 			nextGate = (int)(rdm.nextDouble() * ( this.carReceivers.size() + 2));
+			nextGate = (int)(rdm.nextDouble() * ( numGates + 2 ));
 			
 			while(nextGate >= this.carReceivers.size()){ //get a gate that is valid
 				nextGate = (int)(rdm.nextDouble() * ( this.carReceivers.size() + 2));
@@ -123,8 +124,7 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 				try {
 					this.carReceivers.get(nextGate).writeMessage(new CarArrivalMessage(getCurrentDate(), leavingDate));
 				} catch (IOException e) {
-					// TODO WHAT DO WE DO HERE??
-					e.printStackTrace();
+					this.carReceivers.remove(nextGate);
 				}
 			}
 			notifySubscribers();
@@ -205,11 +205,13 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
     	/*When a gate subscribes add it to the listen and start listening
     	 *We shouldn't hear any communication from it, we should just send it a manager
     	 */
-    	if(receivedOn == gatePort.getPort()){ 
-    		onGateSubscribe(connection);
-    	}
-    	else{
-    		onManagerSubscribe(connection);
+    	synchronized(this){
+    		if(receivedOn == gatePort.getPort()){ 
+    			onGateSubscribe(connection);
+    		}
+    		else{
+    			onManagerSubscribe(connection);
+    		}
     	}
     	
     
@@ -236,29 +238,30 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 
     public void onServerError(ServerSocket failedSocket)
     {
-        System.out.println("There is sadness in the world");
+   
     }
 
 	@Override
 	public void onMessageReceived(AbstractMessage message, MessageListener listener) {
-		
-		for(int i = 0; i < this.gates.size(); i++){ //check if a gate sent it to us
-			if(this.gates.get(i).equals(listener)){
-				try{
-					this.onMessageFromGate(message, listener);
+		synchronized(this){
+			for(int i = 0; i < this.gates.size(); i++){ //check if a gate sent it to us
+				if(this.gates.get(i).equals(listener)){
+					try{
+						this.onMessageFromGate(message, listener);
+					}
+					catch(IOException e){
+						//TODO worry about that later
+					}
+					return;
 				}
-				catch(IOException e){
-					//TODO worry about that later
-				}
-				return;
 			}
+
+			try { //if it wasn't a message from a gate it is from a manager
+				onMessageFromManager(message, listener);
+			} catch (IOException e) {
+				//TODO Do it!
+			} 
 		}
-		
-		try { //if it wasn't a message from a gate it is from a manager
-			onMessageFromManager(message, listener);
-		} catch (IOException e) {
-			//TODO Do it!
-		} 
 	}
 	
 	private void onMessageFromGate(AbstractMessage message, MessageListener listener) throws IOException{
@@ -302,7 +305,6 @@ public class TrafficGenerator extends Thread implements ConnectionHandler, Messa
 					
 					while(managerIter.hasNext()){
 						HostPort toSend = this.connectedManagers.get(managerIter.next());
-						System.out.println("Sending port " + toSend.port + " and addr " + toSend.iaddr);
 						listener.writeMessage(new GateMessage(toSend));
 					}
 				}

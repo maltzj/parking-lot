@@ -127,10 +127,11 @@ public class Gate implements MessageHandler{
 		
 		//Add Car to queue
 		long timeArrived = arrival.getCarSentTime().getTime();
-		long leavingTime = timeArrived + amountOfTimeToWait;
+		long leavingTime = timeArrived + this.amountOfTimeToWait;
 
 		Date timeToLeave = new Date();
 		timeToLeave.setTime(leavingTime);
+		
 		CarWrapper carWrapper = new CarWrapper(carToQueue, timeToLeave);
 		waitingCars.add(carWrapper);
 
@@ -157,7 +158,7 @@ public class Gate implements MessageHandler{
 			CarWrapper currentCar = iter.next();
 			Calendar carLeaveQueueTime = Calendar.getInstance();
 			carLeaveQueueTime.setTime(currentCar.timeToLeaveQueue);
-
+			
 			//Car waited too long and left
 			if(timeToCheckAgainst.after(carLeaveQueueTime)) {
 				numberOfSadnessCars++;
@@ -225,7 +226,7 @@ public class Gate implements MessageHandler{
 
 		System.out.println("Gate #" + this.realPort + " ended with $" + this.amountOfMoney + " from " + this.numberOfCarsLetThrough +
 				" let through and " + this.numberOfSadnessCars + " cars which had to be kicked out and " + this.numberOfTokens +
-				" leftover");
+				" tokens leftover");
 	}
 
 	/**
@@ -254,7 +255,6 @@ public class Gate implements MessageHandler{
 			}
 			case AbstractMessage.TYPE_TOKEN_MESSAGE:
 			{
-				System.out.println("Gate number " + this.realPort + " received a token ");
 				TokenMessage tokenMessage = (TokenMessage) message;
 				this.numberOfTokens += tokenMessage.getNumberOfTokensSent();
 				break;
@@ -330,13 +330,16 @@ public class Gate implements MessageHandler{
 	}
 	
 	protected void onTokenResponseReceived(TokenResponseMessage message){
-			
-			if(this.trader instanceof ProfitTokenTrader){ //if we have a profit token trader, add the necessary amnt of money	
-				this.amountOfMoney += -1 * message.getNumberOfTokens() * this.costPerToken;
-			}
-			
-			this.numberOfTokens += message.getNumberOfTokens();
-			
+
+		if(message.getNumberOfTokens() > 0)
+			System.out.println("Gate# " + this.realPort + " received " + message.getNumberOfTokens() + " tokens ");
+		
+		if(this.trader instanceof ProfitTokenTrader){ //if we have a profit token trader, add the necessary amnt of money	
+			this.amountOfMoney += -1 * message.getNumberOfTokens() * this.costPerToken;
+		}
+
+		this.numberOfTokens += message.getNumberOfTokens();
+
 	}
 
 	protected void checkTokenStatus(){
@@ -440,17 +443,19 @@ public class Gate implements MessageHandler{
 	 */
 	public void sendCarToParkingLot(CarWrapper carWrapper)
 	{
-		System.out.println("Gate #"+realPort +": Sending a car to the parking lot. It will leave at " 
+		/*System.out.println("Gate #"+realPort +": Sending a car to the parking lot. It will leave at " 
 				+ carWrapper.carRepresenting.getTimeDeparts() +" Tokens: "+this.numberOfTokens + " amount of money is: " 
-				+ this.amountOfMoney + " length of queue is " + this.getCarsWaiting());
+				+ this.amountOfMoney + " length of queue is " + this.getCarsWaiting());*/
 
 		CarArrivalMessage message = new CarArrivalMessage(new Date(), carWrapper.getCarRepresenting().getTimeDeparts());
 
 		try {
 				this.manager.writeMessage(message);
-				this.numberOfTokens --;
-				System.out.println("number of tokens that the gate counts is " + this.numberOfTokens + " on " + this.realPort);
-			} catch (IOException e) {
+				this.numberOfTokens--;
+				this.numberOfCarsLetThrough++;
+				this.amountOfMoney += this.moneyPerCarPassed; 
+				
+		} catch (IOException e) {
 				//Do stuff
 			}
 

@@ -37,4 +37,7 @@ public class GateMessage extends AbstractMessage{
 		this.port = port;
 	}
 
+	public String toString(){
+		return this.addr.getHostAddress() + " " + this.port;
+	}
 }

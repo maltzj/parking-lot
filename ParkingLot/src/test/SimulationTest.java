@@ -36,7 +36,7 @@ public class SimulationTest {
         else{
             c = Config.getSharedInstance();
         }
-		TrafficGenerator generator = new TrafficGenerator(c.managers, 1000, "2,0.000000000275,1,-0.0000099,0,0.1");
+		TrafficGenerator generator = new TrafficGenerator(c.managers, 200, "2,0.000000000275,1,-0.0000099,0,0.1");
 		
 		ArrayList<Gate> gates = new ArrayList<Gate>();
 		ArrayList<Manager> managers = new ArrayList<Manager>();

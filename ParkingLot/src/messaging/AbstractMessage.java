@@ -60,6 +60,7 @@ public abstract class AbstractMessage {
 	 */					
 	public static AbstractMessage decodeMessage(InputStream inputStream) throws IOException
 	{
+		
 		synchronized(inputStream)
 		{
 			DataInputStream dataInput = new DataInputStream(inputStream);
@@ -98,7 +99,7 @@ public abstract class AbstractMessage {
 					int ttl = dataInput.readInt();
 					byte[] hostPorts = new byte[length - 8];
 					dataInput.read(hostPorts);
-					String formatted = new String(hostPorts, "UTF-8"); //encode the bytes
+					String formatted = new String(hostPorts, "ASCII"); //encode the bytes
 					Stack<HostPort> stackOfHosts = AbstractMessage.convertStringToHostPort(formatted);
 					return new TokenRequestMessage(tokens, stackOfHosts, ttl);
 				}
@@ -108,7 +109,7 @@ public abstract class AbstractMessage {
 					int tokens = dataInput.readInt();
 					byte[] stackAsBytes = new byte[length - 4];
 					dataInput.read(stackAsBytes);
-					String stackString = new String(stackAsBytes, "UTF-8"); //encode the bytes
+					String stackString = new String(stackAsBytes, "ASCII"); //encode the bytes
 					Stack<HostPort> stackOfHosts = AbstractMessage.convertStringToHostPort(stackString);
 					return new TokenResponseMessage(tokens, stackOfHosts);
 				}
@@ -179,6 +180,7 @@ public abstract class AbstractMessage {
 				case TYPE_GATE:
 				{
 					int length = dataInput.readInt();
+					System.out.println("Length BEING READ is " + length);
 					int port = dataInput.readInt();
 					String inetAddress = getIpAddress(dataInput, length - 4);
 					return new GateMessage(InetAddress.getByName(inetAddress), port);
@@ -227,7 +229,7 @@ public abstract class AbstractMessage {
 				{
 					GateSubscribeMessage subsribeMessage = (GateSubscribeMessage) messageWriting;
 					String addressAsString = subsribeMessage.getAddressOfGate().getHostAddress();
-					byte[] addressAsBytes = addressAsString.getBytes("UTF-8");
+					byte[] addressAsBytes = addressAsString.getBytes("ASCII");
 					dataOutput.writeInt(addressAsBytes.length + 4);
 					dataOutput.writeInt(subsribeMessage.getPort());
 					dataOutput.write(addressAsBytes);
@@ -238,7 +240,7 @@ public abstract class AbstractMessage {
 				{
 					TimeSubscribeMessage subsribeMessage = (TimeSubscribeMessage) messageWriting;
 					String addressAsString = subsribeMessage.getAddressSubscribing().getHostAddress();
-					byte[] addressAsBytes = addressAsString.getBytes("UTF-8");
+					byte[] addressAsBytes = addressAsString.getBytes("ASCII");
 					dataOutput.writeInt(addressAsBytes.length + 4);
 					dataOutput.writeInt(subsribeMessage.getPortSubscribingOn());
 					dataOutput.write(addressAsBytes);
@@ -258,7 +260,7 @@ public abstract class AbstractMessage {
 					dataOutput.writeInt(parsedStack.length()  + 8);
 					dataOutput.writeInt(requestMessage.getTokensRequested());
 					dataOutput.writeInt(requestMessage.getTtl());
-					dataOutput.write(parsedStack.getBytes("UTF-8"));
+					dataOutput.write(parsedStack.getBytes("ASCII"));
 					
 					break;
 				}
@@ -268,22 +270,20 @@ public abstract class AbstractMessage {
 					String parsedStack = AbstractMessage.convertHostPortsToStrings(responseMessage.getReceivers());
 					dataOutput.writeInt(parsedStack.length() + 4);
 					dataOutput.writeInt(responseMessage.getNumberOfTokens());
-					dataOutput.write(parsedStack.getBytes("UTF-8"));
+					dataOutput.write(parsedStack.getBytes("ASCII"));
 					
 					break;
 				}
 				case TYPE_TOKEN_REQUIRE_MESSAGE:
 				{
 					TokenRequireMessage requireMessage = (TokenRequireMessage) messageWriting;
-					dataOutput.writeInt(requireMessage.getTokensRequired());
-					
+					dataOutput.writeInt(requireMessage.getTokensRequired());	
 					break;
 				}
 				case TYPE_TOKEN_MESSAGE:
 				{
 					TokenMessage tokenMessage = (TokenMessage) messageWriting;
 					dataOutput.writeInt(tokenMessage.getNumberOfTokensSent());
-					
 					break;
 				}
 				case TYPE_MONEY_MESSAGE:
@@ -297,7 +297,7 @@ public abstract class AbstractMessage {
 				{
 					GateDoneMessage gateMessage = (GateDoneMessage) messageWriting;
 					String addressAsString = gateMessage.getAddressSubscribing().getHostAddress();
-					byte[] addressAsBytes = addressAsString.getBytes("UTF-8");
+					byte[] addressAsBytes = addressAsString.getBytes("ASCII");
 					dataOutput.writeInt(addressAsBytes.length + 4);
 					dataOutput.writeInt(gateMessage.getPortSubscribingOn());
 					dataOutput.write(addressAsBytes);
@@ -308,7 +308,7 @@ public abstract class AbstractMessage {
 				{
 					LotDoneMessage lotMessage = (LotDoneMessage) messageWriting;
 					String addressAsString = lotMessage.getAddressSubscribing().getHostAddress();
-					byte[] addressAsBytes = addressAsString.getBytes("UTF-8");
+					byte[] addressAsBytes = addressAsString.getBytes("ASCII");
 					dataOutput.writeInt(addressAsBytes.length + 4);
 					dataOutput.writeInt(lotMessage.getPortSubscribingOn());
 					dataOutput.write(addressAsBytes);
@@ -329,7 +329,7 @@ public abstract class AbstractMessage {
 				{
 					MoneyAmountMessage moneyAmountMessage = (MoneyAmountMessage) messageWriting;
 					String addressAsString = moneyAmountMessage.getIpAddress().getHostAddress();
-					byte[] addressAsBytes = addressAsString.getBytes("UTF-8");
+					byte[] addressAsBytes = addressAsString.getBytes("ASCII");
 					dataOutput.writeInt(addressAsBytes.length + 8);
 					dataOutput.writeInt(moneyAmountMessage.getAmountOfMoney());
 					dataOutput.writeInt(moneyAmountMessage.getPort());
@@ -341,7 +341,7 @@ public abstract class AbstractMessage {
 				{
 					TokenAmountMessage tokenAmount = (TokenAmountMessage) messageWriting;
 					String addressAsString = tokenAmount.getIpAddress().getHostAddress();
-					byte[] addressAsBytes = addressAsString.getBytes("UTF-8");
+					byte[] addressAsBytes = addressAsString.getBytes("ASCII");
 					dataOutput.writeInt(addressAsBytes.length + 8);
 					dataOutput.writeInt(tokenAmount.getNumberOfTokens());
 					dataOutput.writeInt(tokenAmount.getPort());
@@ -353,18 +353,18 @@ public abstract class AbstractMessage {
 				{
 					GateMessage gateMessage = (GateMessage) messageWriting;
 					InetAddress addr = gateMessage.addr;
-					byte[] addressAsBytes = addr.getHostAddress().getBytes("UTF-8");
+					byte[] addressAsBytes = addr.getHostAddress().getBytes("ASCII");
+					System.out.println("LENGTH BEING WRITTEN IS " +addressAsBytes.length);
 					dataOutput.writeInt(addressAsBytes.length + 4);
 					dataOutput.writeInt(gateMessage.getPort());
 					dataOutput.write(addressAsBytes);
-					
 					break;
 				}
 				case TYPE_MANAGER_AVAILABLE:
 				{
 					ManagerAvailableMessage availableMessage = (ManagerAvailableMessage) messageWriting;
 					InetAddress addr = availableMessage.getAddr();
-					byte[] addrAsBytes = addr.getHostAddress().getBytes("UTF-8");
+					byte[] addrAsBytes = addr.getHostAddress().getBytes("ASCII");
 					dataOutput.writeInt(addrAsBytes.length + 8);
 					dataOutput.writeInt(availableMessage.getGatePort());
 					dataOutput.writeInt(availableMessage.getManagerPort());
@@ -386,7 +386,7 @@ public abstract class AbstractMessage {
 	{
 		byte[] addressSize = new byte[size];
 		dataInput.read(addressSize);
-		return new String(addressSize, "UTF-8");
+		return new String(addressSize, "ASCII");
 	}
 	
 	public byte getMessageType()
